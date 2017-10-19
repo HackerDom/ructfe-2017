@@ -46,10 +46,6 @@ def get_parser(current_byte):
         }[current_byte]
 
 
-def parse_torrent_file(data: bytes):
-    return parse_dictionary(data)[0]
-
-
 def make_integer(num: int):
     return INT_START + str(num).encode() + INT_END
 
@@ -74,22 +70,3 @@ MAKERS = {
     bytes: make_string,
     dict: make_dictionary,
 }
-
-
-class TorrentFileInfo:
-    def __init__(self, data):
-        meta_dict = parse_torrent_file(data)
-        self.announce = meta_dict[b'announce'].decode()
-        self.name = meta_dict[b'info'][b'name'].decode()
-        self.length = meta_dict[b'info'].get(b'length')
-        if self.length is None:
-            length = 0
-            for file in meta_dict[b'info'][b'files']:
-                length += file[b'length']
-            self.length = length
-            self.type = 'directory'
-        else:
-            self.type = 'file'
-
-    def __str__(self):
-        return "TorrentFileInfo({})".format(self.__dict__)
