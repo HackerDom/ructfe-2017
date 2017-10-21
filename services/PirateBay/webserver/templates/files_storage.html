@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div>
+        <table width="100%" border="1">
+            <tr>
+                {% for model_field in model_fields %}
+                    <th>{{ model_field }}</th>
+                {% endfor %}
+            </tr>
+            {% for file in files %}
+            <tr>
+               <td>{{file.announce}}</td>
+               <td>{{file.length}}</td>
+                <td>{{file.name}}</td>
+                <td>{{file.type}}</td>
+            </tr>
+            {% endfor %}
+            </table>
+    </div>
+</body>
+</html>
