@@ -1,14 +1,11 @@
 from hashlib import sha512
-from random import choice
-from string import hexdigits
-from base64 import b64encode, b64decode
-
+from base64 import b64encode
 
 import cherrypy
 from jinja2 import Template
 
 from db.client import DBClient
-from db.model import Model, TextField, IntField
+from db.model import Model, TextField
 from torrent_format.torrent_file import TorrentFileInfo
 
 TEMPLATES = [
@@ -35,6 +32,13 @@ class User(Model):
     password = TextField(256)
     uid = TextField(32)
 
+    @staticmethod
+    def get_user_by_id(uid):
+        users = User.filter(uid=uid)
+        if not users:
+            return None
+        return users[0]
+
 
 class Cookie:
     def __init__(self, uid, max_age, login, password):
@@ -48,13 +52,13 @@ class Cookie:
         return res
 
     @staticmethod
-    def validate(cookie_uid, cookie_secret):
-        users = User.filter(uid=cookie_uid)
-        if not users:
-            raise UserError("invalid cookie")
-        user = users[0]
+    def is_valid(cookie_uid, cookie_secret):
+        user = User.get_user_by_id(cookie_uid)
+        if user is None:
+            return False
         if Cookie.generate_cookie_secret(user.uid, user.login, user.password) != cookie_secret:
-            raise UserError("invalid cookie")
+            return False
+        return True
 
 
 def load_templates():
@@ -63,10 +67,6 @@ def load_templates():
         with open('templates/{}.html'.format(template_name)) as template_file:
             templates_dict[template_name] = Template(template_file.read())
     return templates_dict
-
-
-def generate_uid():
-    return ''.join(choice(hexdigits) for _ in range(32))
 
 
 def register(login, password):
@@ -91,6 +91,34 @@ def get_torrent_info_files():
     return files
 
 
+def get_authorized_user():
+    request_cookie = dict(cherrypy.request.cookie)
+    if ('uid' in request_cookie) and ('secret' in request_cookie):
+        secret = request_cookie['secret'].value
+        uid = request_cookie['uid'].value
+        if Cookie.is_valid(uid, secret):
+            return User.get_user_by_id(uid)
+    return None
+
+
+def set_cookie(login, password):
+    user_id = authenticate(login, password)
+    user_cookie = Cookie(user_id, 60 * 5, login, password)
+    response_cookie = cherrypy.response.cookie
+    response_cookie['uid'] = user_cookie.uid
+    response_cookie['uid']['max-age'] = user_cookie.max_age
+    response_cookie['secret'] = user_cookie.secret
+    response_cookie['secret']['max-age'] = user_cookie.max_age
+
+
+def reset_cookie():
+    response_cookie = cherrypy.response.cookie
+    response_cookie['uid'] = ''
+    response_cookie['uid']['max-age'] = 0
+    response_cookie['secret'] = ''
+    response_cookie['secret']['max-age'] = 0
+
+
 class RequestHandler:
     def __init__(self):
         self.templates_dict = load_templates()
@@ -101,18 +129,8 @@ class RequestHandler:
     @cherrypy.expose
     def signin(self, login, password):
         try:
-            user_id = authenticate(login, password)
-            user_cookie = Cookie(user_id, 10, login, password)
-
-            cookie = cherrypy.response.cookie
-
-            cookie['uid'] = user_cookie.uid
-            cookie['uid']['max-age'] = 10
-
-            cookie['secret'] = user_cookie.secret
-            cookie['secret']['max-age'] = 10
-
-            return self.get_template('main').render(message='user "{}" has been successfully signed in'.format(login))
+            set_cookie(login, password)
+            raise cherrypy.HTTPRedirect('/')
         except UserError as user_error:
             return self.get_template('signin').render(message=user_error.error_message)
 
@@ -120,7 +138,8 @@ class RequestHandler:
     def signup(self, login, password):
         try:
             register(login, password)
-            return self.get_template('main').render(message='user "{}" has been successfully signed up'.format(login))
+            set_cookie(login, password)
+            raise cherrypy.HTTPRedirect('/')
         except UserError as user_error:
             return self.get_template('signup').render(message=user_error.error_message)
 
@@ -133,14 +152,20 @@ class RequestHandler:
         return self.get_template('signin').render()
 
     @cherrypy.expose
-    def index(self):
-        requset_cookie = dict(cherrypy.request.cookie)
-        if 'uid' in requset_cookie:
-            secret = requset_cookie['secret'].value
-            uid = requset_cookie['uid'].value
-            Cookie.validate(uid, secret)
+    def signout(self):
+        reset_cookie()
+        raise cherrypy.HTTPRedirect('/')
 
-        return self.get_template('main').render()
+    @cherrypy.expose
+    def index(self):
+        user = get_authorized_user()
+        if user is not None:
+            signedin = True
+            message = "Hello, {}!".format(user.login)
+        else:
+            signedin = False
+            message = "Sign in for upload file!"
+        return self.get_template('main').render(signedin=signedin, message=message)
 
     @cherrypy.expose
     def storage(self):
@@ -148,6 +173,17 @@ class RequestHandler:
             model_fields=TorrentFileInfo.get_field_names(),
             files=get_torrent_info_files(),
         )
+
+    @cherrypy.expose
+    def upload(self, upload_file):
+        raw_torrent_info_file = bytearray()
+        while True:
+            data = upload_file.file.read(8192)
+            if not data:
+                break
+            raw_torrent_info_file += data
+        TorrentFileInfo(bytes(raw_torrent_info_file)).save()
+        raise cherrypy.HTTPRedirect('/storage')
 
 
 def start_web_server():

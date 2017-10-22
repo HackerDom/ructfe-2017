@@ -3,10 +3,15 @@
     <head>
     </head>
     <body>
-        <div>
+        <div align="center">
             <p>{{message}}</p>
-            <a href="signup_page">Sign up</a>
-            <a href="signin_page">Sign in</a>
+            {% if not signedin %}
+                <a href="signin_page">Sign in</a>
+                <a href="signup_page">Sign up</a>
+            {% else %}
+                <a href="storage">Files</a>
+                <a href="signout">Sign out</a>
+            {% endif %}
         </div>
     </body>
 </html>

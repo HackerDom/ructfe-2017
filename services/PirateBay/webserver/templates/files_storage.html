@@ -5,22 +5,30 @@
     <title>Title</title>
 </head>
 <body>
-    <div>
+    <div align="center">
         <table width="100%" border="1">
             <tr>
-                {% for model_field in model_fields %}
-                    <th>{{ model_field }}</th>
-                {% endfor %}
+                <th>announce</th>
+                <th>length</th>
+                <th>name</th>
+                <th>type</th>
             </tr>
             {% for file in files %}
             <tr>
-               <td>{{file.announce}}</td>
-               <td>{{file.length}}</td>
+                <td>{{file.announce}}</td>
+                <td>{{file.length}}</td>
                 <td>{{file.name}}</td>
                 <td>{{file.type}}</td>
             </tr>
             {% endfor %}
-            </table>
+        </table>
+        <div>
+            <h2>Upload a file</h2>
+            <form action="upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="upload_file"/><br />
+                <input type="submit"/>
+            </form>
+        </div>
     </div>
 </body>
 </html>
