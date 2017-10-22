@@ -1,6 +1,7 @@
 #include <iostream>
 #include <malloc.h>
 #include "types.h"
+#include "png.h"
 
 enum OP
 {
@@ -74,9 +75,8 @@ struct Instruction
         u32 src1 : 30;
     };
     Swizzle src1Swizzle;
-    u32 padding;
 };
-static_assert( sizeof( Instruction ) == 32, "" );
+static_assert( sizeof( Instruction ) == 28, "" );
 
 
 //
@@ -93,15 +93,30 @@ struct VertexBuffer
     u32 vertexNum;
     u32 vertexComponents;
     __m128_union* vb;
+
+    VertexBuffer()
+        : vertexNum( 0 ), vertexComponents( 0 ), vb( nullptr )
+    {}
+
+    VertexBuffer( u32 vertexNum, u32 vertexComponents ) {
+        this->vertexNum = vertexNum;
+        this->vertexComponents = vertexComponents;
+        vb = ( __m128_union* )memalign( 16, vertexNum * vertexComponents * sizeof( __m128 ) );
+    }
+
+    ~VertexBuffer() {
+        if( !vb )
+            free( vb );
+    }
 };
 
 
 //
 struct RenderTarget
 {
-    u16 width;
-    u16 height;
-    __m128_union* pixels;
+    i16 width;
+    i16 height;
+    u32* pixels;
 };
 
 
@@ -124,7 +139,7 @@ struct Registers
 
 //
 inline
-void LoadRegister( __m128_union& output, const Registers& registers, REGISTER_TYPE regType, u32 regIdx, Swizzle regSwizzle ) {
+void LoadRegister( __m128_union& output, const Registers& registers, u32 regType, u32 regIdx, Swizzle regSwizzle ) {
     output.m128_f32[ 0 ] = registers.regs[ regType ][ regIdx ].m128_f32[ regSwizzle.i0 ];
     output.m128_f32[ 1 ] = registers.regs[ regType ][ regIdx ].m128_f32[ regSwizzle.i1 ];
     output.m128_f32[ 2 ] = registers.regs[ regType ][ regIdx ].m128_f32[ regSwizzle.i2 ];
@@ -133,7 +148,7 @@ void LoadRegister( __m128_union& output, const Registers& registers, REGISTER_TY
 
 
 inline
-void StoreRegister( Registers& registers, REGISTER_TYPE regType, u32 regIdx, Swizzle regSwizzle, const __m128_union& input ) {
+void StoreRegister( const Registers& registers, u32 regType, u32 regIdx, Swizzle regSwizzle, const __m128_union& input ) {
     __m128_union& dst = registers.regs[ regType ][ regIdx ];
     if( regSwizzle.activeNum >= 1 )
         dst.m128_f32[ regSwizzle.i0 ] = input.m128_f32[ 0 ];
@@ -153,20 +168,7 @@ bool Execute( const Registers& registers, const Shader& shader ) {
     {
         Instruction& i = shader.instructions[ ip ];
 
-        __m128_union src0;
-        src0.m128_f32[ 0 ] = registers.regs[ i.src0Type ][ i.src0 ].m128_f32[ i.src0Swizzle.i0 ];
-        src0.m128_f32[ 1 ] = registers.regs[ i.src0Type ][ i.src0 ].m128_f32[ i.src0Swizzle.i1 ];
-        src0.m128_f32[ 2 ] = registers.regs[ i.src0Type ][ i.src0 ].m128_f32[ i.src0Swizzle.i2 ];
-        src0.m128_f32[ 3 ] = registers.regs[ i.src0Type ][ i.src0 ].m128_f32[ i.src0Swizzle.i3 ];
-
-        __m128_union src1;
-        src1.m128_f32[ 0 ] = registers.regs[ i.src1Type ][ i.src1 ].m128_f32[ i.src1Swizzle.i0 ];
-        src1.m128_f32[ 1 ] = registers.regs[ i.src1Type ][ i.src1 ].m128_f32[ i.src1Swizzle.i1 ];
-        src1.m128_f32[ 2 ] = registers.regs[ i.src1Type ][ i.src1 ].m128_f32[ i.src1Swizzle.i2 ];
-        src1.m128_f32[ 3 ] = registers.regs[ i.src1Type ][ i.src1 ].m128_f32[ i.src1Swizzle.i3 ];
-
-        __m128_union result;
-
+        __m128_union src0, src1, result;
         switch( i.op )
         {
             case OP_INVALID:
@@ -174,17 +176,44 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                 printf( "Invalid op\n" );
 #endif
                 return false;
+            case OP_SET:
+                {
+                    f32* floats = ( ( f32* )&i ) + 3; // skip op and dst
+                    result.f = _mm_set_ps( floats[ 3 ], floats[ 2 ], floats[ 1 ], floats[ 0 ] );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
+                }
+                break;
             case OP_ADD:
-                result.f = _mm_add_ps( src0, src1 );
+                {
+                    LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+                    LoadRegister( src1, registers, i.src1Type, i.src1, i.src1Swizzle );
+                    result.f = _mm_add_ps( src0, src1 );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
+                }
                 break;
             case OP_SUB:
-                result.f = _mm_sub_ps( src0, src1 );
+                {
+                    LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+                    LoadRegister( src1, registers, i.src1Type, i.src1, i.src1Swizzle );
+                    result.f = _mm_sub_ps( src0, src1 );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
+                }
                 break;
             case OP_MUL:
-                result.f = _mm_mul_ps( src0, src1 );
+                {
+                    LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+                    LoadRegister( src1, registers, i.src1Type, i.src1, i.src1Swizzle );
+                    result.f = _mm_mul_ps( src0, src1 );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
+                }
                 break;
             case OP_DIV:
-                result.f = _mm_div_ps( src0, src1 );
+                {
+                    LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+                    LoadRegister( src1, registers, i.src1Type, i.src1, i.src1Swizzle );
+                    result.f = _mm_div_ps( src0, src1 );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
+                }
                 break;
             case OP_DOT:
                 {
@@ -194,48 +223,59 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                         return false;
                     }
 #endif
+                    LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+                    LoadRegister( src1, registers, i.src1Type, i.src1, i.src1Swizzle );
                     __m128_union tmp;
                     tmp.f = _mm_mul_ps( src0, src1 );
                     f32 dot = 0.0f;
                     for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
                         dot += tmp.m128_f32[ j ];
                     result.f = _mm_set_ps1( dot );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
                 }
                 break;
             case OP_MOV:
-                result.f = src0.f;
+                {
+                    LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+                    StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, src0 );
+                }
                 break;
             case OP_RET:
                 return true;
         }
-
-        __m128_union& dst = registers.regs[ i.dstType ][ i.dst ];
-        if( i.dstSwizzle.activeNum >= 1 )
-            dst.m128_f32[ i.dstSwizzle.i0 ] = result.m128_f32[ 0 ];
-        if( i.dstSwizzle.activeNum >= 2 )
-            dst.m128_f32[ i.dstSwizzle.i1 ] = result.m128_f32[ 1 ];
-        if( i.dstSwizzle.activeNum >= 3 )
-            dst.m128_f32[ i.dstSwizzle.i2 ] = result.m128_f32[ 2 ];
-        if( i.dstSwizzle.activeNum >= 4 )
-            dst.m128_f32[ i.dstSwizzle.i3 ] = result.m128_f32[ 3 ];
     }
 
     return true;
 }
 
-void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, const RenderTarget& rt )
+
+//
+struct Point2D {
+    i32 x, y;
+};
+
+
+//
+i32 orient2d(const Point2D& a, const Point2D& b, const Point2D& c)
+{
+    return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
+}
+
+
+//
+void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, const Image& rt )
 {
     __m128_union* GPR = ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
     const u32 VARYINGS_PER_VERTEX = 4;
-    // 4 varyings for each vertex of triangle = 12 varyings per triangle
+    // 4 varyings for each vertex of triangle
     __m128_union varyings[ VARYINGS_PER_VERTEX * 3 ];
 
     for( u32 t = 0; t < vb.vertexNum / 3; t++ )
     {
         // vertex shader stage
         __m128_union* vsInput = &vb.vb[ 3 * vb.vertexComponents * t ];
-        i16 minX = 8192;
-        i16 minY = 8192;
+        i16 minX = 255;
+        i16 minY = 255;
         i16 maxX = 0;
         i16 maxY = 0;
         i16 X[ 3 ], Y[ 3 ];
@@ -244,7 +284,7 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
         for( u32 v = 0; v < 3; v++ )
         {
             Registers vsRegs;
-            vsRegs.IR = vsInput;
+            vsRegs.IR = &vsInput[ v * vb.vertexComponents ];
             vsRegs.OR = &varyings[ VARYINGS_PER_VERTEX * v ];
             vsRegs.CR = constants;
             vsRegs.GPR = GPR;
@@ -256,9 +296,10 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
             w.f = _mm_shuffle_ps( pos, pos, 0xFF );
             pos.f = _mm_div_ps( pos, w );
             // ...and ndc to screen space conversion
-            __m128 tmp = _mm_mul_ps( pos, _mm_set_ps( 0.5f, -0.5f, 1.0f, 1.0f ) );
-            tmp = _mm_add_ps( pos, _mm_set_ps( 0.5f, 0.5f, 0.0f, 0.0f ) );
-            pos.f = _mm_mul_ps( pos, _mm_set_ps( rt.width, rt.height, 1.0f, 1.0f ) );
+            __m128_union tmp;
+            tmp.f = _mm_mul_ps( pos, _mm_set_ps( 1.0f, 1.0f, -0.5f, 0.5f ) );
+            tmp.f = _mm_add_ps( tmp, _mm_set_ps( 0.0f, 0.0f, 0.5f, 0.5f ) ); //0.5f, 0.5f, 0.0f, 0.0f ) );
+            pos.f = _mm_mul_ps( tmp, _mm_set_ps( 1.0f, 1.0f, rt.height, rt.width ) );
             X[ v ] = pos.m128_f32[ 0 ] + 0.5f;
             Y[ v ] = pos.m128_f32[ 1 ] + 0.5f;
             Z[ v ] = pos.m128_f32[ 2 ];
@@ -269,19 +310,77 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
             if( Y[ v ] < minY ) minY = Y[ v ];
         }
 
+        // clip againts screen
+        minX = std::max( minX, i16( 0 ) );
+        minY = std::max( minY, i16( 0 ) );
+        maxX = std::min( maxX, i16( rt.width - 1 ) );
+        maxY = std::min( maxY, i16( rt.height - 1 ) );
+
         // fixed function stage
         int triArea = (X[1] - X[0]) * (Y[2] - Y[0]) - (X[0] - X[2]) * (Y[0] - Y[1]);
         if( triArea <= 0 )
             continue;
 
+        Point2D p;
+        Point2D v0 = { X[ 0 ], Y[ 0 ] };
+        Point2D v1 = { X[ 1 ], Y[ 1 ] };
+        Point2D v2 = { X[ 2 ], Y[ 2 ] };
+        for( p.y = minY; p.y <= maxY; p.y++ ){
+            for( p.x = minX; p.x <= maxX; p.x++ ){
+                int w0 = orient2d(v1, v2, p);
+                int w1 = orient2d(v2, v0, p);
+                int w2 = orient2d(v0, v1, p);
 
+                // If p is on or inside all edges, render pixel.
+                if( ( w0 | w1 | w2 ) >= 0 )
+                    rt.rgba[ p.y * rt.width + p.x ].rgba = ~0u;
+            }
+        }
     }
 
     free( GPR );
 }
 
+void DrawTest()
+{
+    Image image( 32, 32 );
+    Instruction vsInsts[ 8 ];
+    Instruction* vsPtr = &vsInsts[ 0 ];
+
+    vsPtr->op = OP_MOV;
+    vsPtr->dst = 0;
+    vsPtr->dstType = REGISTER_OR;
+    vsPtr->dstSwizzle.swizzle = 0b11100100;
+    vsPtr->dstSwizzle.activeNum = 4;
+    vsPtr->src0 = 0;
+    vsPtr->src0Type = REGISTER_IR;
+    vsPtr->src0Swizzle.swizzle = 0b11100100;
+    vsPtr++;
+
+    vsPtr->op = OP_RET;
+    vsPtr->dst = 0;
+    vsPtr->dstType = REGISTER_GPR;
+    vsPtr->src0 = 0;
+    vsPtr->src0Type = REGISTER_GPR;
+    vsPtr->src1 = 0;
+    vsPtr->src1Type = REGISTER_GPR;
+
+    Shader vs;
+    vs.instructions = &vsInsts[ 0 ];
+    vs.instructionsNum = 2;
+
+    VertexBuffer vb( 3, 1 );
+    vb.vb[ 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  0.0f );
+    vb.vb[ 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
+    vb.vb[ 2 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
+
+    Draw( nullptr, vs, vb, image );
+    save_png( "test.png", image );
+}
+
 int main()
 {
+    DrawTest();
     Registers registers;
     registers.IR =  ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
     registers.OR =  ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
@@ -298,14 +397,59 @@ int main()
     //dot r0.x r1.xy r2.zw     1 * 30 + 2 * 40 = 30 + 80 = 110
     //dot r0.xy r1.xyz r2.zwz  1 * 30 + 2 * 40 + 3 * 30 = 110 + 90 = 200
 
-    registers.GPR[ 0 ].f =  _mm_set_ps1( 0 );
-    registers.GPR[ 1 ].f =  _mm_set_ps( 4, 3, 2, 1 );
-    registers.GPR[ 2 ].f =  _mm_set_ps( 40, 30, 20, 10 );
-    registers.GPR[ 3 ].f =  _mm_set_ps1( 0 );
-    registers.GPR[ 4 ].f =  _mm_set_ps1( 0 );
+    //registers.GPR[ 0 ].f =  _mm_set_ps1( 0 );
+    //registers.GPR[ 1 ].f =  _mm_set_ps( 4, 3, 2, 1 );
+    //registers.GPR[ 2 ].f =  _mm_set_ps( 40, 30, 20, 10 );
+    //registers.GPR[ 3 ].f =  _mm_set_ps1( 0 );
+    //registers.GPR[ 4 ].f =  _mm_set_ps1( 0 );
 
-    Instruction insts[ 8 ];
+    Instruction insts[ 16 ];
     Instruction* ptr = &insts[ 0 ];
+
+    ptr->op = OP_SET;
+    ptr->dst = 0;
+    ptr->dstType = REGISTER_GPR;
+    ptr->dstSwizzle.swizzle = 0b11100100;
+    ptr->dstSwizzle.activeNum = 4;
+    f32* floats = ( ( f32* )ptr ) + 3;
+    floats[ 0 ] = 0.0f; floats[ 1 ] = 0.0f; floats[ 2 ] = 0.0f; floats[ 3 ] = 0.0f;
+    ptr++;
+
+    ptr->op = OP_SET;
+    ptr->dst = 1;
+    ptr->dstType = REGISTER_GPR;
+    ptr->dstSwizzle.swizzle = 0b11100100;
+    ptr->dstSwizzle.activeNum = 4;
+    floats = ( ( f32* )ptr ) + 3;
+    floats[ 0 ] = 1.0f; floats[ 1 ] = 2.0f; floats[ 2 ] = 3.0f; floats[ 3 ] = 4.0f;
+    ptr++;
+
+    ptr->op = OP_SET;
+    ptr->dst = 2;
+    ptr->dstType = REGISTER_GPR;
+    ptr->dstSwizzle.swizzle = 0b11100100;
+    ptr->dstSwizzle.activeNum = 4;
+    floats = ( ( f32* )ptr ) + 3;
+    floats[ 0 ] = 10.0f; floats[ 1 ] = 20.0f; floats[ 2 ] = 30.0f; floats[ 3 ] = 40.0f;
+    ptr++;
+
+    ptr->op = OP_SET;
+    ptr->dst = 3;
+    ptr->dstType = REGISTER_GPR;
+    ptr->dstSwizzle.swizzle = 0b11100100;
+    ptr->dstSwizzle.activeNum = 4;
+    floats = ( ( f32* )ptr ) + 3;
+    floats[ 0 ] = 0.0f; floats[ 1 ] = 0.0f; floats[ 2 ] = 0.0f; floats[ 3 ] = 0.0f;
+    ptr++;
+
+    ptr->op = OP_SET;
+    ptr->dst = 4;
+    ptr->dstType = REGISTER_GPR;
+    ptr->dstSwizzle.swizzle = 0b11100100;
+    ptr->dstSwizzle.activeNum = 4;
+    floats = ( ( f32* )ptr ) + 2;
+    floats[ 0 ] = 0.0f; floats[ 1 ] = 0.0f; floats[ 2 ] = 0.0f; floats[ 3 ] = 0.0f;
+    ptr++;
 
     ptr->op = OP_ADD;
     ptr->dst = 0;
