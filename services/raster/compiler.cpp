@@ -89,7 +89,6 @@ int main( int argc, char* argv[] ) {
             case OP_MUL:
             case OP_DIV:
             case OP_DOT:
-            case OP_MOV:
                 {
                     std::string dst, src0, src1;
                     infile >> dst;
@@ -106,6 +105,22 @@ int main( int argc, char* argv[] ) {
                     ParseRegister( src1, regType, reg, inst.src1Swizzle );
                     inst.src1 = reg;
                     inst.src1Type = regType;
+                }
+                break;
+
+            case OP_MOV:
+                {
+                    std::string dst, src0;
+                    infile >> dst;
+                    infile >> src0;
+                    REGISTER_TYPE regType;
+                    u32 reg;
+                    ParseRegister( dst,  regType, reg, inst.dstSwizzle );
+                    inst.dst = reg;
+                    inst.dstType = regType;
+                    ParseRegister( src0, regType, reg, inst.src0Swizzle );
+                    inst.src0 = reg;
+                    inst.src0Type = regType;
                 }
                 break;
 

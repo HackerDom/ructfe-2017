@@ -71,6 +71,9 @@ int main( int argc, char* argv[] ) {
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
                 printf( "%f ", floats[ i ] );
         } else if( inst.op == OP_RET ) {
+        } else if( inst.op == OP_MOV ) {
+            DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
+            DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
         } else {
             DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
             DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
