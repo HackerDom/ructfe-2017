@@ -171,6 +171,8 @@ class RequestHandler:
 
     @cherrypy.expose
     def storage(self):
+        if get_authorized_user() is None:
+            raise cherrypy.HTTPRedirect('/')
         return self.get_template('files_storage').render(
             model_fields=TorrentFileInfo.get_field_names(),
             files=get_torrent_info_files(),
@@ -184,7 +186,8 @@ class RequestHandler:
             if not data:
                 break
             raw_torrent_info_file += data
-        TorrentFileInfo(bytes(raw_torrent_info_file)).save()
+        user_login = get_authorized_user().login
+        TorrentFileInfo(bytes(raw_torrent_info_file), upload_by=user_login).save()
         raise cherrypy.HTTPRedirect('/storage')
 
 

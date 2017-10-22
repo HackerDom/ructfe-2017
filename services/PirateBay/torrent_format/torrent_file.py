@@ -9,8 +9,9 @@ class TorrentFileInfo(Model):
     type = TextField(256)
     name = TextField(256)
     uid = TextField(32)
+    upload_by = TextField(256)
 
-    def __init__(self, data=None):
+    def __init__(self, data=None, upload_by=None):
         if data is None:
             return
         meta_dict, _ = parse_dictionary(data)
@@ -18,6 +19,7 @@ class TorrentFileInfo(Model):
         self.name = meta_dict[b'info'][b'name'].decode()
         self.length = meta_dict[b'info'].get(b'length')
         self.uid = generate_uid()
+        self.upload_by = upload_by
         if self.length is None:
             length = 0
             for file in meta_dict[b'info'][b'files']:
