@@ -1,5 +1,6 @@
 from config import TORRENT_FILES_TABLE_NAME
 from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery
+from utils import cached_method
 
 db_client = DBClient()
 

@@ -1,3 +1,4 @@
+import os
 from hashlib import sha512
 from base64 import b64encode
 
@@ -7,6 +8,7 @@ from jinja2 import Template
 from db.client import DBClient
 from db.model import Model, TextField
 from torrent_format.torrent_file import TorrentFileInfo
+from utils import generate_uid
 
 TEMPLATES = [
     'main',
@@ -64,7 +66,7 @@ class Cookie:
 def load_templates():
     templates_dict = {}
     for template_name in TEMPLATES:
-        with open('templates/{}.html'.format(template_name)) as template_file:
+        with open('webserver/templates/{}.html'.format(template_name)) as template_file:
             templates_dict[template_name] = Template(template_file.read())
     return templates_dict
 
@@ -190,8 +192,4 @@ def start_web_server():
     with DBClient() as db_client:
         db_client.connection.commit()
         request_handler = RequestHandler()
-        cherrypy.quickstart(request_handler, '/', config='webserver.config')
-
-
-if __name__ == '__main__':
-    start_web_server()
+        cherrypy.quickstart(request_handler, '/', config='webserver/webserver.config')
