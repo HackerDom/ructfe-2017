@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <xmmintrin.h>
 #include <smmintrin.h>
+#include <malloc.h>
 
 using u8    = uint8_t;
 using i8    = int8_t;
@@ -110,3 +111,57 @@ struct Instruction
     Swizzle src1Swizzle;
 };
 static_assert( sizeof( Instruction ) == 28, "" );
+
+
+//
+struct Shader
+{
+    Instruction* instructions;
+
+    struct Header
+    {
+        struct
+        {
+            u32 type : 1;
+            u32 instructionsNum : 16;
+        };
+        union
+        {
+            struct
+            {
+                u32 varyingsNum : 4;
+                u32 padding : 28;
+            } vs;
+            struct
+            {
+                u32 integerOutput : 1;
+                u32 padding : 31;
+            } ps;
+            u32 flags;
+        };
+    };
+    Header header;
+
+    Shader()
+        : instructions( nullptr )
+    {
+        header.type = 0;
+        header.instructionsNum = 0;
+        header.flags = 0;
+    }
+
+    Shader( const char* fileName ) {
+        FILE* f = fopen( fileName, "r" );
+        //
+        fread( &header, sizeof( Header ), 1, f );
+        //
+        instructions = ( Instruction* )memalign( 16, header.instructionsNum * sizeof( Instruction ) );
+        fread( instructions, sizeof( Instruction ), header.instructionsNum, f );
+        fclose( f );
+    }
+
+    ~Shader() {
+        if( instructions )
+            free( instructions );
+    }
+};

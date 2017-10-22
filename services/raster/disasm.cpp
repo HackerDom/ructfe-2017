@@ -52,17 +52,22 @@ void DumpRegister( REGISTER_TYPE type, u32 idx, Swizzle swizzle ) {
 
 //
 int main( int argc, char* argv[] ) {
-    FILE* f = fopen( argv[ 1 ], "r" );
-    //
-    fseek( f, 0L, SEEK_END );
-    u32 size = ftell( f );
-    fseek( f, 0L, SEEK_SET );
+    Shader shader( argv[ 1 ] );
+
+    printf( "Instructions num: %u\n", shader.header.instructionsNum );
+    if( shader.header.type == 0 ) {
+        printf( "VS flags:\n" );
+        printf( "\tVS_VARYINGS_NUM = %u\n", shader.header.vs.varyingsNum );
+    }
+    if( shader.header.type == 1 ) {
+        printf( "PS flags:\n" );
+        printf( "\tPS_INTEGER_OUTPUT = %u\n", shader.header.ps.integerOutput );
+    }
 
     //
-    u32 instNum = size / sizeof( Instruction );
-    for( u32 i = 0; i < instNum; i++ ){
-        Instruction inst;
-        fread( &inst, sizeof( Instruction ), 1, f );
+    for( u32 i = 0; i < shader.header.instructionsNum; i++ ){
+        Instruction& inst = shader.instructions[ i ];
+
         printf( "%s ", g_opToStr[ inst.op ] );
         if( inst.op == OP_SET ) {
             DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
@@ -81,7 +86,5 @@ int main( int argc, char* argv[] ) {
         }
         printf( "\n" );
     }
-
-    fclose( f );
     return 0;
 }

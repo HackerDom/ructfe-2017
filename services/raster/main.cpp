@@ -1,41 +1,7 @@
 #include <iostream>
-#include <malloc.h>
 #include <stdio.h>
 #include "types.h"
 #include "png.h"
-
-
-//
-struct Shader
-{
-    Instruction* instructions;
-    u32 instructionsNum;
-
-    Shader()
-        : instructions( nullptr )
-        , instructionsNum( 0 )
-    {
-    }
-
-    Shader( const char* fileName ) {
-        FILE* f = fopen( fileName, "r" );
-        //
-        fseek( f, 0L, SEEK_END );
-        u32 size = ftell( f );
-        fseek( f, 0L, SEEK_SET );
-
-        //
-        instructionsNum = size / sizeof( Instruction );
-        instructions = ( Instruction* )memalign( 16, instructionsNum * sizeof( Instruction ) );
-        fread( instructions, sizeof( Instruction ), instructionsNum, f );
-        fclose( f );
-    }
-
-    ~Shader() {
-        if( instructions )
-            free( instructions );
-    }
-};
 
 
 //
@@ -59,15 +25,6 @@ struct VertexBuffer
         if( !vb )
             free( vb );
     }
-};
-
-
-//
-struct RenderTarget
-{
-    i16 width;
-    i16 height;
-    u32* pixels;
 };
 
 
@@ -115,7 +72,7 @@ void StoreRegister( const Registers& registers, u32 regType, u32 regIdx, Swizzle
 //
 bool Execute( const Registers& registers, const Shader& shader ) {
 
-    for( u32 ip = 0; ip < shader.instructionsNum; ip++ )
+    for( u32 ip = 0; ip < shader.header.instructionsNum; ip++ )
     {
         Instruction& i = shader.instructions[ ip ];
 
@@ -229,10 +186,19 @@ __m128 Interpolate( int w0, int w1, int w2, float invDoubleArea, const __m128_un
 
 //
 void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, const Shader& ps, const Image& rt ) {
-    __m128_union* GPR = ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
     const u32 VARYINGS_PER_VERTEX = 4;
+    if( vs.header.type != 0 )
+        return;
+    if( ps.header.type != 1 )
+        return;
+    if( vs.header.vs.varyingsNum > VARYINGS_PER_VERTEX )
+        return;
+
+    __m128_union* GPR = ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
     // 4 varyings for each vertex of triangle
     __m128_union varyings[ VARYINGS_PER_VERTEX * 3 ];
+
+    u32 varyingsNum = std::max( ( u32 )vs.header.vs.varyingsNum, 1u );
 
     for( u32 t = 0; t < vb.vertexNum / 3; t++ ) {
         // vertex shader stage
@@ -299,7 +265,7 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
                 // If p is on or inside all edges, run pixel shader.
                 if( ( w0 | w1 | w2 ) >= 0 ) {
                     __m128_union input[ VARYINGS_PER_VERTEX ];
-                    for( u32 i = 0; i < VARYINGS_PER_VERTEX; i++ ){
+                    for( u32 i = 0; i < varyingsNum; i++ ){
                         input[ i ].f = Interpolate( w0, w1, w2, invDoubleArea,
                                                     varyings[ VARYINGS_PER_VERTEX * 0 + i ],
                                                     varyings[ VARYINGS_PER_VERTEX * 1 + i ],
@@ -316,10 +282,17 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
                     Execute( psRegs, ps );
 
                     RGBA& rgba = rt.rgba[ p.y * rt.width + p.x ];
-                    rgba.r = output.m128_f32[ 0 ] * 255.0f;
-                    rgba.g = output.m128_f32[ 1 ] * 255.0f;
-                    rgba.b = output.m128_f32[ 2 ] * 255.0f;
-                    rgba.a = output.m128_f32[ 3 ] * 255.0f;
+                    if( ps.header.ps.integerOutput ) {
+                        rgba.r = output.m128_u32[ 0 ];
+                        rgba.g = output.m128_u32[ 1 ];
+                        rgba.b = output.m128_u32[ 2 ];
+                        rgba.a = output.m128_u32[ 3 ];
+                    } else {
+                        rgba.r = output.m128_f32[ 0 ] * 255.0f;
+                        rgba.g = output.m128_f32[ 1 ] * 255.0f;
+                        rgba.b = output.m128_f32[ 2 ] * 255.0f;
+                        rgba.a = output.m128_f32[ 3 ] * 255.0f;
+                    }
                 }
             }
         }

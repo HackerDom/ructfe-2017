@@ -66,13 +66,47 @@ void ParseRegister( const std::string& str, REGISTER_TYPE& type, u32& idx, Swizz
 
 //
 int main( int argc, char* argv[] ) {
-    std::ifstream infile( argv[ 1 ] );
+    if( argc < 4 )
+        return 1;
+
+    const char* type = argv[ 1 ];
+    const char* input = argv[ 2 ];
+    const char* output = argv[ 3 ];
+
+    //
+    Shader::Header header;
+    if( strcmp( type, "vs" ) == 0 )
+        header.type = 0;
+    else if( strcmp( type, "ps" ) == 0 )
+        header.type = 1;
+    else {
+        printf( "Invalid shader type\n" );
+        return 1;
+    }
+
+    std::ifstream infile( input );
     std::vector< Instruction > insts;
     //
     while( !infile.eof() ) {
         Instruction inst;
         std::string opStr;
         infile >> opStr;
+
+        if( opStr.empty() )
+            continue;
+
+        if( opStr.compare( "VS_VARYINGS_NUM" ) == 0 ) {
+            u32 varyingsNum;
+            infile >> varyingsNum;
+            header.vs.varyingsNum = varyingsNum;
+            continue;
+        }
+
+        if( opStr.compare( "PS_INTEGER_OUTPUT" ) == 0 ) {
+            header.ps.integerOutput = 1;
+            continue;
+        }
+
         for( u32 i = 0; i < OP_COUNT; i++ ){
             if( opStr.compare( g_opToStr[ i ] ) == 0 ) {
                 inst.op = ( OP )i;
@@ -146,7 +180,10 @@ int main( int argc, char* argv[] ) {
         insts.push_back( inst );
     }
 
-    FILE* binary = fopen( argv[ 2 ], "w" );
+    header.instructionsNum = insts.size();
+
+    FILE* binary = fopen( output, "w" );
+    fwrite( &header, sizeof( Shader::Header ), 1, binary );
     fwrite( insts.data(), sizeof( Instruction ), insts.size(), binary );
     fclose( binary );
     return 0;
