@@ -263,7 +263,21 @@ i32 orient2d(const Point2D& a, const Point2D& b, const Point2D& c)
 
 
 //
-void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, const Image& rt )
+__m128 Interpolate( int w0, int w1, int w2, float invDoubleArea, const __m128_union& v0, const __m128_union& v1, const __m128_union& v2 ){
+    float l0 = w0 * invDoubleArea;
+    float l1 = w1 * invDoubleArea;
+    float l2 = w2 * invDoubleArea;
+
+    __m128 m0 = _mm_mul_ps( v0.f, _mm_set1_ps( l0 ) );
+    __m128 m1 = _mm_mul_ps( v1.f, _mm_set1_ps( l1 ) );
+    __m128 m2 = _mm_mul_ps( v2.f, _mm_set1_ps( l2 ) );
+    __m128 ret = _mm_add_ps( m0, _mm_add_ps( m1, m2 ) );
+    return ret;
+}
+
+
+//
+void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, const Shader& ps, const Image& rt )
 {
     __m128_union* GPR = ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
     const u32 VARYINGS_PER_VERTEX = 4;
@@ -317,9 +331,10 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
         maxY = std::min( maxY, i16( rt.height - 1 ) );
 
         // fixed function stage
-        int triArea = (X[1] - X[0]) * (Y[2] - Y[0]) - (X[0] - X[2]) * (Y[0] - Y[1]);
-        if( triArea <= 0 )
+        int doubleTriArea = (X[1] - X[0]) * (Y[2] - Y[0]) - (X[0] - X[2]) * (Y[0] - Y[1]);
+        if( doubleTriArea <= 0 )
             continue;
+        f32 invDoubleArea = 1.0f / ( f32 )doubleTriArea;
 
         Point2D p;
         Point2D v0 = { X[ 0 ], Y[ 0 ] };
@@ -331,9 +346,32 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
                 int w1 = orient2d(v2, v0, p);
                 int w2 = orient2d(v0, v1, p);
 
-                // If p is on or inside all edges, render pixel.
-                if( ( w0 | w1 | w2 ) >= 0 )
-                    rt.rgba[ p.y * rt.width + p.x ].rgba = ~0u;
+                // If p is on or inside all edges, run pixel shader.
+                if( ( w0 | w1 | w2 ) >= 0 ) {
+                    //rt.rgba[ p.y * rt.width + p.x ].rgba = ~0u;
+                    __m128_union input[ VARYINGS_PER_VERTEX ];
+                    for( u32 i = 0; i < VARYINGS_PER_VERTEX; i++ ){
+                        input[ i ].f = Interpolate( w0, w1, w2, invDoubleArea,
+                                                    varyings[ VARYINGS_PER_VERTEX * 0 + i ],
+                                                    varyings[ VARYINGS_PER_VERTEX * 1 + i ],
+                                                    varyings[ VARYINGS_PER_VERTEX * 2 + i ]
+                                                    );
+                    }
+
+                    __m128_union output;
+                    Registers psRegs;
+                    psRegs.IR = input;
+                    psRegs.OR = &output;
+                    psRegs.CR = constants;
+                    psRegs.GPR = GPR;
+                    Execute( psRegs, ps );
+
+                    RGBA& rgba = rt.rgba[ p.y * rt.width + p.x ];
+                    rgba.r = output.m128_f32[ 0 ] * 255.0f;
+                    rgba.g = output.m128_f32[ 1 ] * 255.0f;
+                    rgba.b = output.m128_f32[ 2 ] * 255.0f;
+                    rgba.a = output.m128_f32[ 3 ] * 255.0f;
+                }
             }
         }
     }
@@ -357,6 +395,16 @@ void DrawTest()
     vsPtr->src0Swizzle.swizzle = 0b11100100;
     vsPtr++;
 
+    vsPtr->op = OP_MOV;
+    vsPtr->dst = 1;
+    vsPtr->dstType = REGISTER_OR;
+    vsPtr->dstSwizzle.swizzle = 0b11100100;
+    vsPtr->dstSwizzle.activeNum = 4;
+    vsPtr->src0 = 1;
+    vsPtr->src0Type = REGISTER_IR;
+    vsPtr->src0Swizzle.swizzle = 0b11100100;
+    vsPtr++;
+
     vsPtr->op = OP_RET;
     vsPtr->dst = 0;
     vsPtr->dstType = REGISTER_GPR;
@@ -369,12 +417,42 @@ void DrawTest()
     vs.instructions = &vsInsts[ 0 ];
     vs.instructionsNum = 2;
 
-    VertexBuffer vb( 3, 1 );
-    vb.vb[ 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  0.0f );
-    vb.vb[ 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vb[ 2 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
+    VertexBuffer vb( 3, 2 );
+    vb.vb[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  0.0f );
+    vb.vb[ 0 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  0.0f,  1.0f );
 
-    Draw( nullptr, vs, vb, image );
+    vb.vb[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
+    vb.vb[ 1 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
+
+    vb.vb[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
+    vb.vb[ 2 * 2 + 1 ].f = _mm_set_ps( 1.0f, 1.0f,  0.0f,  0.0f );
+
+    Instruction psInsts[ 8 ];
+    Instruction* psPtr = &psInsts[ 0 ];
+
+    psPtr->op = OP_MOV;
+    psPtr->dst = 0;
+    psPtr->dstType = REGISTER_OR;
+    psPtr->dstSwizzle.swizzle = 0b11100100;
+    psPtr->dstSwizzle.activeNum = 4;
+    psPtr->src0 = 1;
+    psPtr->src0Type = REGISTER_IR;
+    psPtr->src0Swizzle.swizzle = 0b11100100;
+    psPtr++;
+
+    psPtr->op = OP_RET;
+    psPtr->dst = 0;
+    psPtr->dstType = REGISTER_GPR;
+    psPtr->src0 = 0;
+    psPtr->src0Type = REGISTER_GPR;
+    psPtr->src1 = 0;
+    psPtr->src1Type = REGISTER_GPR;
+
+    Shader ps;
+    ps.instructions = &psInsts[ 0 ];
+    ps.instructionsNum = 2;
+
+    Draw( nullptr, vs, vb, ps, image );
     save_png( "test.png", image );
 }
 
