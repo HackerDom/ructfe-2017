@@ -1,6 +1,7 @@
 import pymysql
 
 from config import CONNECTION_PARAMS
+from utils import Singleton
 
 
 class InsertQuery:
@@ -13,8 +14,9 @@ class InsertQuery:
 
 
 class GetAllQuery:
-    def __init__(self, tbl_name):
-        self.query = "SELECT * FROM {tbl_name};".format(
+    def __init__(self, tbl_name, field_names):
+        self.query = "SELECT {field_names} FROM {tbl_name};".format(
+            field_names=', '.join(field_names),
             tbl_name=tbl_name,
         )
 
@@ -28,20 +30,12 @@ class CreateTableIfNotExistsQuery:
 
 
 class FilterQuery:
-    def __init__(self, tbl_name, filter_fields):
-        self.query = "SELECT * FROM {tbl_name} WHERE {filter_fields};".format(
+    def __init__(self, tbl_name, field_names, filter_fields):
+        self.query = "SELECT {field_names} FROM {tbl_name} WHERE {filter_fields};".format(
+            field_names=', '.join(field_names),
             tbl_name=tbl_name,
             filter_fields=' AND '.join("{}='{}'".format(*filter_field) for filter_field in filter_fields.items())
         )
-
-
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class DBClient(metaclass=Singleton):

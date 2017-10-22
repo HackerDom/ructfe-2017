@@ -1,20 +1,7 @@
-import pickle
-
-from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery
 from config import TORRENT_FILES_TABLE_NAME
+from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery
 
 db_client = DBClient()
-
-
-def cached_method(func):
-    memory = {}
-
-    def mem_func(*args, **kwargs):
-        args_string = pickle.dumps((args, sorted(kwargs.items())))
-        if args_string not in memory:
-            memory[hash] = func(*args, **kwargs)
-        return memory[hash]
-    return mem_func
 
 
 class ValidationError(Exception):
@@ -37,18 +24,25 @@ class IntField:
 
 
 class Model:
-    def __init__(self, field_values):
-        field_names = sorted(type(self).get_fields())
+    @classmethod
+    def make_from_field_values(cls, field_values):
+        field_names = sorted(cls.get_fields().keys())
+        model_object = cls()
         for field_name, field_value in zip(field_names, field_values):
-            setattr(self, field_name, field_value)
+            setattr(model_object, field_name, field_value)
+        return model_object
 
     @classmethod
     @cached_method
     def get_fields(cls):
-        return dict(field for field in cls.__dict__.items()
-                    if (not field[0].startswith("__")) and
-                    (not field[0].endswith("__")) and
-                    not callable(getattr(cls, field[0])))
+        fields = (field for field in cls.__dict__.items() if (not field[0].startswith("__")) and
+                  (not field[0].endswith("__")) and not callable(getattr(cls, field[0])))
+        return dict(fields)
+
+    @classmethod
+    @cached_method
+    def get_field_names(cls):
+        return sorted(cls.get_fields().keys())
 
     @classmethod
     def validate(cls, fields, check_required=True):
@@ -92,6 +86,7 @@ class Model:
             field_names=field_names_param,
             values=field_values_param,
         ).query
+        # print(insert_query)
         with db_client.connection.cursor() as cursor:
             cursor.execute(insert_query)
         db_client.connection.commit()
@@ -102,17 +97,22 @@ class Model:
     @classmethod
     def all(cls):
         cls.create_table_if_not_exists()
-        get_all_query = GetAllQuery(tbl_name=cls.table_name()).query
+        get_all_query = GetAllQuery(tbl_name=cls.table_name(), field_names=cls.get_field_names()).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(get_all_query)
-            return list(cursor.fetchall())
+            object_tuples = cursor.fetchall()
+            return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
 
     @classmethod
     def filter(cls, **fields):
         cls.validate(fields, check_required=False)
         cls.create_table_if_not_exists()
-        filter_query = FilterQuery(tbl_name=cls.table_name(), filter_fields=fields).query
+        filter_query = FilterQuery(
+            tbl_name=cls.table_name(),
+            field_names=sorted(cls.get_fields().keys()),
+            filter_fields=fields
+        ).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(filter_query)
             object_tuples = cursor.fetchall()
-            return [cls(object_tuple) for object_tuple in object_tuples]
+            return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
