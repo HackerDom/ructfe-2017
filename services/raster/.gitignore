@@ -2,5 +2,9 @@ raster-dbg
 *.pro
 *.pro.user
 *.png
+compiler
+disasm
+test.vs
+test.vs.bin
 
 
