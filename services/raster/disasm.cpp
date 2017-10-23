@@ -2,19 +2,6 @@
 #include <string.h>
 #include "types.h"
 
-//
-const char* g_opToStr[] = {
-    "inv",
-    "set",
-    "add",
-    "sub",
-    "mul",
-    "div",
-    "dot",
-    "mov",
-    "ret"
-};
-
 
 //
 char SwizzleToChar( u8 s ) {
@@ -52,16 +39,24 @@ void DumpRegister( REGISTER_TYPE type, u32 idx, Swizzle swizzle ) {
 
 //
 int main( int argc, char* argv[] ) {
+	if( argc < 2 ) {
+		printf( "./disasm <input>\n" );
+		return 1;
+	}
     Shader shader( argv[ 1 ] );
+	if( !shader.instructions ) {
+		printf( "Invalid shader\n" );
+		return 1;
+	}
 
     printf( "Instructions num: %u\n", shader.header.instructionsNum );
-    if( shader.header.type == 0 ) {
+    if( shader.header.type == SHADER_VERTEX ) {
         printf( "VS flags:\n" );
         printf( "\tVS_VARYINGS_NUM = %u\n", shader.header.vs.varyingsNum );
     }
-    if( shader.header.type == 1 ) {
+    if( shader.header.type == SHADER_PIXEL ) {
         printf( "PS flags:\n" );
-        printf( "\tPS_INTEGER_OUTPUT = %u\n", shader.header.ps.integerOutput );
+		printf( "\t\n" );
     }
 
     //

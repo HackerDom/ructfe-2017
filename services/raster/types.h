@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <xmmintrin.h>
-#include <smmintrin.h>
 #include <malloc.h>
 
 using u8    = uint8_t;
@@ -37,22 +36,42 @@ union __m128_union
 };
 
 
+//
+#define OPS_DEFINE( YOUR_DEFINE ) \
+	YOUR_DEFINE( OP_SET,  	"set"   ) \
+	YOUR_DEFINE( OP_SETI, 	"seti"	) \
+    YOUR_DEFINE( OP_ADD,	"add"	) \
+	YOUR_DEFINE( OP_ADDI,	"addi"	) \
+    YOUR_DEFINE( OP_SUB,	"sub"	) \
+	YOUR_DEFINE( OP_SUBI,	"subi"	) \
+    YOUR_DEFINE( OP_MUL,	"mul"	) \
+    YOUR_DEFINE( OP_DIV,	"div"	) \
+    YOUR_DEFINE( OP_DOT,	"dot"	) \
+    YOUR_DEFINE( OP_MOV,	"mov"	) \
+	YOUR_DEFINE( OP_CVTFI,	"cvtfi"	) \
+	YOUR_DEFINE( OP_CVTIF,	"cvtif"	) \
+    YOUR_DEFINE( OP_RET,	"ret" )
+
+
 enum OP
 {
     OP_INVALID = 0,
-    OP_SET,
-    OP_ADD,
-    OP_SUB,
-    OP_MUL,
-    OP_DIV,
-    OP_DOT,
-    OP_MOV,
-
-    OP_RET,
-
+#define DEFINE_OP( ENUM_MEMBER, STR ) ENUM_MEMBER,
+	OPS_DEFINE( DEFINE_OP )
+	
     OP_COUNT
 };
 
+
+//
+static const char* g_opToStr[] = {
+	"inv",
+#define DEFINE_OPTOSTR( ENUM_MEMBER, STR ) STR,	
+	OPS_DEFINE( DEFINE_OPTOSTR )
+};
+
+
+//
 enum REGISTER_TYPE
 {
     REGISTER_IR = 0,
@@ -63,6 +82,8 @@ enum REGISTER_TYPE
     REGISTER_TYPES_NUM
 };
 
+
+//
 struct Swizzle
 {
     union
@@ -85,6 +106,8 @@ struct Swizzle
     }
 };
 
+
+//
 struct Instruction
 {
     OP op;
@@ -114,6 +137,14 @@ static_assert( sizeof( Instruction ) == 28, "" );
 
 
 //
+enum ShaderType : u32
+{
+	SHADER_VERTEX = 0,
+	SHADER_PIXEL
+};
+
+
+//
 struct Shader
 {
     Instruction* instructions;
@@ -122,7 +153,7 @@ struct Shader
     {
         struct
         {
-            u32 type : 1;
+            ShaderType type : 1;
             u32 instructionsNum : 16;
         };
         union
@@ -134,8 +165,7 @@ struct Shader
             } vs;
             struct
             {
-                u32 integerOutput : 1;
-                u32 padding : 31;
+                u32 padding : 32;
             } ps;
             u32 flags;
         };
@@ -145,13 +175,17 @@ struct Shader
     Shader()
         : instructions( nullptr )
     {
-        header.type = 0;
+        header.type = SHADER_VERTEX;
         header.instructionsNum = 0;
         header.flags = 0;
     }
 
-    Shader( const char* fileName ) {
+    Shader( const char* fileName ) 
+		: Shader()
+	{
         FILE* f = fopen( fileName, "r" );
+		if( !f )
+			return;
         //
         fread( &header, sizeof( Header ), 1, f );
         //

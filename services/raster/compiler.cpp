@@ -4,19 +4,6 @@
 #include <vector>
 #include "types.h"
 
-//
-const char* g_opToStr[] = {
-    "inv",
-    "set",
-    "add",
-    "sub",
-    "mul",
-    "div",
-    "dot",
-    "mov",
-    "ret"
-};
-
 
 //
 u8 CharToSwizzle( char c ) {
@@ -66,8 +53,10 @@ void ParseRegister( const std::string& str, REGISTER_TYPE& type, u32& idx, Swizz
 
 //
 int main( int argc, char* argv[] ) {
-    if( argc < 4 )
+    if( argc < 4 ) {
+		printf( "./compiler <vs|ps> <input> <output>\n" );
         return 1;
+	}
 
     const char* type = argv[ 1 ];
     const char* input = argv[ 2 ];
@@ -76,9 +65,9 @@ int main( int argc, char* argv[] ) {
     //
     Shader::Header header;
     if( strcmp( type, "vs" ) == 0 )
-        header.type = 0;
+        header.type = SHADER_VERTEX;
     else if( strcmp( type, "ps" ) == 0 )
-        header.type = 1;
+        header.type = SHADER_PIXEL;
     else {
         printf( "Invalid shader type\n" );
         return 1;
@@ -99,11 +88,6 @@ int main( int argc, char* argv[] ) {
             u32 varyingsNum;
             infile >> varyingsNum;
             header.vs.varyingsNum = varyingsNum;
-            continue;
-        }
-
-        if( opStr.compare( "PS_INTEGER_OUTPUT" ) == 0 ) {
-            header.ps.integerOutput = 1;
             continue;
         }
 
