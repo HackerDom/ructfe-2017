@@ -5,5 +5,6 @@ CONNECTION_PARAMS = {
     'port': 3306,
     'user': 'root',
     'passwd': 'kepler',
-    'db': 'pirate_bay',
 }
+
+DATABASE_NAME = 'pirate_bay'

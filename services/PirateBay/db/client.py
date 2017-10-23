@@ -1,6 +1,6 @@
 import pymysql
 
-from config import CONNECTION_PARAMS
+from config import CONNECTION_PARAMS, DATABASE_NAME
 from utils import Singleton
 
 
@@ -39,6 +39,11 @@ class FilterQuery:
 
 
 class DBClient(metaclass=Singleton):
+    def use(self, db_name=DATABASE_NAME):
+        self.connection.close()
+        CONNECTION_PARAMS['db'] = db_name
+        self.connection = pymysql.connect(**CONNECTION_PARAMS)
+
     def __init__(self):
         self.connection = pymysql.connect(**CONNECTION_PARAMS)
 
