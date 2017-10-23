@@ -71,66 +71,60 @@ void StoreRegister( const Registers& registers, u32 regType, u32 regIdx, Swizzle
 
 //
 bool Execute( const Registers& registers, const Shader& shader ) {
-
-    for( u32 ip = 0; ip < shader.header.instructionsNum; ip++ )
-    {
+    for( u32 ip = 0; ip < shader.header.instructionsNum; ip++ ) {
         Instruction& i = shader.instructions[ ip ];
 		__m128_union src0, src1, result;
-		
-		if( i.op == OP_INVALID ) {
-#if DEBUG
-            printf( "Invalid op\n" );
-#endif
-            return false;
-		} else if( i.op == OP_SET || i.op == OP_SETI ) {
-            f32* floats = ( ( f32* )&i ) + 3; // skip op and dst
-			result.f = _mm_set_ps( floats[ 3 ], floats[ 2 ], floats[ 1 ], floats[ 0 ] );
-			StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
-        } else if( i.op == OP_RET ) {
-			return true;
-        } else if( i.op == OP_MOV ) {
-			LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
-            StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, src0 );
-		} else if( i.op == OP_CVTFI ) {
-			LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
-			result.i = _mm_cvtps_epi32( src0 );
-            StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
-		} else if( i.op == OP_CVTIF ) {
-			LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
-			result.f = _mm_cvtepi32_ps( src0.i );
-            StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
-		} else {
-			LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+
+        if( g_opOperands[ i.op ] & OPERAND_SRC0 )
+            LoadRegister( src0, registers, i.src0Type, i.src0, i.src0Swizzle );
+        if( g_opOperands[ i.op ] & OPERAND_SRC1 )
             LoadRegister( src1, registers, i.src1Type, i.src1, i.src1Swizzle );
-			
-			switch( i.op )
-			{
-				case OP_ADD:  result.f = _mm_add_ps   ( src0.f, src1.f ); break;
-				case OP_ADDI: result.i = _mm_add_epi32( src0.i, src1.i ); break;
-				case OP_SUB:  result.f = _mm_sub_ps   ( src0.f, src1.f ); break;
-				case OP_SUBI: result.i = _mm_sub_epi32( src0.i, src1.i ); break;
-				case OP_MUL:  result.f = _mm_mul_ps   ( src0.f, src1.f ); break;
-				case OP_DIV:  result.f = _mm_div_ps   ( src0.f, src1.f ); break;
-				case OP_DOT:
-					{
+
+        switch( i.op )
+        {
+            case OP_INVALID:
 #if DEBUG
-						if( i.src0Swizzle.activeNum != i.src1Swizzle.activeNum ) {
-							printf( "i.src0Swizzle.activeNum != i.src1Swizzle.activeNum\n" );
-							return false;
-						}
+                printf( "Invalid op\n" );
 #endif
-						__m128_union tmp;
-						tmp.f = _mm_mul_ps( src0, src1 );
-						f32 dot = 0.0f;
-						for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
-							dot += tmp.m128_f32[ j ];
-						result.f = _mm_set_ps1( dot );
-					}
-					break;
-			}
-		
-			StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
-		}
+                return false;
+                break;
+            case OP_SET:
+            case OP_SETI:
+                {
+                    f32* floats = ( ( f32* )&i ) + 3; // skip op and dst
+                    result.f = _mm_set_ps( floats[ 3 ], floats[ 2 ], floats[ 1 ], floats[ 0 ] );
+                }
+                break;
+            case OP_ADD:  result.f = _mm_add_ps   ( src0.f, src1.f ); break;
+            case OP_ADDI: result.i = _mm_add_epi32( src0.i, src1.i ); break;
+            case OP_SUB:  result.f = _mm_sub_ps   ( src0.f, src1.f ); break;
+            case OP_SUBI: result.i = _mm_sub_epi32( src0.i, src1.i ); break;
+            case OP_MUL:  result.f = _mm_mul_ps   ( src0.f, src1.f ); break;
+            case OP_DIV:  result.f = _mm_div_ps   ( src0.f, src1.f ); break;
+            case OP_DOT:
+                {
+#if DEBUG
+                    if( i.src0Swizzle.activeNum != i.src1Swizzle.activeNum ) {
+                        printf( "i.src0Swizzle.activeNum != i.src1Swizzle.activeNum\n" );
+                        return false;
+                    }
+#endif
+                    __m128_union tmp;
+                    tmp.f = _mm_mul_ps( src0, src1 );
+                    f32 dot = 0.0f;
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        dot += tmp.m128_f32[ j ];
+                    result.f = _mm_set_ps1( dot );
+                }
+                break;
+            case OP_MOV:   result = src0; break;
+            case OP_CVTFI: result.i = _mm_cvtps_epi32( src0 ); break;
+            case OP_CVTIF: result.f = _mm_cvtepi32_ps( src0.i ); break;
+            case OP_RET: return true;
+        }
+
+        if( g_opOperands[ i.op ] & OPERAND_DST )
+            StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
     }
 
     return true;
@@ -204,7 +198,7 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
             Execute( vsRegs, vs );
 
             // o0 is always position, so perform perspective divide on it
-            __m128_union pos = vsRegs.OR[ 0 ];
+            __m128_union& pos = vsRegs.OR[ 0 ];
             __m128_union w;
             w.f = _mm_shuffle_ps( pos, pos, 0xFF );
             pos.f = _mm_div_ps( pos, w );
@@ -266,7 +260,7 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
 					rgba.r = output.m128_u32[ 0 ];
 					rgba.g = output.m128_u32[ 1 ];
 					rgba.b = output.m128_u32[ 2 ];
-					rgba.a = output.m128_u32[ 3 ];
+                    rgba.a = output.m128_u32[ 3 ];
                 }
             }
         }

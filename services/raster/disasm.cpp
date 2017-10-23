@@ -64,20 +64,22 @@ int main( int argc, char* argv[] ) {
         Instruction& inst = shader.instructions[ i ];
 
         printf( "%s ", g_opToStr[ inst.op ] );
-        if( inst.op == OP_SET ) {
+        if( g_opOperands[ inst.op ] & OPERAND_DST )
             DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
+        if( g_opOperands[ inst.op ] & OPERAND_SRC0 )
+            DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
+        if( g_opOperands[ inst.op ] & OPERAND_SRC1 )
+            DumpRegister( ( REGISTER_TYPE )inst.src1Type, inst.src1, inst.src1Swizzle );
 
+        if( inst.op == OP_SET ) {
             f32* floats = ( ( f32* )&inst ) + 3;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
                 printf( "%f ", floats[ i ] );
-        } else if( inst.op == OP_RET ) {
-        } else if( inst.op == OP_MOV ) {
-            DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
-            DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
-        } else {
-            DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
-            DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
-            DumpRegister( ( REGISTER_TYPE )inst.src1Type, inst.src1, inst.src1Swizzle );
+        }
+        if( inst.op == OP_SETI ) {
+            i32* ints = ( ( i32* )&inst ) + 3;
+            for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
+                printf( "%i ", ints[ i ] );
         }
         printf( "\n" );
     }

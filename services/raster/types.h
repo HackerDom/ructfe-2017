@@ -37,27 +37,37 @@ union __m128_union
 
 
 //
+enum OPERANDS
+{
+    OPERAND_DST  = 1 << 0,
+    OPERAND_SRC0 = 1 << 1,
+    OPERAND_SRC1 = 1 << 2,
+};
+
+
+//
 #define OPS_DEFINE( YOUR_DEFINE ) \
-	YOUR_DEFINE( OP_SET,  	"set"   ) \
-	YOUR_DEFINE( OP_SETI, 	"seti"	) \
-    YOUR_DEFINE( OP_ADD,	"add"	) \
-	YOUR_DEFINE( OP_ADDI,	"addi"	) \
-    YOUR_DEFINE( OP_SUB,	"sub"	) \
-	YOUR_DEFINE( OP_SUBI,	"subi"	) \
-    YOUR_DEFINE( OP_MUL,	"mul"	) \
-    YOUR_DEFINE( OP_DIV,	"div"	) \
-    YOUR_DEFINE( OP_DOT,	"dot"	) \
-    YOUR_DEFINE( OP_MOV,	"mov"	) \
-	YOUR_DEFINE( OP_CVTFI,	"cvtfi"	) \
-	YOUR_DEFINE( OP_CVTIF,	"cvtif"	) \
-    YOUR_DEFINE( OP_RET,	"ret" )
+    YOUR_DEFINE( OP_SET,  	"set"   , OPERAND_DST ) \
+    YOUR_DEFINE( OP_SETI, 	"seti"	, OPERAND_DST ) \
+    YOUR_DEFINE( OP_ADD,	"add"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_ADDI,	"addi"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_SUB,	"sub"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_SUBI,	"subi"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_MUL,	"mul"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_DIV,	"div"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_DOT,	"dot"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_MOV,	"mov"	, OPERAND_DST | OPERAND_SRC0 ) \
+    YOUR_DEFINE( OP_CVTFI,	"cvtfi"	, OPERAND_DST | OPERAND_SRC0 ) \
+    YOUR_DEFINE( OP_CVTIF,	"cvtif"	, OPERAND_DST | OPERAND_SRC0 ) \
+    YOUR_DEFINE( OP_RET,	"ret"   , 0 )
 
 
 enum OP
 {
     OP_INVALID = 0,
-#define DEFINE_OP( ENUM_MEMBER, STR ) ENUM_MEMBER,
+#define DEFINE_OP( ENUM_MEMBER, STR, OPERANDS_MASK ) ENUM_MEMBER,
 	OPS_DEFINE( DEFINE_OP )
+#undef DEFINE_OP
 	
     OP_COUNT
 };
@@ -66,8 +76,18 @@ enum OP
 //
 static const char* g_opToStr[] = {
 	"inv",
-#define DEFINE_OPTOSTR( ENUM_MEMBER, STR ) STR,	
+#define DEFINE_OPTOSTR( ENUM_MEMBER, STR, OPERANDS_MASK ) STR,
 	OPS_DEFINE( DEFINE_OPTOSTR )
+#undef DEFINE_OPTOSTR
+};
+
+
+//
+static u32 g_opOperands[] = {
+    0,
+#define DEFINE_OPERANDS_MASK( ENUM_MEMBER, STR, OPERANDS_MASK ) OPERANDS_MASK,
+    OPS_DEFINE( DEFINE_OPERANDS_MASK )
+#undef DEFINE_OPTOSTR
 };
 
 

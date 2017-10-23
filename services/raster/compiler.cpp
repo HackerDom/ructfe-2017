@@ -91,6 +91,7 @@ int main( int argc, char* argv[] ) {
             continue;
         }
 
+        inst.op = OP_INVALID;
         for( u32 i = 0; i < OP_COUNT; i++ ){
             if( opStr.compare( g_opToStr[ i ] ) == 0 ) {
                 inst.op = ( OP )i;
@@ -98,67 +99,45 @@ int main( int argc, char* argv[] ) {
             }
         }
 
-        //
-        switch ( inst.op )
-        {
-            // 3 operands instructions
-            case OP_ADD:
-            case OP_SUB:
-            case OP_MUL:
-            case OP_DIV:
-            case OP_DOT:
-                {
-                    std::string dst, src0, src1;
-                    infile >> dst;
-                    infile >> src0;
-                    infile >> src1;
-                    REGISTER_TYPE regType;
-                    u32 reg;
-                    ParseRegister( dst,  regType, reg, inst.dstSwizzle );
-                    inst.dst = reg;
-                    inst.dstType = regType;
-                    ParseRegister( src0, regType, reg, inst.src0Swizzle );
-                    inst.src0 = reg;
-                    inst.src0Type = regType;
-                    ParseRegister( src1, regType, reg, inst.src1Swizzle );
-                    inst.src1 = reg;
-                    inst.src1Type = regType;
-                }
-                break;
+        if( inst.op == OP_INVALID ) {
+            printf( "Invalid op: %s\n", opStr.c_str() );
+            return 1;
+        }
 
-            case OP_MOV:
-                {
-                    std::string dst, src0;
-                    infile >> dst;
-                    infile >> src0;
-                    REGISTER_TYPE regType;
-                    u32 reg;
-                    ParseRegister( dst,  regType, reg, inst.dstSwizzle );
-                    inst.dst = reg;
-                    inst.dstType = regType;
-                    ParseRegister( src0, regType, reg, inst.src0Swizzle );
-                    inst.src0 = reg;
-                    inst.src0Type = regType;
-                }
-                break;
+        std::string str;
+        REGISTER_TYPE regType;
+        u32 reg;
+        if( g_opOperands[ inst.op ] & OPERAND_DST ) {
+            infile >> str;
+            ParseRegister( str,  regType, reg, inst.dstSwizzle );
+            inst.dst = reg;
+            inst.dstType = regType;
+        }
 
-            case OP_SET:
-                {
-                    std::string dst;
-                    infile >> dst;
-                    REGISTER_TYPE regType;
-                    u32 reg;
-                    ParseRegister( dst,  regType, reg, inst.dstSwizzle );
-                    inst.dst = reg;
-                    inst.dstType = regType;
-                    f32* floats = ( ( f32* )&inst ) + 3;
-                    for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                        infile >> floats[ i ];
-                }
-                break;
+        if( g_opOperands[ inst.op ] & OPERAND_SRC0 ) {
+            infile >> str;
+            ParseRegister( str,  regType, reg, inst.src0Swizzle );
+            inst.src0 = reg;
+            inst.src0Type = regType;
+        }
 
-            default:
-                break;
+        if( g_opOperands[ inst.op ] & OPERAND_SRC1 ) {
+            infile >> str;
+            ParseRegister( str,  regType, reg, inst.src1Swizzle );
+            inst.src1 = reg;
+            inst.src1Type = regType;
+        }
+
+        if( inst.op == OP_SET ) {
+            f32* floats = ( ( f32* )&inst ) + 3;
+            for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
+                infile >> floats[ i ];
+        }
+
+        if( inst.op == OP_SETI ) {
+            i32* ints = ( ( i32* )&inst ) + 3;
+            for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
+                infile >> ints[ i ];
         }
 
         insts.push_back( inst );
