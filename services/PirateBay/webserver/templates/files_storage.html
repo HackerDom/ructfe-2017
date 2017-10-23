@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Torrent files</title>
 </head>
 <body>
     <div align="center">
@@ -13,6 +13,7 @@
                 <th>length</th>
                 <th>name</th>
                 <th>type</th>
+                <th>upload by</th>
             </tr>
             {% for file in files %}
             <tr>
@@ -20,6 +21,7 @@
                 <td>{{file.length}}</td>
                 <td>{{file.name}}</td>
                 <td>{{file.type}}</td>
+                <td>{{file.upload_by}}</td>
             </tr>
             {% endfor %}
         </table>
