@@ -153,7 +153,27 @@ struct Instruction
     };
     Swizzle src1Swizzle;
 };
+
+
+//
+struct SetInstruction
+{
+    OP op;
+    // dst register
+    struct
+    {
+        u32 dstType : 2;
+        u32 dst : 30;
+    };
+    Swizzle dstSwizzle;
+    union
+    {
+        f32 floats[ 4 ];
+        i32 ints[ 4 ];
+    };
+};
 static_assert( sizeof( Instruction ) == 28, "" );
+static_assert( sizeof( SetInstruction ) == 28, "" );
 
 
 //

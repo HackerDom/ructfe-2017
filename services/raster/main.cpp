@@ -29,19 +29,17 @@ struct VertexBuffer
 
 
 //
-struct Registers
+union Registers
 {
-    union
+    struct
     {
-        struct
-        {
-            __m128_union* IR; // input registers
-            __m128_union* OR; // output registers
-            __m128_union* CR; // constant registers
-            __m128_union* GPR; // general purpose registers
-        };
-        __m128_union* regs[ REGISTER_TYPES_NUM ];
+        __m128_union* IR; // input registers
+        __m128_union* OR; // output registers
+        __m128_union* CR; // constant registers
+        __m128_union* GPR; // general purpose registers
+
     };
+    __m128_union* regs[ REGISTER_TYPES_NUM ];
 };
 
 
@@ -91,8 +89,8 @@ bool Execute( const Registers& registers, const Shader& shader ) {
             case OP_SET:
             case OP_SETI:
                 {
-                    f32* floats = ( ( f32* )&i ) + 3; // skip op and dst
-                    result.f = _mm_set_ps( floats[ 3 ], floats[ 2 ], floats[ 1 ], floats[ 0 ] );
+                    SetInstruction seti = *( SetInstruction* )&i;
+                    result.f = _mm_set_ps( seti.floats[ 3 ], seti.floats[ 2 ], seti.floats[ 1 ], seti.floats[ 0 ] );
                 }
                 break;
             case OP_ADD:  result.f = _mm_add_ps   ( src0.f, src1.f ); break;

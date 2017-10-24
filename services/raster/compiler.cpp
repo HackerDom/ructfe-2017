@@ -129,15 +129,15 @@ int main( int argc, char* argv[] ) {
         }
 
         if( inst.op == OP_SET ) {
-            f32* floats = ( ( f32* )&inst ) + 3;
+            SetInstruction* setInst = ( SetInstruction* )&inst;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                infile >> floats[ i ];
+                infile >> setInst->floats[ i ];
         }
 
         if( inst.op == OP_SETI ) {
-            i32* ints = ( ( i32* )&inst ) + 3;
+            SetInstruction* setInst = ( SetInstruction* )&inst;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                infile >> ints[ i ];
+                infile >> setInst->ints[ i ];
         }
 
         insts.push_back( inst );

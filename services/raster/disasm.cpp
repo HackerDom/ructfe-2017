@@ -72,14 +72,14 @@ int main( int argc, char* argv[] ) {
             DumpRegister( ( REGISTER_TYPE )inst.src1Type, inst.src1, inst.src1Swizzle );
 
         if( inst.op == OP_SET ) {
-            f32* floats = ( ( f32* )&inst ) + 3;
+            SetInstruction* setInst = ( SetInstruction* )&inst;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                printf( "%f ", floats[ i ] );
+                printf( "%f ", setInst->floats[ i ] );
         }
         if( inst.op == OP_SETI ) {
-            i32* ints = ( ( i32* )&inst ) + 3;
+            SetInstruction* setInst = ( SetInstruction* )&inst;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                printf( "%i ", ints[ i ] );
+                printf( "%i ", setInst->ints[ i ] );
         }
         printf( "\n" );
     }
