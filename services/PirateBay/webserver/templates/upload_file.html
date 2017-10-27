@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/sea.css">
+    <link rel="stylesheet" href="css/upload_form.css">
+    <script src="js/upload_form.js"></script>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">Home</a>
+        <a href="/signout">Sign out</a>
+        <a href="/storage">Files</a>
+        <p>Hello, {{ authed }}!</p>
+    </div>
+<form action="upload" method="post" enctype="multipart/form-data">
+    <input type="file" id="upload_file" name="upload_file">
+    <p id="mess">Drag your files here or click in this area.</p>
+    <button type="submit">Upload</button>
+</form>
+</body>
+</html>

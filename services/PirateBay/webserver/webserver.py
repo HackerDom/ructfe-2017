@@ -10,13 +10,6 @@ from db.model import Model, TextField
 from torrent_format.torrent_file import TorrentFileInfo
 from utils import generate_uid
 
-TEMPLATES = [
-    'main',
-    'signup',
-    'signin',
-    'files_storage',
-]
-
 
 def get_sha512(data: bytes):
     hasher = sha512()
@@ -65,8 +58,8 @@ class Cookie:
 
 def load_templates():
     templates_dict = {}
-    for template_name in TEMPLATES:
-        with open('webserver/templates/{}.html'.format(template_name)) as template_file:
+    for template_name in os.listdir('webserver/templates'):
+        with open('webserver/templates/{}'.format(template_name)) as template_file:
             templates_dict[template_name] = Template(template_file.read())
     return templates_dict
 
@@ -134,7 +127,7 @@ class RequestHandler:
             set_cookie(login, password)
             raise cherrypy.HTTPRedirect('/')
         except UserError as user_error:
-            return self.get_template('signin').render(message=user_error.error_message)
+            return self.get_template('signin.html').render(message=user_error.error_message)
 
     @cherrypy.expose
     def signup(self, login, password):
@@ -143,15 +136,15 @@ class RequestHandler:
             set_cookie(login, password)
             raise cherrypy.HTTPRedirect('/')
         except UserError as user_error:
-            return self.get_template('signup').render(message=user_error.error_message)
+            return self.get_template('signup.html').render(message=user_error.error_message)
 
     @cherrypy.expose
     def signup_page(self):
-        return self.get_template('signup').render()
+        return self.get_template('signup.html').render()
 
     @cherrypy.expose
     def signin_page(self):
-        return self.get_template('signin').render()
+        return self.get_template('signin.html').render()
 
     @cherrypy.expose
     def signout(self):
@@ -161,21 +154,18 @@ class RequestHandler:
     @cherrypy.expose
     def index(self):
         user = get_authorized_user()
-        if user is not None:
-            signedin = True
-            message = "Hello, {}!".format(user.login)
-        else:
-            signedin = False
-            message = "Sign in for upload file!"
-        return self.get_template('main').render(signedin=signedin, message=message)
+        authed = "" if user is None else user.login
+        return self.get_template('main.html').render(authed=authed)
 
     @cherrypy.expose
     def storage(self):
-        if get_authorized_user() is None:
+        user = get_authorized_user()
+        if user is None:
             raise cherrypy.HTTPRedirect('/')
-        return self.get_template('files_storage').render(
+        return self.get_template('files_storage.html').render(
             model_fields=TorrentFileInfo.get_field_names(),
             files=get_torrent_info_files(),
+            authed=user.login
         )
 
     @cherrypy.expose
@@ -189,6 +179,13 @@ class RequestHandler:
         user_login = get_authorized_user().login
         TorrentFileInfo(bytes(raw_torrent_info_file), upload_by=user_login).save()
         raise cherrypy.HTTPRedirect('/storage')
+
+    @cherrypy.expose
+    def upload_file(self):
+        user = get_authorized_user()
+        if user is None:
+            raise cherrypy.HTTPRedirect('/')
+        return self.get_template('upload_file.html').render(authed=user.login)
 
 
 def start_web_server():

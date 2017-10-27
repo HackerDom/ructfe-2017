@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Torrent files</title>
+    <link rel="stylesheet" href="css/sea.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/upload_form.js"></script>
 </head>
 <body>
-    <div align="center">
+    <div class="topbar">
         <a href="/">Home</a>
+        <a href="/signout">Sign out</a>
+        <a href="/upload_file">Upload file</a>
+        <p>Hello, {{ authed }}!</p>
+    </div>
+    <div>
         <table width="100%" border="1">
             <tr>
                 <th>announce</th>
@@ -25,13 +33,13 @@
             </tr>
             {% endfor %}
         </table>
-        <div>
-            <h2>Upload a file</h2>
-            <form action="upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="upload_file"/><br />
-                <input type="submit"/>
-            </form>
-        </div>
+        <!--<div>-->
+            <!--<form action="u" method="post" enctype="multipart/form-data">-->
+                <!--<input type="file" id="upload_file" name="upload_file">-->
+                <!--<p id="mess">Drag your files here or click in this area.</p>-->
+                <!--<button type="submit">Upload</button>-->
+            <!--</form>-->
+        <!--</div>-->
     </div>
 </body>
 </html>

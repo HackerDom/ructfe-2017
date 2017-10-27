@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sign up</title>
-</head>
-<body>
-    <div align="center">
-        <a href="/">Home</a>
-        <form action="signup">
-            <p style="color: red">{{ message }}</p>
-            <div>
-                <label><b>Email</b></label>
-                <input type="text" value="user" placeholder="Enter login" name="login" required>
-                <br>
-                <label><b>Password</b></label>
-                <input type="password" value="passw" placeholder="Enter Password" name="password" required>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/sea.css">
+        <title>Sign up</title>
+    </head>
+    <body>
+        <div class="topbar">
+            <a href="/">Home</a>
+            <a href="/signin_page">Sign in</a>
+        </div>
+        <div id="login">
+            <form name='form-login' action="signup">
                 <div>
-                    <button type="button">Cancel</button>
-                    <button type="submit">Sign Up</button>
+                    <span class="fontawesome-user"></span>
+                    <input type="text" name="login" placeholder="Username">
+                    <span class="fontawesome-lock"></span>
+                    <input type="password" name="password" placeholder="Password">
+                    <input type="submit" value="Create an account">
                 </div>
-            </div>
-        </form>
-    </div>
-</body>
+            </form>
+        </div>
+    </body>
 </html>
