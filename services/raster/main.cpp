@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <string.h>
 #include "types.h"
 #include "png.h"
 
@@ -9,21 +10,21 @@ struct VertexBuffer
 {
     u32 vertexNum;
     u32 vertexComponents;
-    __m128_union* vb;
+    __m128_union* vertices;
 
     VertexBuffer()
-        : vertexNum( 0 ), vertexComponents( 0 ), vb( nullptr )
+        : vertexNum( 0 ), vertexComponents( 0 ), vertices( nullptr )
     {}
 
     VertexBuffer( u32 vertexNum, u32 vertexComponents ) {
         this->vertexNum = vertexNum;
         this->vertexComponents = vertexComponents;
-        vb = ( __m128_union* )memalign( 16, vertexNum * vertexComponents * sizeof( __m128 ) );
+        vertices = ( __m128_union* )memalign( 16, vertexNum * vertexComponents * sizeof( __m128 ) );
     }
 
     ~VertexBuffer() {
-        if( !vb )
-            free( vb );
+        if( !vertices )
+            free( vertices );
     }
 };
 
@@ -37,7 +38,7 @@ union Registers
         __m128_union* OR; // output registers
         __m128_union* CR; // constant registers
         __m128_union* GPR; // general purpose registers
-
+        Image* const * TR; // texture registers
     };
     __m128_union* regs[ REGISTER_TYPES_NUM ];
 };
@@ -91,6 +92,24 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                 {
                     SetInstruction seti = *( SetInstruction* )&i;
                     result.f = _mm_set_ps( seti.floats[ 3 ], seti.floats[ 2 ], seti.floats[ 1 ], seti.floats[ 0 ] );
+                }
+                break;
+            case OP_TFETCH:
+                {
+                    TFetchInstruction tfetch = *( TFetchInstruction* )&i;
+                    Image* texture = registers.TR[ tfetch.textureReg ];
+                    if( !texture ) { // unbound texture
+                        result.i = _mm_set1_epi32( 0 );
+                    } else {
+                        __m128_union textureSize, texelPos;
+                        textureSize.f = _mm_cvtepi32_ps( _mm_set_epi32( 0, 0, texture->height, texture->width ) );
+                        texelPos.i = _mm_cvtps_epi32( _mm_mul_ps( src0.f, textureSize ) );
+                        // wrap sampling mode
+                        int x = texelPos.m128_i32[ 0 ] % texture->width;
+                        int y = texelPos.m128_i32[ 1 ] % texture->height;
+                        RGBA& rgba = texture->rgba[ y * texture->width + x ];
+                        result.i = _mm_set_epi32( rgba.a, rgba.b, rgba.g, rgba.r );
+                    }
                 }
                 break;
             case OP_ADD:  result.f = _mm_add_ps   ( src0.f, src1.f ); break;
@@ -157,28 +176,44 @@ __m128 Interpolate( int w0, int w1, int w2, float invDoubleArea, const __m128_un
 
 
 //
-void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, const Shader& ps, const Image& rt ) {
+struct PipelineState
+{
+     __m128_union* constants;
+     Image* textures[ 16 ];
+     VertexBuffer* vb;
+     Shader* vs;
+     Shader* ps;
+     Image* rt;
+
+     PipelineState() {
+         memset( this, 0, sizeof( PipelineState ) );
+     }
+};
+
+
+//
+void Draw( const PipelineState& pState ) {
     const u32 VARYINGS_PER_VERTEX = 4;
-    if( vs.header.type != SHADER_VERTEX )
+    if( pState.vs->header.type != SHADER_VERTEX )
         return;
-    if( ps.header.type != SHADER_PIXEL )
+    if( pState.ps->header.type != SHADER_PIXEL )
         return;
-    if( vs.header.vs.varyingsNum > VARYINGS_PER_VERTEX )
+    if( pState.vs->header.vs.varyingsNum > VARYINGS_PER_VERTEX )
         return;
 	
 	// viewport scale and offset
-	__m128 vpScale  = _mm_set_ps( 1.0f, 1.0f, -0.5f * rt.height, 0.5f * rt.width );
-	__m128 vpOffset = _mm_set_ps( 0.0f, 0.0f,  0.5f * rt.height, 0.5f * rt.width );
+    __m128 vpScale  = _mm_set_ps( 1.0f, 1.0f, -0.5f * pState.rt->height, 0.5f * pState.rt->width );
+    __m128 vpOffset = _mm_set_ps( 0.0f, 0.0f,  0.5f * pState.rt->height, 0.5f * pState.rt->width );
 
     __m128_union* GPR = ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
     // 4 varyings for each vertex of triangle
     __m128_union varyings[ VARYINGS_PER_VERTEX * 3 ];
 
-    u32 varyingsNum = std::max( ( u32 )vs.header.vs.varyingsNum, 1u );
+    u32 varyingsNum = std::max( ( u32 )pState.vs->header.vs.varyingsNum, 1u );
 
-    for( u32 t = 0; t < vb.vertexNum / 3; t++ ) {
+    for( u32 t = 0; t < pState.vb->vertexNum / 3; t++ ) {
         // vertex shader stage
-        __m128_union* vsInput = &vb.vb[ 3 * vb.vertexComponents * t ];
+        __m128_union* vsInput = &pState.vb->vertices[ 3 * pState.vb->vertexComponents * t ];
         i16 minX = 255;
         i16 minY = 255;
         i16 maxX = 0;
@@ -189,11 +224,12 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
         for( u32 v = 0; v < 3; v++ )
         {
             Registers vsRegs;
-            vsRegs.IR = &vsInput[ v * vb.vertexComponents ];
+            vsRegs.IR = &vsInput[ v * pState.vb->vertexComponents ];
             vsRegs.OR = &varyings[ VARYINGS_PER_VERTEX * v ];
-            vsRegs.CR = constants;
+            vsRegs.CR = pState.constants;
             vsRegs.GPR = GPR;
-            Execute( vsRegs, vs );
+            vsRegs.TR = pState.textures;
+            Execute( vsRegs, *pState.vs );
 
             // o0 is always position, so perform perspective divide on it
             __m128_union& pos = vsRegs.OR[ 0 ];
@@ -215,8 +251,8 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
         // clip againts screen
         minX = std::max( minX, i16( 0 ) );
         minY = std::max( minY, i16( 0 ) );
-        maxX = std::min( maxX, i16( rt.width - 1 ) );
-        maxY = std::min( maxY, i16( rt.height - 1 ) );
+        maxX = std::min( maxX, i16( pState.rt->width - 1 ) );
+        maxY = std::min( maxY, i16( pState.rt->height - 1 ) );
 
         // fixed function stage
         int doubleTriArea = (X[1] - X[0]) * (Y[2] - Y[0]) - (X[0] - X[2]) * (Y[0] - Y[1]);
@@ -250,11 +286,12 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
                     Registers psRegs;
                     psRegs.IR = input;
                     psRegs.OR = &output;
-                    psRegs.CR = constants;
+                    psRegs.CR = pState.constants;
                     psRegs.GPR = GPR;
-                    Execute( psRegs, ps );
+                    psRegs.TR = pState.textures;
+                    Execute( psRegs, *pState.ps );
 
-                    RGBA& rgba = rt.rgba[ p.y * rt.width + p.x ];
+                    RGBA& rgba = pState.rt->rgba[ p.y * pState.rt->width + p.x ];
 					rgba.r = output.m128_u32[ 0 ];
 					rgba.g = output.m128_u32[ 1 ];
 					rgba.b = output.m128_u32[ 2 ];
@@ -270,34 +307,78 @@ void Draw(  __m128_union* constants, const Shader& vs, const VertexBuffer& vb, c
 void DrawTest()
 {
     Image image( 256, 256 );
-    Shader vs( "shaders/test2.vs.bin" );
-    Shader ps( "shaders/test.ps.bin" );
+    Shader vs( "shaders/simple.vs.bin" );
+    Shader ps( "shaders/draw_test.ps.bin" );
 
     VertexBuffer vb( 6, 2 );
-    vb.vb[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vb[ 0 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  0.0f,  1.0f );
+    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
+    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  0.0f,  1.0f );
 
-    vb.vb[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vb[ 1 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
+    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
+    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
 
-    vb.vb[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vb[ 2 * 2 + 1 ].f = _mm_set_ps( 1.0f, 1.0f,  0.0f,  0.0f );
+    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
+    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 1.0f, 1.0f,  0.0f,  0.0f );
 
-    vb.vb[ 3 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vb[ 3 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  0.0f,  1.0f );
+    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
+    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
 
-    vb.vb[ 4 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vb[ 4 * 2 + 1 ].f = _mm_set_ps( 1.0f, 1.0f,  0.0f,  0.0f );
+    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
+    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
 
-    vb.vb[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vb[ 5 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
+    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
+    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
 
-    Draw( nullptr, vs, vb, ps, image );
+    PipelineState pState;
+    pState.vb = &vb;
+    pState.vs = &vs;
+    pState.ps = &ps;
+    pState.rt = &image;
+    Draw( pState );
     save_png( "test.png", image );
 }
+
+void TextureTest()
+{
+    Image image( 256, 256 );
+    Image texture;
+    read_png( "texture.png", texture );
+    Shader vs( "shaders/simple.vs.bin" );
+    Shader ps( "shaders/texture_test.ps.bin" );
+
+    VertexBuffer vb( 6, 2 );
+    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
+    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
+
+    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
+    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
+
+    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
+    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
+
+    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
+    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
+
+    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
+    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
+
+    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
+    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
+
+    PipelineState pState;
+    pState.vb = &vb;
+    pState.vs = &vs;
+    pState.textures[ 0 ] = &texture;
+    pState.ps = &ps;
+    pState.rt = &image;
+    Draw( pState );
+    save_png( "texture_test.png", image );
+}
+
 
 int main()
 {
     DrawTest();
+    TextureTest();
     return 0;
 }

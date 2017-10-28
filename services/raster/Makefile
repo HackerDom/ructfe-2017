@@ -1,7 +1,7 @@
 .PHONY: debug all compiler disasm release clean
 
 debug:
-	g++ -O0 -g -std=c++11 main.cpp png.cpp -DDEBUG=1 -lpng12 -o raster-dbg
+	g++ -O0 -g -std=c++11 main.cpp png.cpp -DDEBUG=1 -lpng16 -o raster-dbg
 
 compiler:
 	g++ -O0 -g -std=c++11 compiler.cpp -o compiler

@@ -81,6 +81,10 @@ int main( int argc, char* argv[] ) {
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
                 printf( "%i ", setInst->ints[ i ] );
         }
+        if( inst.op == OP_TFETCH ) {
+            TFetchInstruction* tfetch = ( TFetchInstruction* )&inst;
+            printf( "t%u ", tfetch->textureReg );
+        }
         printf( "\n" );
     }
     return 0;

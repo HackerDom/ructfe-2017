@@ -20,19 +20,23 @@ u8 CharToSwizzle( char c ) {
 
 
 //
-void ParseRegister( const std::string& str, REGISTER_TYPE& type, u32& idx, Swizzle& swizzle ) {
+bool ParseRegister( const std::string& str, REGISTER_TYPE& type, u32& idx, Swizzle& swizzle ) {
     char copy[ 16 ];
     strcpy( copy, str.c_str() );
     const char* idxStr = &copy[ 1 ];
 
     if( copy[ 0 ] == 'i' )
         type = REGISTER_IR;
-    if( copy[ 0 ] == 'o' )
+    else if( copy[ 0 ] == 'o' )
         type = REGISTER_OR;
-    if( copy[ 0 ] == 'c' )
+    else if( copy[ 0 ] == 'c' )
         type = REGISTER_CR;
-    if( copy[ 0 ] == 'r' )
+    else if( copy[ 0 ] == 'r' )
         type = REGISTER_GPR;
+    else {
+        printf( "Invalid register: %s\n", copy );
+        return false;
+    }
 
     char* dot = const_cast< char* >( strchr( idxStr, '.' ) );
     *dot = 0;
@@ -48,6 +52,8 @@ void ParseRegister( const std::string& str, REGISTER_TYPE& type, u32& idx, Swizz
         swizzle.i2 = CharToSwizzle( swizzleStr[ 2 ] );
     if( swizzle.activeNum >= 4 )
         swizzle.i3 = CharToSwizzle( swizzleStr[ 3 ] );
+
+    return true;
 }
 
 
@@ -109,21 +115,24 @@ int main( int argc, char* argv[] ) {
         u32 reg;
         if( g_opOperands[ inst.op ] & OPERAND_DST ) {
             infile >> str;
-            ParseRegister( str,  regType, reg, inst.dstSwizzle );
+            if( !ParseRegister( str,  regType, reg, inst.dstSwizzle ) )
+                return 1;
             inst.dst = reg;
             inst.dstType = regType;
         }
 
         if( g_opOperands[ inst.op ] & OPERAND_SRC0 ) {
             infile >> str;
-            ParseRegister( str,  regType, reg, inst.src0Swizzle );
+            if( !ParseRegister( str,  regType, reg, inst.src0Swizzle ) )
+                return 1;
             inst.src0 = reg;
             inst.src0Type = regType;
         }
 
         if( g_opOperands[ inst.op ] & OPERAND_SRC1 ) {
             infile >> str;
-            ParseRegister( str,  regType, reg, inst.src1Swizzle );
+            if( !ParseRegister( str,  regType, reg, inst.src1Swizzle ) )
+                return 1;
             inst.src1 = reg;
             inst.src1Type = regType;
         }
@@ -138,6 +147,16 @@ int main( int argc, char* argv[] ) {
             SetInstruction* setInst = ( SetInstruction* )&inst;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
                 infile >> setInst->ints[ i ];
+        }
+
+        if( inst.op == OP_TFETCH ) {
+            TFetchInstruction* tfetch = ( TFetchInstruction* )&inst;
+            infile >> str;
+            if( str[ 0 ] != 't' ) {
+                printf( "Invalid register: %s\n", str.c_str() );
+                return 1;
+            }
+            tfetch->textureReg = atoi( str.c_str() + 1 );
         }
 
         insts.push_back( inst );

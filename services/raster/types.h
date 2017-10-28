@@ -59,6 +59,7 @@ enum OPERANDS
     YOUR_DEFINE( OP_MOV,	"mov"	, OPERAND_DST | OPERAND_SRC0 ) \
     YOUR_DEFINE( OP_CVTFI,	"cvtfi"	, OPERAND_DST | OPERAND_SRC0 ) \
     YOUR_DEFINE( OP_CVTIF,	"cvtif"	, OPERAND_DST | OPERAND_SRC0 ) \
+    YOUR_DEFINE( OP_TFETCH,	"tfetch", OPERAND_DST | OPERAND_SRC0 ) \
     YOUR_DEFINE( OP_RET,	"ret"   , 0 )
 
 
@@ -98,6 +99,7 @@ enum REGISTER_TYPE
     REGISTER_OR,
     REGISTER_CR,
     REGISTER_GPR,
+    REGISTER_TR,
 
     REGISTER_TYPES_NUM
 };
@@ -172,8 +174,33 @@ struct SetInstruction
         i32 ints[ 4 ];
     };
 };
+
+
+//
+struct TFetchInstruction
+{
+    OP op;
+    // dst register
+    struct
+    {
+        u32 dstType : 2;
+        u32 dst : 30;
+    };
+    Swizzle dstSwizzle;
+    // src0 register
+    struct
+    {
+        u32 src0Type : 2;
+        u32 src0 : 30;
+    };
+    Swizzle src0Swizzle;
+    // texture register
+    u32 textureReg;
+    u16 padding;
+};
 static_assert( sizeof( Instruction ) == 28, "" );
 static_assert( sizeof( SetInstruction ) == 28, "" );
+static_assert( sizeof( TFetchInstruction ) == 28, "" );
 
 
 //
