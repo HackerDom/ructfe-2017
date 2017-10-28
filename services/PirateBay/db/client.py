@@ -9,8 +9,9 @@ class InsertQuery:
         self.query = "INSERT INTO {tbl_name} ({field_names}) VALUES ({values});".format(
             tbl_name=tbl_name,
             field_names=', '.join(field_names),
-            values="'{}'".format("', '".join(values))
+            values=", ".join(value for value in values)
         )
+        print(self.query)
 
 
 class GetAllQuery:
@@ -34,8 +35,9 @@ class FilterQuery:
         self.query = "SELECT {field_names} FROM {tbl_name} WHERE {filter_fields};".format(
             field_names=', '.join(field_names),
             tbl_name=tbl_name,
-            filter_fields=' AND '.join("{}='{}'".format(*filter_field) for filter_field in filter_fields.items())
+            filter_fields=' AND '.join(filter_fields)
         )
+        print(self.query)
 
 
 class DBClient(metaclass=Singleton):

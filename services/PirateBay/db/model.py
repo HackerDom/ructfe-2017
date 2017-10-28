@@ -47,13 +47,14 @@ class Model:
 
     @classmethod
     def validate(cls, fields, check_required=True):
-        for field_name in fields:
+        real_fields = [field.split('__')[0] for field in fields]
+        for field_name in real_fields:
             if field_name not in cls.get_fields():
                 raise ValidationError("Undeclared field: {}".format(field_name))
         if not check_required:
             return
         for field_name, _ in cls.get_fields().items():
-            if field_name not in fields:
+            if field_name not in real_fields:
                 raise ValidationError("Field {} is required".format(field_name))
 
     @classmethod
@@ -79,7 +80,7 @@ class Model:
         table_name = cls.table_name()
         model_fields = cls.get_fields()
         sorted_field_names = sorted(model_fields.keys())
-        field_values = [str(fields[field_name]) for field_name in sorted_field_names]
+        field_values = ["'{}'".format(fields[field_name]) for field_name in sorted_field_names]
         field_names_param = sorted_field_names
         field_values_param = field_values
         insert_query = InsertQuery(
@@ -104,14 +105,26 @@ class Model:
             object_tuples = cursor.fetchall()
             return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
 
+    @staticmethod
+    def format_field_filter(field_name, field_value):
+        field, *params = field_name.split('__')
+        if not params:
+            return "{}='{}'".format(field_name, field_value)
+        else:
+            if params[0] == 'contains':
+                return "{} LIKE '%{}%'".format(field, field_value)
+            else:
+                raise ValueError("Unexpected options: {}".format(",".join(params)))
+
     @classmethod
     def filter(cls, **fields):
         cls.validate(fields, check_required=False)
         cls.create_table_if_not_exists()
+        filter_fields = [cls.format_field_filter(*field) for field in fields.items()]
         filter_query = FilterQuery(
             tbl_name=cls.table_name(),
             field_names=sorted(cls.get_fields().keys()),
-            filter_fields=fields
+            filter_fields=filter_fields
         ).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(filter_query)
