@@ -17,6 +17,10 @@ def get_sha512(data: bytes):
     return hasher.digest()
 
 
+def get_base_of_hash(data: str):
+    return b64encode(get_sha512(data.encode())).decode()
+
+
 class UserError(Exception):
     def __init__(self, error_message):
         self.error_message = error_message
@@ -24,7 +28,7 @@ class UserError(Exception):
 
 class User(Model):
     login = TextField(256)
-    password = TextField(256)
+    password_hash = TextField(256)
     uid = TextField(32)
 
     @staticmethod
@@ -36,22 +40,21 @@ class User(Model):
 
 
 class Cookie:
-    def __init__(self, uid, max_age, login, password):
+    def __init__(self, uid, login, password, max_age=60 * 60):
         self.uid = uid
         self.max_age = max_age
-        self.secret = Cookie.generate_cookie_secret(uid, login, password)
+        self.secret = Cookie.generate_cookie_secret(uid, login, get_base_of_hash(password))
 
     @staticmethod
-    def generate_cookie_secret(uid, login, password):
-        res = b64encode(get_sha512((login + password + uid).encode())).decode()
-        return res
+    def generate_cookie_secret(uid, login, password_hash):
+        return get_base_of_hash(login + password_hash + uid)
 
     @staticmethod
     def is_valid(cookie_uid, cookie_secret):
         user = User.get_user_by_id(cookie_uid)
         if user is None:
             return False
-        if Cookie.generate_cookie_secret(user.uid, user.login, user.password) != cookie_secret:
+        if Cookie.generate_cookie_secret(user.uid, user.login, user.password_hash) != cookie_secret:
             return False
         return True
 
@@ -68,7 +71,7 @@ def register(login, password):
     users = User.filter(login=login)
     if users:
         raise UserError("user {} already exists".format(login))
-    User.create(uid=generate_uid(), login=login, password=password)
+    User.create(uid=generate_uid(), login=login, password_hash=get_base_of_hash(password))
 
 
 def authenticate(login, password):
@@ -76,13 +79,17 @@ def authenticate(login, password):
     if not users:
         raise UserError("user {} doesn't exists".format(login))
     user = users[0]
-    if user.password != password:
+    if user.password_hash != get_base_of_hash(password):
         raise UserError("wrong password")
     return user.uid
 
 
-def get_torrent_info_files():
-    files = TorrentFileInfo.all()
+def get_torrent_info_files(fields_filter):
+    if fields_filter:
+        print(fields_filter)
+        files = TorrentFileInfo.filter(name__contains=fields_filter)
+    else:
+        files = TorrentFileInfo.all()
     return files
 
 
@@ -98,7 +105,7 @@ def get_authorized_user():
 
 def set_cookie(login, password):
     user_id = authenticate(login, password)
-    user_cookie = Cookie(user_id, 60 * 5, login, password)
+    user_cookie = Cookie(user_id, login, password)
     response_cookie = cherrypy.response.cookie
     response_cookie['uid'] = user_cookie.uid
     response_cookie['uid']['max-age'] = user_cookie.max_age
@@ -158,14 +165,15 @@ class RequestHandler:
         return self.get_template('main.html').render(authed=authed)
 
     @cherrypy.expose
-    def storage(self):
+    def storage(self, search_filter=""):
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect('/')
         return self.get_template('files_storage.html').render(
             model_fields=TorrentFileInfo.get_field_names(),
-            files=get_torrent_info_files(),
-            authed=user.login
+            files=get_torrent_info_files(search_filter),
+            authed=user.login,
+            value=search_filter,
         )
 
     @cherrypy.expose

@@ -5,13 +5,24 @@
     <title>Torrent files</title>
     <link rel="stylesheet" href="css/sea.css">
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/upload_form.js"></script>
+    <script type="text/javascript">
+        $("#search_field").keyup(function(event) {
+            alert(1);
+            if (event.keyCode === 13) {
+                $("#search_btn").click();
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="topbar">
         <a href="/">Home</a>
         <a href="/signout">Sign out</a>
         <a href="/upload_file">Upload file</a>
+        <form action="storage">
+            <input value="{{ value }}" type="search" id="search_field" name="search_filter" placeholder="Search..." autofocus/>
+            <input type="submit" id="search_btn" style="display:none;" />
+        </form>
         <p>Hello, {{ authed }}!</p>
     </div>
     <div>

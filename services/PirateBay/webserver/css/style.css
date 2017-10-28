@@ -40,9 +40,22 @@ body {
     font-size: 17px;
 }
 
+.topbar input#search_field{
+    background: #181818;
+    border: none;
+    float: left;
+    color: #fff;
+    padding: 12px 14px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
 .bigmain {
     text-align: center;
     margin-top: 5%;
+    color: white;
+    font-size: xx-large;
 }
 
 table {

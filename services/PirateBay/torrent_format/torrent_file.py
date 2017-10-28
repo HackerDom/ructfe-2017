@@ -11,7 +11,7 @@ class TorrentFileInfo(Model):
     uid = TextField(32)
     upload_by = TextField(256)
 
-    def __init__(self, data=None, upload_by=None):
+    def __init__(self, data=None, upload_by=""):
         if data is None:
             return
         meta_dict, _ = parse_dictionary(data)
