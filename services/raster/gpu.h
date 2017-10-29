@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <xmmintrin.h>
 #include <malloc.h>
+#include <string.h>
+#include "png.h"
 
 using u8    = uint8_t;
 using i8    = int8_t;
@@ -32,7 +34,7 @@ union __m128_union
     u8 	m128_u8[ 16 ];
     i8 	m128_i8[ 16 ];
 
-    operator __m128() { return f; }
+    inline operator __m128() { return f; }
 };
 
 
@@ -212,7 +214,18 @@ enum ShaderType : u32
 
 
 //
-struct Shader
+struct NonMovable
+{
+    NonMovable() = default;
+    NonMovable( const NonMovable& ) = delete;
+    NonMovable( const NonMovable&& ) = delete;
+    NonMovable& operator=( const NonMovable& ) = delete;
+    NonMovable& operator=( const NonMovable&& ) = delete;
+};
+
+
+//
+struct Shader : public NonMovable
 {
     Instruction* instructions;
 
@@ -266,3 +279,46 @@ struct Shader
             free( instructions );
     }
 };
+
+
+//
+struct VertexBuffer : public NonMovable
+{
+    u32 vertexNum;
+    u32 vertexComponents;
+    __m128_union* vertices;
+
+    VertexBuffer()
+        : vertexNum( 0 ), vertexComponents( 0 ), vertices( nullptr )
+    {}
+
+    VertexBuffer( u32 vertexNum, u32 vertexComponents ) {
+        this->vertexNum = vertexNum;
+        this->vertexComponents = vertexComponents;
+        vertices = ( __m128_union* )memalign( 16, vertexNum * vertexComponents * sizeof( __m128 ) );
+    }
+
+    ~VertexBuffer() {
+        if( !vertices )
+            free( vertices );
+    }
+};
+
+
+//
+struct PipelineState
+{
+     __m128_union constants[ 256 ];
+     Image* textures[ 16 ];
+     VertexBuffer* vb;
+     Shader* vs;
+     Shader* ps;
+     Image* rt;
+
+     PipelineState() {
+         memset( this, 0, sizeof( PipelineState ) );
+     }
+};
+
+//
+void Draw( const PipelineState& pState );

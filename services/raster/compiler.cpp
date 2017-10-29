@@ -2,7 +2,7 @@
 #include <string.h>
 #include <fstream>
 #include <vector>
-#include "types.h"
+#include "gpu.h"
 
 
 //
