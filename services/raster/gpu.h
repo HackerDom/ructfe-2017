@@ -306,11 +306,34 @@ struct VertexBuffer : public NonMovable
 
 
 //
+struct IndexBuffer : public NonMovable
+{
+    u32 indicesNum;
+    u32* indices;
+
+    IndexBuffer()
+        : indicesNum( 0 ), indices( nullptr )
+    {}
+
+    IndexBuffer( u32 indicesNum ) {
+        this->indicesNum = indicesNum;
+        this->indices = ( u32* )memalign( 16, indicesNum * sizeof( u32 ) );
+    }
+
+    ~IndexBuffer() {
+        if( indices )
+            free( indices );
+    }
+};
+
+
+//
 struct PipelineState
 {
      __m128_union constants[ 256 ];
      Image* textures[ 16 ];
      VertexBuffer* vb;
+     IndexBuffer* ib;
      Shader* vs;
      Shader* ps;
      Image* rt;

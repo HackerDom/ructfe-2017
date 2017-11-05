@@ -169,9 +169,9 @@ void Draw( const PipelineState& pState ) {
 
     u32 varyingsNum = std::max( ( u32 )pState.vs->header.vs.varyingsNum, 1u );
 
-    for( u32 t = 0; t < pState.vb->vertexNum / 3; t++ ) {
+    for( u32 t = 0; t < pState.ib->indicesNum / 3; t++ ) {
         // vertex shader stage
-        __m128_union* vsInput = &pState.vb->vertices[ 3 * pState.vb->vertexComponents * t ];
+        u32* indices = &pState.ib->indices[ t * 3 ];
         i16 minX = 255;
         i16 minY = 255;
         i16 maxX = 0;
@@ -182,7 +182,8 @@ void Draw( const PipelineState& pState ) {
         for( u32 v = 0; v < 3; v++ )
         {
             Registers vsRegs;
-            vsRegs.IR = &vsInput[ v * pState.vb->vertexComponents ];
+            u32& index = indices[ v ];
+            vsRegs.IR = &pState.vb->vertices[ index * pState.vb->vertexComponents ];
             vsRegs.OR = &varyings[ VARYINGS_PER_VERTEX * v ];
             vsRegs.CR = const_cast< __m128_union* >( &pState.constants[ 0 ] );
             vsRegs.GPR = GPR;
