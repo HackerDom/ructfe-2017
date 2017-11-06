@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
 #include "gpu.h"
 
 
@@ -106,6 +107,44 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                     for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
                         dot += tmp.m128_f32[ j ];
                     result.f = _mm_set_ps1( dot );
+                }
+                break;
+            case OP_LENGTH:
+                {
+                    __m128_union tmp;
+                    tmp.f = _mm_mul_ps( src0.f, src0.f );
+                    f32 dot = 0.0f;
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        dot += tmp.m128_f32[ j ];
+                    result.f = _mm_set1_ps( sqrt( dot ) );
+                }
+                break;
+            case OP_NORMALIZE:
+                {
+                    __m128_union tmp;
+                    tmp.f = _mm_mul_ps( src0.f, src0.f );
+                    f32 dot = 0.0f;
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        dot += tmp.m128_f32[ j ];
+                    f32 length = sqrt( dot );
+                    tmp.f = _mm_set1_ps( length );
+                    result.f = _mm_div_ps( src0.f, tmp.f );
+                }
+                break;
+            case OP_ABS:
+                {
+                    __m128_union tmp;
+                    tmp.f = _mm_set1_ps( -0.0f );
+                    result.f = _mm_andnot_ps( tmp.f, src0.f );
+                }
+                break;
+            case OP_SATURATE:
+                {
+                    __m128_union min, max;
+                    min.f = _mm_set1_ps( 0.0f );
+                    max.f = _mm_set1_ps( 1.0f );
+                    result.f = _mm_max_ps( src0.f, min );
+                    result.f = _mm_min_ps( result.f, max );
                 }
                 break;
             case OP_MOV:   result = src0; break;
