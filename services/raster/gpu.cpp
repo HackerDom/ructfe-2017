@@ -168,18 +168,13 @@ struct Point2D {
 
 
 //
-i32 orient2d(const Point2D& a, const Point2D& b, const Point2D& c)
-{
-    return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
+i32 EdgeFunction( const Point2D& a, const Point2D& b, const Point2D& c ) {
+    return ( b.x - a.x ) * ( c.y - a.y ) - ( b.y - a.y ) * ( c.x - a.x );
 }
 
 
 //
-__m128 Interpolate( int w0, int w1, int w2, float invDoubleArea, const __m128_union& v0, const __m128_union& v1, const __m128_union& v2 ){
-    float l0 = w0 * invDoubleArea;
-    float l1 = w1 * invDoubleArea;
-    float l2 = w2 * invDoubleArea;
-
+__m128 Interpolate( f32 l0, f32 l1, f32 l2, const __m128_union& v0, const __m128_union& v1, const __m128_union& v2 ){
     __m128 m0 = _mm_mul_ps( v0.f, _mm_set1_ps( l0 ) );
     __m128 m1 = _mm_mul_ps( v1.f, _mm_set1_ps( l1 ) );
     __m128 m2 = _mm_mul_ps( v2.f, _mm_set1_ps( l2 ) );
@@ -208,6 +203,8 @@ void Draw( const PipelineState& pState ) {
 
     u32 varyingsNum = std::max( ( u32 )pState.vs->header.vs.varyingsNum, 1u );
 
+    __m128 ones = _mm_set1_ps( 1.0f );
+
     u32 indicesNum = pState.ib ? pState.ib->indicesNum : pState.vb->vertexNum;
     for( u32 t = 0; t < indicesNum / 3; t++ ) {
         // vertex shader stage
@@ -221,19 +218,17 @@ void Draw( const PipelineState& pState ) {
             autoIndexBuffer[ 2 ] = t * 3 + 2;
             indices = autoIndexBuffer;
         }
-        i16 minX = 255;
-        i16 minY = 255;
+        i16 minX = 32767;
+        i16 minY = 32767;
         i16 maxX = 0;
         i16 maxY = 0;
-        i16 X[ 3 ], Y[ 3 ];
-        f32 Z[ 3 ];
-        //f32 W[ 3 ];
-        for( u32 v = 0; v < 3; v++ )
+        Point2D v[ 3 ];
+        for( u32 vi = 0; vi < 3; vi++ )
         {
             Registers vsRegs;
-            u32& index = indices[ v ];
+            u32& index = indices[ vi ];
             vsRegs.IR = &pState.vb->vertices[ index * pState.vb->vertexComponents ];
-            vsRegs.OR = &varyings[ VARYINGS_PER_VERTEX * v ];
+            vsRegs.OR = &varyings[ VARYINGS_PER_VERTEX * vi ];
             vsRegs.CR = const_cast< __m128_union* >( &pState.constants[ 0 ] );
             vsRegs.GPR = GPR;
             vsRegs.TR = pState.textures;
@@ -241,19 +236,24 @@ void Draw( const PipelineState& pState ) {
 
             // o0 is always position, so perform perspective divide on it
             __m128_union& pos = vsRegs.OR[ 0 ];
-            __m128_union w;
-            w.f = _mm_shuffle_ps( pos, pos, 0xFF );
-            pos.f = _mm_div_ps( pos, w );
+            __m128_union invW;
+            invW.f = _mm_shuffle_ps( pos, pos, 0xFF );
+            invW.f = _mm_div_ps( ones, invW.f );
+            pos.f = _mm_mul_ps( pos, invW.f );
+            pos.m128_f32[ 3 ] = invW.m128_f32[ 3 ];
             // ...and ndc to screen space conversion
 			pos.f = _mm_add_ps( _mm_mul_ps( pos, vpScale ), vpOffset );
-            X[ v ] = pos.m128_f32[ 0 ] + 0.5f;
-            Y[ v ] = pos.m128_f32[ 1 ] + 0.5f;
-            Z[ v ] = pos.m128_f32[ 2 ];
+            v[ vi ].x = pos.m128_f32[ 0 ] + 0.5f;
+            v[ vi ].y = pos.m128_f32[ 1 ] + 0.5f;
             // tri bounds
-            if( X[ v ] > maxX ) maxX = X[ v ];
-            if( Y[ v ] > maxY ) maxY = Y[ v ];
-            if( X[ v ] < minX ) minX = X[ v ];
-            if( Y[ v ] < minY ) minY = Y[ v ];
+            if( v[ vi ].x > maxX ) maxX = v[ vi ].x;
+            if( v[ vi ].y > maxY ) maxY = v[ vi ].y;
+            if( v[ vi ].x < minX ) minX = v[ vi ].x;
+            if( v[ vi ].y < minY ) minY = v[ vi ].y;
+
+            // enable perspective correct interpolation
+            for( u32 i = 1; i < varyingsNum; i++ )
+                vsRegs.OR[ i ].f = _mm_mul_ps( vsRegs.OR[ i ].f, invW );
         }
 
         // clip againts screen
@@ -263,31 +263,40 @@ void Draw( const PipelineState& pState ) {
         maxY = std::min( maxY, i16( pState.rt->height - 1 ) );
 
         // fixed function stage
-        int doubleTriArea = (X[1] - X[0]) * (Y[2] - Y[0]) - (X[0] - X[2]) * (Y[0] - Y[1]);
+        int doubleTriArea = EdgeFunction( v[ 0 ], v[ 1 ], v[ 2 ] );
         if( doubleTriArea <= 0 )
             continue;
         f32 invDoubleArea = 1.0f / ( f32 )doubleTriArea;
 
         // pixel shader stage
         Point2D p;
-        Point2D v0 = { X[ 0 ], Y[ 0 ] };
-        Point2D v1 = { X[ 1 ], Y[ 1 ] };
-        Point2D v2 = { X[ 2 ], Y[ 2 ] };
         for( p.y = minY; p.y <= maxY; p.y++ ){
             for( p.x = minX; p.x <= maxX; p.x++ ){
-                int w0 = orient2d(v1, v2, p);
-                int w1 = orient2d(v2, v0, p);
-                int w2 = orient2d(v0, v1, p);
+                i32 w0 = EdgeFunction( v[ 1 ], v[ 2 ], p );
+                i32 w1 = EdgeFunction( v[ 2 ], v[ 0 ], p );
+                i32 w2 = EdgeFunction( v[ 0 ], v[ 1 ], p );
 
                 // If p is on or inside all edges, run pixel shader.
                 if( ( w0 | w1 | w2 ) >= 0 ) {
-                    __m128_union input[ VARYINGS_PER_VERTEX ];
-                    for( u32 i = 0; i < varyingsNum; i++ ){
-                        input[ i ].f = Interpolate( w0, w1, w2, invDoubleArea,
+                    f32 l0 = ( f32 )w0 * invDoubleArea;
+                    f32 l1 = ( f32 )w1 * invDoubleArea;
+                    f32 l2 = ( f32 )w2 * invDoubleArea;
+
+                     __m128_union input[ VARYINGS_PER_VERTEX ];
+                    input[ 0 ].f = Interpolate( l0, l1, l2,
+                                                varyings[ VARYINGS_PER_VERTEX * 0 ],
+                                                varyings[ VARYINGS_PER_VERTEX * 1 ],
+                                                varyings[ VARYINGS_PER_VERTEX * 2 ] );
+                    f32 oneOverZ = input[ 0 ].m128_f32[ 3 ];
+                    f32 Z = 1.0f / oneOverZ;
+                    __m128 zVec = _mm_set1_ps( Z );
+
+                    for( u32 i = 1; i < varyingsNum; i++ ){
+                        input[ i ].f = Interpolate( l0, l1, l2,
                                                     varyings[ VARYINGS_PER_VERTEX * 0 + i ],
                                                     varyings[ VARYINGS_PER_VERTEX * 1 + i ],
-                                                    varyings[ VARYINGS_PER_VERTEX * 2 + i ]
-                                                    );
+                                                    varyings[ VARYINGS_PER_VERTEX * 2 + i ] );
+                        input[ i ].f = _mm_mul_ps( input[ i ].f, zVec );
                     }
 
                     // depth test
