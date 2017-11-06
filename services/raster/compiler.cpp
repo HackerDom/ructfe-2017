@@ -81,11 +81,26 @@ int main( int argc, char* argv[] ) {
 
     std::ifstream infile( input );
     std::vector< Instruction > insts;
+    bool isComment = false;
     //
     while( !infile.eof() ) {
         Instruction inst;
         std::string opStr;
         infile >> opStr;
+        if( opStr.compare( "/*" ) == 0 ) {
+            isComment = true;
+            continue;
+        }
+        if( opStr.compare( "*/" ) == 0 ) {
+            if( !isComment ) {
+                printf( "Unexpected */\n" );
+                return 1;
+            }
+            isComment = false;
+            continue;
+        }
+        if( isComment )
+            continue;
 
         if( opStr.empty() )
             continue;
