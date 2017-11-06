@@ -19,7 +19,11 @@ union RGBA
 //
 struct Image
 {
-    RGBA*		rgba;
+    union
+    {
+        RGBA*		rgba;
+        float*      f32;
+    };
     uint32_t 	width;
     uint32_t 	height;
 

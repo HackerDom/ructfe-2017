@@ -45,7 +45,7 @@ void TextureTest()
     Shader vs( "shaders/simple.vs.bin" );
     Shader ps( "shaders/texture_test.ps.bin" );
 
-    VertexBuffer vb( 4, 2 );
+    VertexBuffer vb( 6, 2 );
     vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
     vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
 
@@ -55,20 +55,18 @@ void TextureTest()
     vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
     vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
 
-    vb.vertices[ 3 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 3 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
+    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
+    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
 
-    IndexBuffer ib( 6 );
-    ib.indices[ 0 ] = 0;
-    ib.indices[ 1 ] = 1;
-    ib.indices[ 2 ] = 2;
-    ib.indices[ 3 ] = 0;
-    ib.indices[ 4 ] = 2;
-    ib.indices[ 5 ] = 3;
+    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
+    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
+
+    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
+    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
 
     PipelineState pState;
     pState.vb = &vb;
-    pState.ib = &ib;
+    pState.ib = nullptr;
     pState.vs = &vs;
     pState.textures[ 0 ] = &texture;
     pState.ps = &ps;
@@ -76,7 +74,6 @@ void TextureTest()
     Draw( pState );
     save_png( "texture_test.png", image );
 }
-
 
 //
 void GpuTests()

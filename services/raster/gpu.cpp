@@ -169,9 +169,19 @@ void Draw( const PipelineState& pState ) {
 
     u32 varyingsNum = std::max( ( u32 )pState.vs->header.vs.varyingsNum, 1u );
 
-    for( u32 t = 0; t < pState.ib->indicesNum / 3; t++ ) {
+    u32 indicesNum = pState.ib ? pState.ib->indicesNum : pState.vb->vertexNum;
+    for( u32 t = 0; t < indicesNum / 3; t++ ) {
         // vertex shader stage
-        u32* indices = &pState.ib->indices[ t * 3 ];
+        u32* indices = nullptr;
+        u32 autoIndexBuffer[ 3 ];
+        if( pState.ib )
+            indices = &pState.ib->indices[ t * 3 ];
+        else {
+            autoIndexBuffer[ 0 ] = t * 3 + 0;
+            autoIndexBuffer[ 1 ] = t * 3 + 1;
+            autoIndexBuffer[ 2 ] = t * 3 + 2;
+            indices = autoIndexBuffer;
+        }
         i16 minX = 255;
         i16 minY = 255;
         i16 maxX = 0;
@@ -241,6 +251,14 @@ void Draw( const PipelineState& pState ) {
                                                     );
                     }
 
+                    // depth test
+                    if( pState.depthRt ) {
+                        float& depth = pState.depthRt->f32[ p.y * pState.depthRt->width + p.x ];
+                        if( input[ 0 ].m128_f32[ 2 ] > depth )
+                            continue;
+                        depth = input[ 0 ].m128_f32[ 2 ];
+                    }
+
                     __m128_union output;
                     Registers psRegs;
                     psRegs.IR = input;
@@ -261,4 +279,16 @@ void Draw( const PipelineState& pState ) {
     }
 
     free( GPR );
+}
+
+
+void CleanDepthRenderTarget( Image* depthRt, float value ) {
+    if( !depthRt )
+        return;
+
+    for( u32 y = 0; y < depthRt->height; y++ ) {
+        for( u32 x = 0; x < depthRt->width; x++ ){
+            depthRt->f32[ y * depthRt->width + x ] = value;
+        }
+    }
 }

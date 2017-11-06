@@ -337,6 +337,7 @@ struct PipelineState
      Shader* vs;
      Shader* ps;
      Image* rt;
+     Image* depthRt;
 
      PipelineState() {
          memset( this, 0, sizeof( PipelineState ) );
@@ -344,4 +345,5 @@ struct PipelineState
 };
 
 //
+void CleanDepthRenderTarget(Image* depthRt, float value );
 void Draw( const PipelineState& pState );
