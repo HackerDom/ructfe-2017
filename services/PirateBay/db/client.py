@@ -20,6 +20,7 @@ class GetAllQuery:
             field_names=', '.join(field_names),
             tbl_name=tbl_name,
         )
+        print(self.query)
 
 
 class CreateTableIfNotExistsQuery:
@@ -28,6 +29,7 @@ class CreateTableIfNotExistsQuery:
             tbl_name=tbl_name,
             fields=', '.join(' '.join(field) for field in fields),
         )
+        print(self.query)
 
 
 class FilterQuery:
@@ -54,3 +56,5 @@ class DBClient(metaclass=Singleton):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
+
+# '%a%'

@@ -73,6 +73,10 @@ class Model:
             cursor.execute(create_table_if_not_exists_query)
         db_client.connection.commit()
 
+    @staticmethod
+    def check_field(field):
+        return str(field).replace("'", r"\'").replace('"', r'\"')
+
     @classmethod
     def create(cls, **fields):
         cls.validate(fields)
@@ -80,7 +84,7 @@ class Model:
         table_name = cls.table_name()
         model_fields = cls.get_fields()
         sorted_field_names = sorted(model_fields.keys())
-        field_values = ["'{}'".format(fields[field_name]) for field_name in sorted_field_names]
+        field_values = ["'{}'".format(cls.check_field(fields[field_name])) for field_name in sorted_field_names]
         field_names_param = sorted_field_names
         field_values_param = field_values
         insert_query = InsertQuery(
@@ -118,6 +122,7 @@ class Model:
 
     @classmethod
     def filter(cls, **fields):
+        print("##{}##".format(fields))
         cls.validate(fields, check_required=False)
         cls.create_table_if_not_exists()
         filter_fields = [cls.format_field_filter(*field) for field in fields.items()]

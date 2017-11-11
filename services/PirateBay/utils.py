@@ -1,3 +1,5 @@
+from hashlib import sha512
+from base64 import b64encode
 from random import choice
 from string import hexdigits
 import pickle
@@ -25,3 +27,13 @@ def cached_method(func):
             memory[hash] = func(*args, **kwargs)
         return memory[hash]
     return mem_func
+
+
+def get_sha512(data: bytes):
+    hasher = sha512()
+    hasher.update(data)
+    return hasher.digest()
+
+
+def get_base_of_hash(data: str):
+    return b64encode(get_sha512(data.encode())).decode()

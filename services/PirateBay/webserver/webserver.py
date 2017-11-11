@@ -1,6 +1,5 @@
 import os
-from hashlib import sha512
-from base64 import b64encode
+import re
 
 import cherrypy
 from jinja2 import Template
@@ -8,17 +7,9 @@ from jinja2 import Template
 from db.client import DBClient
 from db.model import Model, TextField
 from torrent_format.torrent_file import TorrentFileInfo
-from utils import generate_uid
+from utils import generate_uid, get_base_of_hash
 
-
-def get_sha512(data: bytes):
-    hasher = sha512()
-    hasher.update(data)
-    return hasher.digest()
-
-
-def get_base_of_hash(data: str):
-    return b64encode(get_sha512(data.encode())).decode()
+LOGIN_PATTERN = re.compile("^[a-z0-9_-]{3,16}$")
 
 
 class UserError(Exception):
@@ -67,10 +58,31 @@ def load_templates():
     return templates_dict
 
 
+def validate_login(login):
+    if re.match(LOGIN_PATTERN, login) is None:
+        raise UserError('Username "{}" is invalid. Username must match regex {}'.format(login, LOGIN_PATTERN.pattern))
+
+
+BAD_CHARS = [
+    '\\',
+    '\'',
+    '\"',
+    '%',
+    '_',
+]
+
+
+def adjust_search_filter(filter_req: str):
+    for bad_char in BAD_CHARS:
+        filter_req = filter_req.replace(bad_char, "\\" + bad_char)
+    return filter_req
+
+
 def register(login, password):
+    validate_login(login)
     users = User.filter(login=login)
     if users:
-        raise UserError("user {} already exists".format(login))
+        raise UserError('username "{}" already exists'.format(login))
     User.create(uid=generate_uid(), login=login, password_hash=get_base_of_hash(password))
 
 
@@ -86,7 +98,6 @@ def authenticate(login, password):
 
 def get_torrent_info_files(fields_filter):
     if fields_filter:
-        print(fields_filter)
         files = TorrentFileInfo.filter(name__contains=fields_filter)
     else:
         files = TorrentFileInfo.all()
@@ -133,8 +144,8 @@ class RequestHandler:
         try:
             set_cookie(login, password)
             raise cherrypy.HTTPRedirect('/')
-        except UserError as user_error:
-            return self.get_template('signin.html').render(message=user_error.error_message)
+        except UserError:
+            raise cherrypy.HTTPRedirect('/signin_page')
 
     @cherrypy.expose
     def signup(self, login, password):
@@ -142,8 +153,8 @@ class RequestHandler:
             register(login, password)
             set_cookie(login, password)
             raise cherrypy.HTTPRedirect('/')
-        except UserError as user_error:
-            return self.get_template('signup.html').render(message=user_error.error_message)
+        except UserError:
+            raise cherrypy.HTTPRedirect('/signup_page')
 
     @cherrypy.expose
     def signup_page(self):
@@ -171,7 +182,7 @@ class RequestHandler:
             raise cherrypy.HTTPRedirect('/')
         return self.get_template('files_storage.html').render(
             model_fields=TorrentFileInfo.get_field_names(),
-            files=get_torrent_info_files(search_filter),
+            files=get_torrent_info_files(adjust_search_filter(search_filter)),
             authed=user.login,
             value=search_filter,
         )
