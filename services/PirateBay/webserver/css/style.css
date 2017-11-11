@@ -58,6 +58,12 @@ body {
     font-size: xx-large;
 }
 
+.error {
+    margin: 0;
+    color: red;
+    padding-bottom: 10px;
+}
+
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -81,12 +87,13 @@ tr:nth-child(even) {
 }
 
 input {
-  border: none;
-  font-family: 'Open Sans', Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.5em;
-  padding: 0;
-  -webkit-appearance: none;
+    border: none;
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5em;
+    padding: 0;
+    margin: 0;
+    -webkit-appearance: none;
 }
 
 #login {
@@ -147,7 +154,13 @@ input {
     cursor: pointer;
     transition: background 0.3s, color 0.3s;
 }
+
 #login form input[type="submit"]:hover {
   background: #16aa56;
+  color: white;
+}
+
+#login form input[type="submit"]:disabled {
+  background: #5f0000;
   color: white;
 }

@@ -4,25 +4,25 @@
         <meta charset="UTF-8">
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/sea.css">
+        <script src="js/validation.js"></script>
         <title>Sign up</title>
+        <script>
+        </script>
     </head>
     <body>
         <div class="topbar">
             <a href="/">Home</a>
             <a href="/signin_page">Sign in</a>
         </div>
-        <div class="bigmain">
-            <p>{{ message }}</p>
-        </div>
-
         <div id="login">
             <form name='form-login' action="signup">
                 <div>
+                    <p class="error" id="login_message"></p>
                     <span class="fontawesome-user"></span>
-                    <input type="text" name="login" placeholder="Username">
+                    <input type="text" name="login" placeholder="Username" onchange="validate_login(this.form)">
                     <span class="fontawesome-lock"></span>
                     <input type="password" name="password" placeholder="Password">
-                    <input type="submit" value="Create an account">
+                    <input id="submit" type="submit" value="Create an account">
                 </div>
             </form>
         </div>
