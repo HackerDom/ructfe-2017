@@ -5,4 +5,6 @@ raster-dbg
 compiler
 disasm
 compile_shaders.sh
+storage.dat
+
 

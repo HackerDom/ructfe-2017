@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <microhttpd.h>
 #include <pthread.h>
+#include <algorithm>
 
 #define POSTBUFFERSIZE  65536
 
@@ -72,16 +73,16 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 
 	printf("Received request: %s %s\n", method, url);
 
+    Headers headers;
 	if (!*context)
 	{
 		if (!strcmp(method, "POST"))
 		{
 			HttpPostProcessor *postProcessor = NULL;
 
-            int contentLength = -1;
-            MHD_get_connection_values( connection, MHD_HEADER_KIND, RetriveContentLength, &contentLength );
+            MHD_get_connection_values( connection, MHD_HEADER_KIND, IterateHeadersBase, &headers );
 
-            HttpResponse response = self->requestHandler->HandlePost(HttpRequest(url, method, connection), contentLength, &postProcessor);
+            HttpResponse response = self->requestHandler->HandlePost(HttpRequest(url, method, headers, connection), &postProcessor);
 
 			if (!postProcessor)
 			{
@@ -99,8 +100,8 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 
 	if (!strcmp (method, "GET"))
 	{
-		SendResponse(connection, self->requestHandler->HandleGet(HttpRequest(url, method, connection)));
-
+        MHD_get_connection_values( connection, MHD_HEADER_KIND, IterateHeadersBase, &headers );
+        SendResponse( connection, self->requestHandler->HandleGet( HttpRequest( url, method, headers, connection ) ) );
 		return MHD_YES;
 	}
 
@@ -145,14 +146,15 @@ void HttpServer::PostProcessRequest(void *param, MHD_Connection *connection, voi
 	*context = NULL;
 }
 
-int HttpServer::RetriveContentLength( void *cls, enum MHD_ValueKind kind, const char *key, const char *value )
+int HttpServer::IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const char *key, const char *value )
 {
-    if( strcasecmp( key, "Content-Length" ) )
-        return MHD_YES;
-
-    int* contentLength = ( int* )cls;
-    *contentLength = atoi( value );
-    return MHD_NO;
+    Headers* headers = ( Headers* )cls;
+    std::string keyStr = key;
+    std::string valueStr = value;
+    std::transform( keyStr.begin(), keyStr.end(), keyStr.begin(), ::tolower );
+    std::transform( valueStr.begin(), valueStr.end(), valueStr.begin(), ::tolower );
+    headers->insert( { keyStr, valueStr } );
+    return MHD_YES;
 }
 
 int HttpServer::SendResponse(MHD_Connection *connection, HttpResponse response)
@@ -181,7 +183,7 @@ void HttpServer::OnFatalError(void *param, const char *file, uint32_t line, cons
 	exit(1);
 }
 
-HttpPostProcessor::HttpPostProcessor(HttpRequest request)
+HttpPostProcessor::HttpPostProcessor( const HttpRequest& request)
 {
 	this->request = request;
 	isCompleted = false;
@@ -231,7 +233,6 @@ HttpPostProcessor::~HttpPostProcessor()
 int HttpPostProcessor::IteratePostDataBase(void *context, MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size)
 {
 	HttpPostProcessor *self = (HttpPostProcessor *)context;
-
 	if (!self)
 		return MHD_NO;
 
@@ -245,11 +246,12 @@ HttpRequest::HttpRequest()
 	this->connection = NULL;
 };
 
-HttpRequest::HttpRequest(const char *url, const char *method, MHD_Connection *connection)
+HttpRequest::HttpRequest(const char *url, const char *method, const Headers& headers, MHD_Connection *connection)
 {
 	this->url = url;
 	this->method = method;
 	this->connection = connection;
+    this->headers = headers;
 };
 
 HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0)
@@ -331,4 +333,35 @@ bool HttpRequestHandler::ParseUrl(const char *url, int parts, ...)
 	va_end(args);
 
 	return result;
+}
+
+
+//
+bool GetHeader( const Headers& headers, const std::string& key, std::string& val ) {
+    auto iter = headers.find( key );
+    if( iter != headers.end() ) {
+        val = iter->second;
+        return true;
+    }
+    return false;
+}
+
+
+//
+bool GetHeader( const Headers& headers, const std::string& key, int& val ) {
+    std::string valStr;
+    if( !GetHeader( headers, key, valStr ) )
+        return false;
+    val = atoi( valStr.c_str() );
+    return true;
+}
+
+
+//
+bool GetHeader( const Headers& headers, const std::string& key, float& val ) {
+    std::string valStr;
+    if( !GetHeader( headers, key, valStr ) )
+        return false;
+    val = atof( valStr.c_str() );
+    return true;
 }

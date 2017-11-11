@@ -1,0 +1,20 @@
+sub r0.xyz c4.xyz i1.xyz
+normalize r0.xyz r0.xyz
+dot r0.xyz r0.xyz i2.xyz
+saturate r0.xyz r0.xyz
+set r1.x 1.0
+/* sub r0.xyz r1.xxx r0.xyz */
+set r2.xyz 255.0 255.0 255.0
+mul r3.xyz r0.xyz r2.xyz
+cvtfi o0.xyz r3.xyz
+
+
+set r4.xyz 0.5 0.5 0.5
+mul r5.xyz i2.xyz r4.xyz
+add r5.xyz r5.xyz r4.xyz
+mul r5.xyz r5.xyz r2.xyz
+cvtfi o0.xyz r5.xyz
+
+
+seti o0.w 255
+ret

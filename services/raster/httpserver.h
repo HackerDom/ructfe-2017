@@ -1,20 +1,24 @@
 #pragma once
 
 #include <microhttpd.h>
-
+#include <string>
+#include <map>
 
 #define THREADPOOL_SIZE 16
 
 class HttpRequestState;
 class HttpRequestHandler;
 
+using Headers = std::map< std::string, std::string >;
+
 struct HttpRequest
 {
 	HttpRequest();
-	HttpRequest(const char *url, const char *method, MHD_Connection *connection);
+    HttpRequest(const char *url, const char *method, const Headers& headers, MHD_Connection *connection);
 
 	const char *url;
     const char *method;
+    Headers headers;
 
 	MHD_Connection *connection;
 };
@@ -43,7 +47,7 @@ public:
 private:
 	static int HandleRequest(void *param, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **context);
 	static void PostProcessRequest(void *param, MHD_Connection *connection, void **context, MHD_RequestTerminationCode toe);
-    static int RetriveContentLength(void *cls, enum MHD_ValueKind kind, const char *key, const char *value );
+    static int IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const char *key, const char *value );
 	static int SendResponse(MHD_Connection *connection, HttpResponse response);
 	static void OnFatalError(void *param, const char *file, uint32_t line, const char *reason);
 
@@ -60,12 +64,12 @@ public:
 	void CreateMhdProcessor();
 	bool TryGetResponse(HttpResponse *response);
 
-	virtual int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size) = 0;
+    virtual int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size) = 0;
 
 	MHD_PostProcessor *mhdProcessor;
 
 protected:
-    HttpPostProcessor(HttpRequest request);
+    HttpPostProcessor( const HttpRequest& request );
 
 	void Complete(HttpResponse response);
 	virtual void FinalizeRequest() = 0;
@@ -75,7 +79,7 @@ private:
 	HttpRequest request;
 	HttpResponse response;
 
-	static int IteratePostDataBase(void *context, MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
+    static int IteratePostDataBase(void *context, MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
 };
 
 #define OUT(x) NULL, sizeof(x), x
@@ -83,8 +87,15 @@ private:
 class HttpRequestHandler
 {
 public:
-	virtual HttpResponse HandleGet(HttpRequest request) = 0;
-    virtual HttpResponse HandlePost(HttpRequest request, int contentLength, HttpPostProcessor **postProcessor) = 0;
+    virtual HttpResponse HandleGet( HttpRequest request ) = 0;
+    virtual HttpResponse HandlePost( HttpRequest request, HttpPostProcessor **postProcessor ) = 0;
 
-	static bool ParseUrl(const char *url, int parts, ...);
+    static bool ParseUrl( const char *url, int parts, ... );
 };
+
+
+//
+bool GetHeader( const Headers& headers, const std::string& key, std::string& val );
+bool GetHeader( const Headers& headers, const std::string& key, int& val );
+bool GetHeader( const Headers& headers, const std::string& key, float& val );
+

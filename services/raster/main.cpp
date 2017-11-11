@@ -1,4 +1,14 @@
 #include "gpu.h"
+#include "httpserver.h"
+#include "ship.h"
+#include <lib3ds/file.h>
+#include <lib3ds/node.h>
+#include <lib3ds/mesh.h>
+#include <lib3ds/vector.h>
+#include <lib3ds/matrix.h>
+#include <list>
+#include <math.h>
+#include <time.h>
 
 void DrawTest()
 {
@@ -75,23 +85,438 @@ void TextureTest()
     save_png( "texture_test.png", image );
 }
 
+void BuildViewMatrix( Lib3dsMatrix viewMatrix, Lib3dsVector eye, Lib3dsVector at, Lib3dsVector up ) {
+    Lib3dsVector zAxis;
+    lib3ds_vector_sub( zAxis, at, eye );
+    lib3ds_vector_normalize( zAxis );
+
+    Lib3dsVector xAxis, yAxis;
+    lib3ds_vector_cross( xAxis, up, zAxis );
+    lib3ds_vector_normalize( xAxis );
+    lib3ds_vector_cross( yAxis, zAxis, xAxis );
+
+    viewMatrix[ 0 ][ 0 ] = xAxis[ 0 ];
+    viewMatrix[ 1 ][ 0 ] = xAxis[ 1 ];
+    viewMatrix[ 2 ][ 0 ] = xAxis[ 2 ];
+    viewMatrix[ 3 ][ 0 ] = -lib3ds_vector_dot( xAxis, eye );
+
+    viewMatrix[ 0 ][ 1 ] = yAxis[ 0 ];
+    viewMatrix[ 1 ][ 1 ] = yAxis[ 1 ];
+    viewMatrix[ 2 ][ 1 ] = yAxis[ 2 ];
+    viewMatrix[ 3 ][ 1 ] = -lib3ds_vector_dot( yAxis, eye );
+
+    viewMatrix[ 0 ][ 2 ] = zAxis[ 0 ];
+    viewMatrix[ 1 ][ 2 ] = zAxis[ 1 ];
+    viewMatrix[ 2 ][ 2 ] = zAxis[ 2 ];
+    viewMatrix[ 3 ][ 2 ] = -lib3ds_vector_dot( zAxis, eye );
+
+    viewMatrix[ 0 ][ 3 ] = 0.0f;
+    viewMatrix[ 1 ][ 3 ] = 0.0f;
+    viewMatrix[ 2 ][ 3 ] = 0.0f;
+    viewMatrix[ 3 ][ 3 ] = 1.0f;
+}
+
+void BuildOrthoProjMatrix( Lib3dsMatrix projMatrix, f32 width, f32 height, f32 near, f32 far ) {
+    for( u32 i = 0; i < 4; i++ )
+        for( u32 j = 0; j < 4; j++ )
+            projMatrix[ i ][ j ] = 0.0f;
+
+    projMatrix[ 0 ][ 0 ] = 2.0f / width;
+    projMatrix[ 1 ][ 1 ] = 2.0f / height;
+    projMatrix[ 2 ][ 2 ] = 1.0f / ( far - near );
+    projMatrix[ 3 ][ 2 ] = near / ( near - far );
+    projMatrix[ 3 ][ 3 ] = 1.0f;
+}
+
+
+void BuildProjMatrix( Lib3dsMatrix projMatrix, float fovY, float aspect, float near, float far ) {
+    for( u32 i = 0; i < 4; i++ )
+        for( u32 j = 0; j < 4; j++ )
+            projMatrix[ i ][ j ] = 0.0f;
+
+    f32 yScale = 1.0f / tanf( 0.5f * fovY );
+    f32 xScale = yScale / aspect;
+    f32 _22 = far / ( far - near );
+
+    projMatrix[ 0 ][ 0 ] = xScale;
+    projMatrix[ 1 ][ 1 ] = yScale;
+    projMatrix[ 2 ][ 2 ] = _22;
+    projMatrix[ 3 ][ 2 ] = -_22 * near;
+    projMatrix[ 2 ][ 3 ] = 1.0f;
+}
+
+
+//
+VertexBuffer* LoadShip()
+{
+    Lib3dsFile* file = lib3ds_file_load( "ship.3ds" );
+    Lib3dsMesh* mesh = file->meshes;
+    VertexBuffer* vb = new VertexBuffer( 3 * mesh->faces, 2 );
+
+    //for( u32 f = 0; f < mesh->faces; f++ ) {
+    //    Lib3dsFace& face = mesh->faceL[ f ];
+    //    face.smoothing = 1;
+    //}
+    Lib3dsVector* normalL = new Lib3dsVector[ 3 * mesh->faces ];
+    lib3ds_mesh_calculate_normals( mesh, normalL );
+
+    u32 v = 0;
+    for( u32 f = 0; f < mesh->faces; f++ ) {
+        const Lib3dsFace& face = mesh->faceL[ f ];
+        for( u32 p = 0; p < 3; p++ ) {
+            Lib3dsVector& point = mesh->pointL[ face.points[ p ] ].pos;
+            Lib3dsVector& normal = normalL[ f * 3 + p ];
+            Lib3dsVector pt, n;
+            Lib3dsMatrix identity;
+            lib3ds_matrix_identity( identity );
+            lib3ds_vector_transform( pt, identity, point );
+            lib3ds_vector_transform( n,  identity, normal );
+            vb->vertices[ v * vb->vertexComponents + 0 ].f = _mm_set_ps( 1.0f, pt[ 2 ], pt[ 1 ], pt[ 0 ] );
+            vb->vertices[ v * vb->vertexComponents + 1 ].f = _mm_set_ps( 0.0f, n[ 2 ], n[ 1 ], n[ 0 ] );
+            v++;
+        }
+    }
+    lib3ds_file_free( file );
+
+    return vb;
+}
+
+
+//
+void DrawShip()
+{
+    VertexBuffer* vb = LoadShip();
+
+    /*VertexBuffer vb( 6, 2 );
+    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
+    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
+
+    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
+    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
+
+    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
+    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
+
+    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
+    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
+
+    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
+    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
+
+    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
+    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
+
+    Image texture;
+    read_png( "texture.png", texture );*/
+
+    Lib3dsMatrix view, proj, viewProj;
+    Lib3dsVector camPos, camAt, camUp;
+    camPos[ 0 ] = 1.0f;
+    camPos[ 1 ] = 1.0f;
+    camPos[ 2 ] = -2.0f;
+    camAt[ 0 ] = 0.0f;
+    camAt[ 1 ] = 0.0f;
+    camAt[ 2 ] = 0.0f;
+    camUp[ 0 ] = 0.0f;
+    camUp[ 1 ] = 1.0f;
+    camUp[ 2 ] = 0.0f;
+    BuildViewMatrix( view, camPos, camAt, camUp );
+    BuildProjMatrix( proj, 90.0f / 180.0f * LIB3DS_PI, 1.0f, 0.1f, 100.0f );
+    //BuildOrthoProjMatrix( proj, 4.0, 4.0, 0.1f, 100.0f );
+    lib3ds_matrix_copy( viewProj, proj );
+    lib3ds_matrix_mult( viewProj, view );
+    lib3ds_matrix_transpose( viewProj );
+
+    Image image( 512, 512 );
+    Image depthRt( 512, 512 );
+    Shader vs( "shaders/ship.vs.bin" );
+    Shader ps( "shaders/ship.ps.bin" );
+
+    PipelineState pState;
+    memcpy( pState.constants, viewProj, 4 * 4 * sizeof( float ) );
+    memcpy( &pState.constants[ 4 ], camPos, 4 * sizeof( float ) );
+    pState.vb = vb;
+    pState.ib = nullptr;
+    pState.vs = &vs;
+    //pState.textures[ 0 ] = &texture;
+    pState.ps = &ps;
+    pState.rt = &image;
+    pState.depthRt = &depthRt;
+    CleanDepthRenderTarget( pState.depthRt, 1.0f );
+    Draw( pState );
+    save_png( "ship.png", image );
+
+    /*Lib3dsNode* nodes = file->nodes;
+    std::list< Lib3dsNode* > stack;
+    while( nodes ) {
+        //
+        if( node->type == LIB3DS_OBJECT_NODE ) {
+
+        }
+
+        // DFS
+        if( nodes->childs ) {
+            stack.push_back( nodes );
+            nodes = nodes->childs;
+        } else if( nodes->next ) {
+            nodes = nodes->next;
+        } else if( !stack.empty() ){
+            nodes = stack.pop_back()->next;
+        }
+    }*/
+}
+
+
+//
+class AddShipProcessor : public HttpPostProcessor
+{
+public:
+    AddShipProcessor(const HttpRequest& request, ShipStorage* shipStorage );
+    virtual ~AddShipProcessor();
+
+    int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
+
+    ShipStorage* m_shipStorage;
+    int m_flagShaderSize;
+    u8* m_flagShader;
+    f32 m_shipPosX;
+    f32 m_shipPosZ;
+    f32 m_shipRotY;
+    bool m_isHeadersValid;
+
+protected:
+    virtual void FinalizeRequest();
+
+private:
+};
+
+
+//
+AddShipProcessor::AddShipProcessor( const HttpRequest& request, ShipStorage* shipStorage )
+    : HttpPostProcessor( request )
+    , m_shipStorage( shipStorage )
+    , m_flagShader( nullptr )
+    , m_flagShaderSize( 0 )
+    , m_isHeadersValid( false )
+{
+    static std::string contentLengthKeyStr( "content-length" );
+    static std::string posXKeyStr( "pos_x" );
+    static std::string posZKeyStr( "pos_z" );
+    static std::string rotYKeyStr( "rot_y" );
+    int headerRead = 0;
+
+    if( GetHeader( request.headers, contentLengthKeyStr, m_flagShaderSize ) ) {
+        m_flagShader = new u8[ m_flagShaderSize ];
+        headerRead++;
+    }
+
+    if( GetHeader( request.headers, posXKeyStr, m_shipPosX ) )
+        headerRead++;
+
+    if( GetHeader( request.headers, posZKeyStr, m_shipPosZ ) )
+        headerRead++;
+
+    if( GetHeader( request.headers, rotYKeyStr, m_shipRotY ) )
+        headerRead++;
+
+    m_isHeadersValid = headerRead == 4;
+}
+
+
+//
+AddShipProcessor::~AddShipProcessor() {
+    delete[] m_flagShader;
+}
+
+
+//
+void AddShipProcessor::FinalizeRequest() {
+    if( !m_isHeadersValid ) {
+        Complete( HttpResponse( MHD_HTTP_BAD_REQUEST ) );
+        return;
+    }
+
+    if( !Shader::IsValidPixelShader( m_flagShader ) ) {
+        Complete( HttpResponse( MHD_HTTP_BAD_REQUEST ) );
+        return;
+    }
+
+    if( m_shipStorage->AddShip( m_shipPosX, m_shipPosZ, m_shipRotY, m_flagShader ) )
+        Complete( HttpResponse( MHD_HTTP_OK ) );
+    else
+        Complete( HttpResponse(MHD_HTTP_BAD_REQUEST) );
+}
+
+
+//
+int AddShipProcessor::IteratePostData( MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
+                                       const char *transferEncoding, const char *data, uint64_t offset, size_t size ) {
+    if( strncmp( key, "flag_shader", 11 ) == 0 && m_flagShader )
+        memcpy( m_flagShader + offset, data, size );
+
+    return MHD_YES;
+}
+
+
+//
+class RequestHandler : public HttpRequestHandler
+{
+public:
+    RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb );
+
+    HttpResponse HandleGet( HttpRequest request );
+    HttpResponse HandlePost( HttpRequest request, HttpPostProcessor **postProcessor );
+
+private:
+    ShipStorage* m_shipStorage;
+    VertexBuffer* m_shipVb;
+};
+
+
+//
+RequestHandler::RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb )
+    : m_shipStorage( shipStorage )
+    , m_shipVb( shipVb )
+{
+}
+
+
+//
+HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
+    if( ParseUrl( request.url, 1, "draw" ) )
+    {
+        static std::string camPosXStr( "cam_pos_x" );
+        static std::string camPosYStr( "cam_pos_y" );
+        static std::string camPosZStr( "cam_pos_z" );
+        static std::string camAimPosXStr( "cam_aimpos_x" );
+        static std::string camAimPosYStr( "cam_aimpos_y" );
+        static std::string camAimPosZStr( "cam_aimpos_z" );
+        int headerRead = 0;
+
+        Lib3dsVector camPos, camAt, camUp;
+        camPos[ 0 ] = 1.0f;
+        camPos[ 1 ] = 1.0f;
+        camPos[ 2 ] = -10.0f;
+        camAt[ 0 ] = 0.0f;
+        camAt[ 1 ] = 0.0f;
+        camAt[ 2 ] = 0.0f;
+        //camUp[ 0 ] = 0.0f;
+        //camUp[ 1 ] = 1.0f;
+        //camUp[ 2 ] = 0.0f;
+
+        GetHeader( request.headers, camPosXStr, camPos[ 0 ] );
+        GetHeader( request.headers, camPosYStr, camPos[ 1 ] );
+        GetHeader( request.headers, camPosZStr, camPos[ 2 ] );
+        GetHeader( request.headers, camAimPosXStr, camAt[ 0 ] );
+        GetHeader( request.headers, camAimPosYStr, camAt[ 1 ] );
+        GetHeader( request.headers, camAimPosZStr, camAt[ 2 ] );
+
+        // build camUp vector
+        Lib3dsVector upVector, temp, dir;
+        upVector[ 0 ] = 0.0f; upVector[ 1 ] = 1.0f; upVector[ 2 ] = 0.0f;
+        lib3ds_vector_sub( dir, camAt, camPos );
+        lib3ds_vector_normalize( dir );
+        lib3ds_vector_cross( temp, dir, upVector );
+        lib3ds_vector_cross( camUp, temp, dir );
+
+        // draw
+        Lib3dsMatrix view, proj, viewProj;
+        BuildViewMatrix( view, camPos, camAt, camUp );
+        BuildProjMatrix( proj, 90.0f / 180.0f * LIB3DS_PI, 1.0f, 0.1f, 100.0f );
+        //BuildOrthoProjMatrix( proj, 4.0, 4.0, 0.1f, 100.0f );
+        lib3ds_matrix_copy( viewProj, proj );
+        lib3ds_matrix_mult( viewProj, view );
+        lib3ds_matrix_transpose( viewProj );
+
+        Image image( 512, 512 );
+        Image depthRt( 512, 512 );
+        Shader vs( "shaders/ship.vs.bin" );
+        Shader ps( "shaders/ship.ps.bin" );
+
+        PipelineState pState;
+        memcpy( pState.constants, viewProj, 4 * 4 * sizeof( float ) );
+        memcpy( &pState.constants[ 4 ], camPos, 4 * sizeof( float ) );
+        pState.vb = m_shipVb;
+        pState.ib = nullptr;
+        pState.vs = &vs;
+        //pState.textures[ 0 ] = &texture;
+        pState.ps = &ps;
+        pState.rt = &image;
+        pState.depthRt = &depthRt;
+
+        CleanDepthRenderTarget( pState.depthRt, 1.0f );
+
+        Ship* ship = m_shipStorage->GetListTail();
+        while( ship ) {
+            Lib3dsMatrix tr, rot;
+            lib3ds_matrix_identity( tr );
+            lib3ds_matrix_identity( rot );
+            lib3ds_matrix_rotate_y( rot, ship->m_rotY );
+            lib3ds_matrix_translate_xyz( tr, ship->m_posX, 0.0f, ship->m_posZ );
+            lib3ds_matrix_mult( rot, tr );
+            lib3ds_matrix_transpose( rot );
+            memcpy( &pState.constants[ 5 ], rot, 4 * 4 * sizeof( float ) );
+            Draw( pState );
+            ship = ship->m_previousShip;
+        }
+
+        save_png( "draw.png", image );
+        return HttpResponse( MHD_HTTP_OK );
+    }
+    return HttpResponse( MHD_HTTP_NOT_FOUND );
+}
+
+
+//
+HttpResponse RequestHandler::HandlePost( HttpRequest request, HttpPostProcessor **postProcessor ) {
+    if( ParseUrl( request.url, 1, "add_ship" ) ) {
+        *postProcessor = new AddShipProcessor( request, m_shipStorage );
+        return HttpResponse();
+    }
+
+    return HttpResponse( MHD_HTTP_NOT_FOUND );
+}
+
+
 //
 void GpuTests()
 {
     DrawTest();
     TextureTest();
+
+    timespec tp;
+    double startTime, endTime;
+    clock_gettime( CLOCK_REALTIME, &tp );
+    startTime = tp.tv_sec + tp.tv_nsec / 1000000000.0;
+    DrawShip();
+    clock_gettime( CLOCK_REALTIME, &tp );
+    endTime = tp.tv_sec + tp.tv_nsec / 1000000000.0;
+    printf( ":: Time: %f\n", endTime - startTime );
 }
 
 
 //
 void Service()
 {
+    VertexBuffer* shipVb = LoadShip();
+    ShipStorage shipStorage( "storage.dat" );
+    RequestHandler handler( &shipStorage, shipVb );
+    HttpServer server(&handler);
 
+    server.Start(16780);
+
+    while(1){
+        sleep(1);
+    }
+
+    server.Stop();
+    delete shipVb;
 }
 
 
 int main()
 {
-    GpuTests();
+    //GpuTests();
+    Service();
     return 0;
 }

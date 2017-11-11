@@ -238,7 +238,7 @@ struct Shader : public NonMovable
         struct
         {
             ShaderType type : 1;
-            u32 instructionsNum : 16;
+            u32 instructionsNum : 10;
         };
         union
         {
@@ -276,6 +276,33 @@ struct Shader : public NonMovable
         instructions = ( Instruction* )memalign( 16, header.instructionsNum * sizeof( Instruction ) );
         fread( instructions, sizeof( Instruction ), header.instructionsNum, f );
         fclose( f );
+    }
+
+    Shader( const u8* shader ) {
+        const u8* ptr = shader;
+        memcpy( &header, ptr, sizeof( Header ) );
+        ptr += sizeof( Header );
+        instructions = ( Instruction* )memalign( 16, header.instructionsNum * sizeof( Instruction ) );
+        memcpy( instructions, ptr, header.instructionsNum * sizeof( Instruction ) );
+    }
+
+    size_t GetSize() const {
+        return sizeof( Header ) + header.instructionsNum * sizeof( Instruction );
+    }
+
+    static bool IsValidPixelShader( const u8* shader ) {
+        Header* _header;
+        const u8* ptr = shader;
+        _header = ( Header* )ptr;
+        ptr += sizeof( Header );
+
+        if( _header->type != SHADER_PIXEL )
+            return false;
+
+        if( _header->instructionsNum > 1024 )
+            return false;
+
+        return true;
     }
 
     ~Shader() {
