@@ -173,7 +173,7 @@ droplet_id = None
 if net_state == "READY":
     cloud_ip = get_cloud_ip()
     if not cloud_ip:
-        log_stderr("no cloud_ip ip, exiting")
+        log_stderr("no cloud ip, exiting")
         sys.exit(1)
 
     ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS + 

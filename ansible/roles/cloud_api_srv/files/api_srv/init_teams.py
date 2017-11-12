@@ -25,6 +25,7 @@ for i in range(N):
     open("db/team%d/deploy_method" % i, "w").write("UNKNOWN")
     open("db/team%d/net_deploy_state" % i, "w").write("NOT_STARTED")
     open("db/team%d/image_deploy_state" % i, "w").write("NOT_STARTED")
+    open("db/team%d/team_state" % i, "w").write("NOT_CLOUD")
 
     shutil.copyfile("openvpn_team_net/client_entergame/%d.conf" % i, "db/team%d/client_entergame.ovpn" % i)
     shutil.copyfile("openvpn_team_net/client_intracloud/%d.conf" % i, "db/team%d/client_intracloud.conf" % i)
