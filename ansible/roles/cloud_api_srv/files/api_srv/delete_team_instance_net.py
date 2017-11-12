@@ -28,11 +28,6 @@ SSH_OPTS = [
     "-o", "UserKnownHostsFile=/dev/null"
 ]
 
-SSH_DO_OPTS = SSH_OPTS + [
-    "-o", "User=root",
-    "-o", "IdentityFile=ructf2017_do_deploy"
-]
-
 SSH_YA_OPTS = SSH_OPTS + [
     "-o", "User=cloud",
     "-o", "IdentityFile=ructf2017_ya_deploy"

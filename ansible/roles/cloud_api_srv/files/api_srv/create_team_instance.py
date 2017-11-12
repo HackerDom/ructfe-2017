@@ -45,21 +45,54 @@ SSH_YA_OPTS = SSH_OPTS + [
 def log_stderr(*params):
     print("Team %d:" % TEAM, *params,file=sys.stderr)
 
-def check_vm_exists():
-    resp = requests.get("https://api.digitalocean.com/v2/droplets", headers=HEADERS)
-    data = json.loads(resp.text)
+def get_all_vms(attempts=5, timeout=10):
+    vms = {}
+    url = "https://api.digitalocean.com/v2/droplets?per_page=200"
+    
+    cur_attempt = 1
 
-    for droplet in data["droplets"]:
-        if droplet["name"] == VM_NAME:
+    while True:
+        try:
+            resp = requests.get(url, headers=HEADERS)
+            if not str(resp.status_code).startswith("2"):
+                log_stderr(resp.status_code, resp.headers, resp.text)
+                raise Exception("bad status code %d" % resp.status_code)
+
+            data = json.loads(resp.text)
+
+            for droplet in data["droplets"]:
+                vms[droplet["id"]] = droplet
+
+            if "links" in data and "pages" in data["links"] and "next" in data["links"]["pages"]:
+                url = data["links"]["pages"]["next"]
+            else:
+                break
+
+        except Exception as e:
+            log_stderr("get_all_vms trying again %s" % (e,))
+            cur_attempt += 1
+            if cur_attempt > attempts:
+                return None # do not return parts of the output
+            time.sleep(timeout)
+    return list(vms.values())
+
+
+def check_vm_exists(vm_name):
+    droplets = get_all_vms()
+    if droplets is None:
+        return None
+
+    for droplet in droplets:
+        if droplet["name"] == vm_name:
             return True
     return False
 
 
-def create_vm(attempts=10, timeout=20):
+def create_vm(vm_name, attempts=10, timeout=20):
     for i in range(attempts):
         try:
             data = json.dumps({
-                "name": VM_NAME,
+                "name": vm_name,
                 "region": "ams2",
                 "size": "512mb",
                 "image": 29261612,
@@ -84,7 +117,7 @@ def create_vm(attempts=10, timeout=20):
             log_stderr("create_vm trying again %s" % (e,))
         time.sleep(timeout)
     return None
-        
+
 
 def get_ip_by_id(droplet_id, attempts=5, timeout=20):
     for i in range(attempts):
@@ -97,24 +130,26 @@ def get_ip_by_id(droplet_id, attempts=5, timeout=20):
             log_stderr("get_ip_by_id trying again %s" % (e,))
         time.sleep(timeout)
     log_stderr("failed to get ip by id")
-    return ""
+    return None
 
-def get_ip_by_vmname(team, attempts=5, timeout=20):
-    for i in range(attempts):
-        try:
-            resp = requests.get("https://api.digitalocean.com/v2/droplets", headers=HEADERS)
-            data = json.loads(resp.text)
-            print(data)
+def get_ip_by_vmname(vm_name):
+    ids = set()
 
-            for droplet in data["droplets"]:
-                if droplet["name"] == VM_NAME:
-                    return droplet['networks']['v4'][0]['ip_address']
-            raise Exception("no droplet with such name")
-        except Exception as e:
-            log_stderr("get_ip_by_vmname trying again %s" % (e,))
-        time.sleep(timeout)
-    log_stderr("failed to get ip by vmname")
-    return ""
+    droplets = get_all_vms()
+    if droplets is None:
+        return None
+
+    for droplet in droplets:
+        if droplet["name"] == vm_name:
+            ids.add(droplet['id'])
+
+    if len(ids) > 1:
+        log_stderr("warning: there are more than one droplet with name %s, using random :)" % vm_name)
+
+    if not ids:
+        return None
+
+    return get_ip_by_id(list(ids)[0])
 
 def gen_cloud_ip():
     cloud_ip = random.choice(CLOUD_HOSTS)
@@ -129,21 +164,88 @@ def get_cloud_ip():
         open("db/team%d/cloud_ip" % TEAM, "w").write(cloud_ip)
         return cloud_ip
 
-def create_domain_record(name, ip):
-    data = json.dumps({
-        "type": "A",
-        "name": name,
-        "data": ip,
-        "ttl":1
-    })
-    resp = requests.post("https://api.digitalocean.com/v2/domains/%s/records" % DOMAIN, headers=HEADERS, data=data)
-    return resp.status_code in [200, 201, 202]
+def get_all_domain_records(attempts=5, timeout=20):
+    records = {}
+    url = "https://api.digitalocean.com/v2/domains/%s/records?per_page=200" % DOMAIN
+    
+    cur_attempt = 1
+
+    while True:
+        try:
+            resp = requests.get(url, headers=HEADERS)
+            if not str(resp.status_code).startswith("2"):
+                log_stderr(resp.status_code, resp.headers, resp.text)
+                raise Exception("bad status code %d" % resp.status_code)
+
+            data = json.loads(resp.text)
+            for record in data["domain_records"]:
+                records[record["id"]] = record
+
+            if "links" in data and "pages" in data["links"] and "next" in data["links"]["pages"]:
+                url = data["links"]["pages"]["next"]
+            else:
+                break
+        except Exception as e:
+            log_stderr("get_all_domain_records trying again %s" % (e,))
+            cur_attempt += 1
+            if cur_attempt > attempts:
+                return None # do not return parts of the output
+            time.sleep(timeout)
+
+    return list(records.values())
+
+
+def get_domain_ids_by_hostname(host_name):
+    ids = set()
+
+    records = get_all_domain_records()
+    if records is None:
+        return None
+
+    for record in records:
+        if record["type"] == "A" and record["name"] == host_name:
+            ids.add(record['id'])
+    return ids
+
+def create_domain_record(name, ip, attempts=10, timeout=20):
+    for i in range(attempts):
+        try:
+            data = json.dumps({
+                "type": "A",
+                "name": name,
+                "data": ip,
+                "ttl":1
+            })
+            resp = requests.post("https://api.digitalocean.com/v2/domains/%s/records" % DOMAIN, headers=HEADERS, data=data)
+            if not str(resp.status_code).startswith("2"):
+                log_stderr(resp.status_code, resp.headers, resp.text)
+                raise Exception("bad status code %d" % resp.status_code)
+            return True            
+        except Exception as e:
+            log_stderr("create_domain_record trying again %s" % (e,))
+        time.sleep(timeout)
+    return None
+
+def delete_domain_record(domain_id, attempts=10, timeout=20):
+    for i in range(attempts):
+        try:
+            log_stderr("deleting domain record %d" % domain_id)
+            resp = requests.delete("https://api.digitalocean.com/v2/domains/%s/records/%d" % (DOMAIN, domain_id), headers=HEADERS)
+            if not str(resp.status_code).startswith("2"):
+                log_stderr(resp.status_code, resp.headers, resp.text)
+                raise Exception("bad status code %d" % resp.status_code)
+            return True
+        except Exception as e:
+            log_stderr("delete_domain_record trying again %s" % (e,))
+        time.sleep(timeout)
+    return False
 
 def call_unitl_zero_exit(params, attempts=60, timeout=10):
     for i in range(attempts):
         if subprocess.call(params) == 0:
             return True
         time.sleep(timeout)
+    return None
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -151,9 +253,14 @@ net_state = open("db/team%d/net_deploy_state" % TEAM).read().strip()
 
 droplet_id = None
 if net_state == "NOT_STARTED":
-    if not check_vm_exists():
-        droplet_id = create_vm()
-        if not droplet_id:
+    exists = check_vm_exists(VM_NAME)
+    if exists is None:
+        log_stderr("failed to determine if vm exists, exiting")
+        sys.exit(1)
+
+    if not exists:
+        droplet_id = create_vm(VM_NAME)
+        if droplet_id is None:
             log_stderr("failed to create vm, exiting")
             sys.exit(1)
 
@@ -167,9 +274,19 @@ if net_state == "DO_LAUNCHED":
         ip = get_ip_by_vmname(VM_NAME)
     else:
         ip = get_ip_by_id(droplet_id)
-    if not ip:
+    
+    if ip is None:
         log_stderr("no ip, exiting")
         sys.exit(1)
+
+    domain_ids = get_domain_ids_by_hostname(VM_NAME)
+    if domain_ids is None:
+        log_stderr("failed to check if dns exists, exiting")
+        sys.exit(1)
+
+    if domain_ids:
+        for domain_id in domain_ids:
+            delete_domain_record(domain_id)
 
     if create_domain_record(VM_NAME, ip):
         net_state = "DNS_REGISTERED"
@@ -179,11 +296,12 @@ if net_state == "DO_LAUNCHED":
         sys.exit(1)
 
 if net_state == "DNS_REGISTERED":
-    if not ip:
+    if ip is None:
         ip = get_ip_by_vmname(VM_NAME)
-    if not ip:
-        log_stderr("no ip, exiting")
-        sys.exit(1)
+
+        if ip is None:
+            log_stderr("no ip, exiting")
+            sys.exit(1)
 
     ret = call_unitl_zero_exit(["scp"] + SSH_DO_OPTS + 
         ["db/team%d/server_outside.conf" % TEAM, 
