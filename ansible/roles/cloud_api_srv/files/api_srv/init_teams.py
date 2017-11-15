@@ -34,6 +34,8 @@ for i in range(N):
     shutil.copyfile("openvpn_team_main_net_client/%d.conf" % i, "db/team%d/game_network.conf" % i)
 
     shutil.copyfile("root_passwds/passwds/team%d_root_passwd.txt" % i, "db/team%d/root_passwd.txt" % i)
+    
+    shutil.copyfile("tokens_hashed/%d.txt" % i, "db/team%d/token_hash.txt" % i)
 
     rootpasswd = open("root_passwds/passwds/team%d_root_passwd.txt" % i).read().strip()
     root_passwd_hash = crypt.crypt(rootpasswd, crypt.METHOD_SHA512)
