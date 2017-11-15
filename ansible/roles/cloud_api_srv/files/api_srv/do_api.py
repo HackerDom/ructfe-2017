@@ -51,6 +51,19 @@ def get_all_vms(attempts=5, timeout=10):
     return list(vms.values())
 
 
+def get_ids_by_vmname(vm_name):
+    ids = set()
+
+    droplets = get_all_vms()
+    if droplets is None:
+        return None
+
+    for droplet in droplets:
+        if droplet["name"] == vm_name:
+            ids.add(droplet['id'])
+    return ids
+
+
 def check_vm_exists(vm_name):
     droplets = get_all_vms()
     if droplets is None:
@@ -91,6 +104,21 @@ def create_vm(vm_name, image, ssh_keys, region="ams2", size="512mb", attempts=10
             log("create_vm trying again %s" % (e,))
         time.sleep(timeout)
     return None
+
+
+def delete_vm_by_id(droplet_id, attempts=10, timeout=20):
+    for i in range(attempts):
+        try:
+            log("deleting droplet")
+            resp = requests.delete("https://api.digitalocean.com/v2/droplets/%d" % droplet_id, headers=HEADERS)
+            if not str(resp.status_code).startswith("2"):
+                log(resp.status_code, resp.headers, resp.text)
+                raise Exception("bad status code %d" % resp.status_code)
+            return True
+        except Exception as e:
+            log("delete_vm_by_id trying again %s" % (e,))
+        time.sleep(timeout)
+    return False
 
 
 def get_ip_by_id(droplet_id, attempts=5, timeout=20):
@@ -158,7 +186,7 @@ def get_all_domain_records(domain, attempts=5, timeout=20):
     return list(records.values())
 
 
-def get_domain_ids_by_hostname(host_name, domain):
+def get_domain_ids_by_hostname(host_name, domain, print_warning_on_fail=False):
     ids = set()
 
     records = get_all_domain_records(domain)
@@ -168,6 +196,11 @@ def get_domain_ids_by_hostname(host_name, domain):
     for record in records:
         if record["type"] == "A" and record["name"] == host_name:
             ids.add(record['id'])
+
+    if not ids:
+        if print_warning_on_fail:
+            log_stderr("failed to get domain ids by hostname")
+
     return ids
 
 

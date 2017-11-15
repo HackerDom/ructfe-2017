@@ -31,14 +31,17 @@ def gen_cloud_ip():
     cloud_ip = random.choice(CLOUD_HOSTS)
     return cloud_ip
 
-def get_cloud_ip(team):
+def get_cloud_ip(team, may_generate=False):
     try:
         return open("db/team%d/cloud_ip" % team).read().strip()
     except FileNotFoundError as e:
-        cloud_ip = gen_cloud_ip()
-        print("Generating cloud_ip, assigned %s" % cloud_ip, file=sys.stderr)
-        open("db/team%d/cloud_ip" % team, "w").write(cloud_ip)
-        return cloud_ip
+        if may_generate:
+            cloud_ip = gen_cloud_ip()
+            print("Generating cloud_ip, assigned %s" % cloud_ip, file=sys.stderr)
+            open("db/team%d/cloud_ip" % team, "w").write(cloud_ip)
+            return cloud_ip
+        else:
+            return None
 
 def log_progress(*params):
     print("progress:", *params, flush=True)

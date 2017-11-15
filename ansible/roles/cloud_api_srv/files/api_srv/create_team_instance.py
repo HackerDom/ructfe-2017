@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 
 import sys
-import requests
 import json
 import time
 import os
-import subprocess
-import random
 import traceback
 
 import do_api
@@ -126,7 +123,7 @@ def main():
     log_progress("75%")
 
     if net_state == "DO_DEPLOYED":
-        cloud_ip = get_cloud_ip(TEAM)
+        cloud_ip = get_cloud_ip(TEAM, may_generate=True)
         if not cloud_ip:
             log_stderr("no cloud_ip ip, exiting")
             sys.exit(1)
