@@ -7,6 +7,9 @@ DOMAIN = "cloud.alexbers.com"
 
 CLOUD_HOSTS = ["5.45.248.218"]
 
+ROUTER_HOST = "router2.ructfe.clients.haas.yandex.net" # change me before the game
+
+
 SSH_OPTS = [
     "-o", "StrictHostKeyChecking=no", 
     "-o", "CheckHostIP=no", 
