@@ -25,7 +25,8 @@ SSH_OPTS = [
     "-o", "NoHostAuthenticationForLocalhost=yes",
     "-o", "BatchMode=yes",
     "-o", "LogLevel=ERROR",
-    "-o", "UserKnownHostsFile=/dev/null"
+    "-o", "UserKnownHostsFile=/dev/null",
+    "-o", "ConnectTimeout=10"
 ]
 
 SSH_YA_OPTS = SSH_OPTS + [
