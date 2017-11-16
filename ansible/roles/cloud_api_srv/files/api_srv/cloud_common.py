@@ -7,12 +7,13 @@ DOMAIN = "cloud.alexbers.com"
 
 CLOUD_HOSTS = ["5.45.248.218"]
 
-ROUTER_HOST = "router2.ructfe.clients.haas.yandex.net" # change me before the game
+# change me before the game
+ROUTER_HOST = "router2.ructfe.clients.haas.yandex.net"
 
 
 SSH_OPTS = [
-    "-o", "StrictHostKeyChecking=no", 
-    "-o", "CheckHostIP=no", 
+    "-o", "StrictHostKeyChecking=no",
+    "-o", "CheckHostIP=no",
     "-o", "NoHostAuthenticationForLocalhost=yes",
     "-o", "BatchMode=yes",
     "-o", "LogLevel=ERROR",
@@ -30,9 +31,11 @@ SSH_YA_OPTS = SSH_OPTS + [
     "-o", "IdentityFile=ructf2017_ya_deploy"
 ]
 
+
 def gen_cloud_ip():
     cloud_ip = random.choice(CLOUD_HOSTS)
     return cloud_ip
+
 
 def get_cloud_ip(team, may_generate=False):
     try:
@@ -40,14 +43,16 @@ def get_cloud_ip(team, may_generate=False):
     except FileNotFoundError as e:
         if may_generate:
             cloud_ip = gen_cloud_ip()
-            print("Generating cloud_ip, assigned %s" % cloud_ip, file=sys.stderr)
+            print("Generating cloud_ip, assigned " + cloud_ip, file=sys.stderr)
             open("db/team%d/cloud_ip" % team, "w").write(cloud_ip)
             return cloud_ip
         else:
             return None
 
+
 def log_progress(*params):
     print("progress:", *params, flush=True)
+
 
 def call_unitl_zero_exit(params, attempts=60, timeout=10):
     for i in range(attempts):

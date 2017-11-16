@@ -7,18 +7,18 @@ import os
 import traceback
 
 import do_api
-from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit, 
+from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
                           SSH_OPTS, SSH_DO_OPTS, SSH_YA_OPTS, DOMAIN)
 
 TEAM = int(sys.argv[1])
 VM_NAME = "router-team%d" % TEAM
 
 DO_IMAGE = 29261612
-DO_SSH_KEYS = [435386,15240256]
+DO_SSH_KEYS = [435386, 15240256]
 
 
 def log_stderr(*params):
-    print("Team %d:" % TEAM, *params,file=sys.stderr)
+    print("Team %d:" % TEAM, *params, file=sys.stderr)
 
 
 def main():
@@ -35,14 +35,15 @@ def main():
         log_progress("5%")
 
         if not exists:
-            droplet_id = do_api.create_vm(VM_NAME, image=DO_IMAGE, ssh_keys=DO_SSH_KEYS)
+            droplet_id = do_api.create_vm(
+                VM_NAME, image=DO_IMAGE, ssh_keys=DO_SSH_KEYS)
             if droplet_id is None:
                 log_stderr("failed to create vm, exiting")
                 sys.exit(1)
 
         net_state = "DO_LAUNCHED"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
-        time.sleep(1) # this allows to make less requests (there is a limit)
+        time.sleep(1)  # this allows to make less requests (there is a limit)
 
     log_progress("10%")
     ip = None
@@ -51,7 +52,7 @@ def main():
             ip = do_api.get_ip_by_vmname(VM_NAME)
         else:
             ip = do_api.get_ip_by_id(droplet_id)
-        
+
         if ip is None:
             log_stderr("no ip, exiting")
             sys.exit(1)
@@ -62,7 +63,7 @@ def main():
         if domain_ids is None:
             log_stderr("failed to check if dns exists, exiting")
             sys.exit(1)
-        
+
         if domain_ids:
             for domain_id in domain_ids:
                 do_api.delete_domain_record(domain_id, DOMAIN)
@@ -75,7 +76,7 @@ def main():
         else:
             log_stderr("failed to create vm: dns register error")
             sys.exit(1)
-        
+
         for i in range(20, 60):
             # just spinning for the sake of smooth progress
             log_progress("%d%%" % i)
@@ -93,26 +94,28 @@ def main():
 
         log_progress("65%")
 
-        ret = call_unitl_zero_exit(["scp"] + SSH_DO_OPTS + 
-            ["db/team%d/server_outside.conf" % TEAM, 
-            "%s:/etc/openvpn/server_outside_team%d.conf" % (ip,TEAM)])
+        file_from = "db/team%d/server_outside.conf" % TEAM
+        file_to = "%s:/etc/openvpn/server_outside_team%d.conf" % (ip, TEAM)
+        ret = call_unitl_zero_exit(["scp"] + SSH_DO_OPTS +
+                                   [file_from, file_to])
         if not ret:
             log_stderr("scp to DO failed")
             sys.exit(1)
 
         log_progress("70%")
 
-        ret = call_unitl_zero_exit(["scp"] + SSH_DO_OPTS + 
-            ["db/team%d/game_network.conf" % TEAM, 
-            "%s:/etc/openvpn/game_network_team%d.conf" % (ip,TEAM)])
+        file_from = "db/team%d/game_network.conf" % TEAM
+        file_to = "%s:/etc/openvpn/game_network_team%d.conf" % (ip, TEAM)
+        ret = call_unitl_zero_exit(["scp"] + SSH_DO_OPTS +
+                                   [file_from, file_to])
         if not ret:
             log_stderr("scp to DO failed")
             sys.exit(1)
 
         log_progress("72%")
 
-        ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + 
-            [ip, "systemctl start openvpn@server_outside_team%d" % TEAM])
+        cmd = ["systemctl start openvpn@server_outside_team%d" % TEAM]
+        ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
         if not ret:
             log_stderr("start internal tun")
             sys.exit(1)
@@ -130,26 +133,28 @@ def main():
 
         log_progress("77%")
 
-        ret = call_unitl_zero_exit(["scp"] + SSH_YA_OPTS + 
-            ["db/team%d/client_intracloud.conf" % TEAM,  
-            "%s:/home/cloud/client_intracloud_team%d.conf" % (cloud_ip, TEAM)])
+        file_from = "db/team%d/client_intracloud.conf" % TEAM
+        file_to = "%s:/home/cloud/client_intracloud_team%d.conf" % (cloud_ip,
+                                                                    TEAM)
+        ret = call_unitl_zero_exit(["scp"] + SSH_YA_OPTS +
+                                   [file_from, file_to])
         if not ret:
             log_stderr("scp to YA failed")
             sys.exit(1)
 
         log_progress("78%")
 
-        ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS + 
-            [cloud_ip, "sudo", "/cloud/scripts/launch_intra_vpn.sh", str(TEAM)])
+        cmd = ["sudo", "/cloud/scripts/launch_intra_vpn.sh", str(TEAM)]
+        ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd)
         if not ret:
             log_stderr("launch team intra vpn")
             sys.exit(1)
-        
+
         net_state = "READY"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
 
     image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
-    
+
     log_progress("80%")
 
     if net_state == "READY":
@@ -160,17 +165,20 @@ def main():
                 log_stderr("no cloud_ip ip, exiting")
                 sys.exit(1)
 
-            ret = call_unitl_zero_exit(["scp"] + SSH_YA_OPTS + 
-                ["db/team%d/root_passwd_hash.txt" % TEAM,  
-                "%s:/home/cloud/root_passwd_hash_team%d.txt" % (cloud_ip, TEAM)])
+            file_from = "db/team%d/root_passwd_hash.txt" % TEAM
+            file_to = "%s:/home/cloud/root_passwd_hash_team%d.txt" % (cloud_ip,
+                                                                      TEAM)
+            ret = call_unitl_zero_exit(["scp"] + SSH_YA_OPTS +
+                                       [file_from, file_to])
             if not ret:
                 log_stderr("scp to YA failed")
                 sys.exit(1)
 
             log_progress("85%")
 
-            ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS + 
-                [cloud_ip, "sudo", "/cloud/scripts/launch_vm.sh", str(TEAM)])
+            cmd = ["sudo", "/cloud/scripts/launch_vm.sh", str(TEAM)]
+            ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS +
+                                       [cloud_ip] + cmd)
             if not ret:
                 log_stderr("launch team vm")
                 sys.exit(1)
