@@ -30,7 +30,7 @@ def main():
         exists = do_api.check_vm_exists(VM_NAME)
         if exists is None:
             log_stderr("failed to determine if vm exists, exiting")
-            sys.exit(1)
+            return 1
 
         log_progress("5%")
 
@@ -39,7 +39,7 @@ def main():
                 VM_NAME, image=DO_IMAGE, ssh_keys=DO_SSH_KEYS)
             if droplet_id is None:
                 log_stderr("failed to create vm, exiting")
-                sys.exit(1)
+                return 1
 
         net_state = "DO_LAUNCHED"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
@@ -55,14 +55,14 @@ def main():
 
         if ip is None:
             log_stderr("no ip, exiting")
-            sys.exit(1)
+            return 1
 
         log_progress("15%")
 
         domain_ids = do_api.get_domain_ids_by_hostname(VM_NAME, DOMAIN)
         if domain_ids is None:
             log_stderr("failed to check if dns exists, exiting")
-            sys.exit(1)
+            return 1
 
         if domain_ids:
             for domain_id in domain_ids:
@@ -75,7 +75,7 @@ def main():
             open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
         else:
             log_stderr("failed to create vm: dns register error")
-            sys.exit(1)
+            return 1
 
         for i in range(20, 60):
             # just spinning for the sake of smooth progress
@@ -90,7 +90,7 @@ def main():
 
             if ip is None:
                 log_stderr("no ip, exiting")
-                sys.exit(1)
+                return 1
 
         log_progress("65%")
 
@@ -100,7 +100,7 @@ def main():
                                    [file_from, file_to])
         if not ret:
             log_stderr("scp to DO failed")
-            sys.exit(1)
+            return 1
 
         log_progress("70%")
 
@@ -110,7 +110,7 @@ def main():
                                    [file_from, file_to])
         if not ret:
             log_stderr("scp to DO failed")
-            sys.exit(1)
+            return 1
 
         log_progress("72%")
 
@@ -118,7 +118,7 @@ def main():
         ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
         if not ret:
             log_stderr("start internal tun")
-            sys.exit(1)
+            return 1
 
         net_state = "DO_DEPLOYED"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
@@ -129,7 +129,7 @@ def main():
         cloud_ip = get_cloud_ip(TEAM, may_generate=True)
         if not cloud_ip:
             log_stderr("no cloud_ip ip, exiting")
-            sys.exit(1)
+            return 1
 
         log_progress("77%")
 
@@ -140,7 +140,7 @@ def main():
                                    [file_from, file_to])
         if not ret:
             log_stderr("scp to YA failed")
-            sys.exit(1)
+            return 1
 
         log_progress("78%")
 
@@ -148,7 +148,7 @@ def main():
         ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd)
         if not ret:
             log_stderr("launch team intra vpn")
-            sys.exit(1)
+            return 1
 
         net_state = "READY"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
@@ -163,7 +163,7 @@ def main():
 
             if not cloud_ip:
                 log_stderr("no cloud_ip ip, exiting")
-                sys.exit(1)
+                return 1
 
             file_from = "db/team%d/root_passwd_hash.txt" % TEAM
             file_to = "%s:/home/cloud/root_passwd_hash_team%d.txt" % (cloud_ip,
@@ -172,7 +172,7 @@ def main():
                                        [file_from, file_to])
             if not ret:
                 log_stderr("scp to YA failed")
-                sys.exit(1)
+                return 1
 
             log_progress("85%")
 
@@ -181,35 +181,33 @@ def main():
                                        [cloud_ip] + cmd)
             if not ret:
                 log_stderr("launch team vm")
-                sys.exit(1)
+                return 1
 
             image_state = "RUNNING"
             open("db/team%d/image_deploy_state" % TEAM, "w").write(image_state)
+    
     log_progress("100%")
+    return 0
+
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    print("started: %d" % int(time.time()))
+    print("started: %d" % time.time())
+    exitcode = 1
     try:
-        main()
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
+        exitcode = main()
+
+        net_state = open("db/team%d/net_deploy_state" % TEAM).read().strip()
+        image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
+
+        log_stderr("NET_STATE:", net_state)
+        log_stderr("IMAGE_STATE:", image_state)
+
+        if net_state != "READY":
+            print("msg: ERR, failed to set up the network")
+        elif image_state != "RUNNING":
+            print("msg: ERR, failed to start up the vm")
     except:
         traceback.print_exc()
-
-    net_state = open("db/team%d/net_deploy_state" % TEAM).read().strip()
-    image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
-
-    log_stderr("NET_STATE:", net_state)
-    log_stderr("IMAGE_STATE:", image_state)
-
-    if net_state == "READY" and image_state == "RUNNING":
-        print("status: OK")
-    elif net_state != "READY":
-        print("status: ERR, failed to set up the network")
-    elif image_state != "RUNNING":
-        print("status: ERR, failed to start up the vm")
-    else:
-        print("status: ERR")
-
-    print("finished: %d" % int(time.time()))
-
-    sys.exit(0)
+    print("exit_code: %d" % exitcode)
+    print("finished: %d" % time.time())

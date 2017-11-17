@@ -24,7 +24,7 @@ def main():
     droplet_id = None
     if net_state != "READY":
         log_stderr("the network state should be READY")
-        sys.exit(1)
+        return 1
 
     team_state = open("db/team%d/team_state" % TEAM).read().strip()
 
@@ -34,13 +34,13 @@ def main():
         ip = do_api.get_ip_by_vmname(VM_NAME)
         if ip is None:
             log_stderr("no ip, exiting")
-            sys.exit(1)
+            return 1
 
         cmd = ["sudo", "/root/cloud/switch_team_to_cloud.sh", str(TEAM), ip]
         ret = call_unitl_zero_exit(["ssh"] + SSH_YA_OPTS + [ROUTER_HOST] + cmd)
         if not ret:
             log_stderr("switch_team_to_cloud")
-            sys.exit(1)
+            return 1
         team_state = "MIDDLE_STATE"
         open("db/team%d/team_state" % TEAM, "w").write(team_state)
 
@@ -49,35 +49,30 @@ def main():
             ip = do_api.get_ip_by_vmname(VM_NAME)
             if ip is None:
                 log_stderr("no ip, exiting")
-                sys.exit(1)
+                return 1
 
         cmd = ["systemctl start openvpn@game_network_team%d" % TEAM]
         ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
         if not ret:
             log_stderr("start main game net tun")
-            sys.exit(1)
+            return 1
 
         team_state = "CLOUD"
         open("db/team%d/team_state" % TEAM, "w").write(team_state)
+    
+    if team_state == "CLOUD":
+        print("msg: OK, if you have a game router, disconnect it from OpenVPN *NOW*")
+        return 0
 
+    return 1
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    print("started: %d" % int(time.time()))
+    print("started: %d" % time.time())
+    exitcode = 1
     try:
-        main()
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
+        exitcode = main()
     except:
         traceback.print_exc()
-
-    team_state = open("db/team%d/team_state" % TEAM).read().strip()
-
-    log_stderr("TEAM_STATE:", team_state)
-
-    if team_state == "CLOUD":
-        print("status: OK")
-    else:
-        print("status: ERR")
-
-    print("finished: %d" % int(time.time()))
-
-    sys.exit(0)
+    print("exit_code: %d" % exitcode)
+    print("finished: %d" % time.time())
