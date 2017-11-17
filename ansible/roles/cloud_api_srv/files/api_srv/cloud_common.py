@@ -54,9 +54,17 @@ def log_progress(*params):
     print("progress:", *params, flush=True)
 
 
-def call_unitl_zero_exit(params, attempts=60, timeout=10):
-    for i in range(attempts):
-        if subprocess.call(params, stdout=sys.stderr) == 0:
+def call_unitl_zero_exit(params, redirect_out_to_err=True, attempts=60, timeout=10):
+    if redirect_out_to_err:
+        stdout = sys.stderr
+    else:
+        stdout = sys.stdout
+
+    for i in range(attempts-1):
+        if subprocess.call(params, stdout=stdout) == 0:
             return True
         time.sleep(timeout)
+    if subprocess.call(params, stdout=stdout) == 0:
+        return True
+
     return None
