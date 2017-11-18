@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <malloc.h>
 #define STBI_ONLY_PNG 1
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -36,10 +37,12 @@ struct Image
 
     }
 
-    Image( uint16_t w, uint16_t h )
+    Image( uint32_t w, uint32_t h )
     	: rgba( nullptr ), width( w ), height( h )
     {
-    	rgba = new RGBA[ w * h ];
+        uint32_t size = w * h * sizeof( RGBA );
+        size = ( size + 15 ) & ~15;
+        rgba = ( RGBA* )memalign( 16, size );
     }
 
     Image( const Image& ) = delete;
@@ -49,16 +52,18 @@ struct Image
 
     ~Image()
     {
-        delete[] rgba;
+        free( rgba );
     }
 
     //
-    void Reinit( uint16_t w, uint16_t h )
+    void Reinit( uint32_t w, uint32_t h )
     {
-        delete[] rgba;
+        free( rgba );
         width = w;
         height = h;
-        rgba = new RGBA[ w * h ];
+        uint32_t size = w * h * sizeof( RGBA );
+        size = ( size + 15 ) & ~15;
+        rgba = ( RGBA* )memalign( 16, size );
     }
 };
 

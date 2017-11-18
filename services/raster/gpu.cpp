@@ -396,13 +396,17 @@ void ClearRenderTarget( Image* rt, u8 r, u8 g, u8 b, u8 a ) {
     if( !rt )
         return;
 
-    for( u32 y = 0; y < rt->height; y++ ) {
-        for( u32 x = 0; x < rt->width; x++ ){
-            rt->rgba[ y * rt->width + x ].r = r;
-            rt->rgba[ y * rt->width + x ].g = g;
-            rt->rgba[ y * rt->width + x ].b = b;
-            rt->rgba[ y * rt->width + x ].a = a;
-        }
+    RGBA rgba;
+    rgba.r = r;
+    rgba.g = g;
+    rgba.b = b;
+    rgba.a = a;
+
+    __m128i vec = _mm_set1_epi32( rgba.rgba );
+    u32 size = rt->width * rt->height;
+    for( u32 i = 0; i < size; i += 4 ) {
+        __m128i* dst = ( __m128i* )&rt->rgba[ i ];
+        *dst = vec;
     }
 }
 
@@ -412,9 +416,10 @@ void ClearDepthRenderTarget( Image* depthRt, float value ) {
     if( !depthRt )
         return;
 
-    for( u32 y = 0; y < depthRt->height; y++ ) {
-        for( u32 x = 0; x < depthRt->width; x++ ){
-            depthRt->f32[ y * depthRt->width + x ] = value;
-        }
+    __m128 vec = _mm_set1_ps( value );
+    u32 size = depthRt->width * depthRt->height;
+    for( u32 i = 0; i < size; i += 4 ) {
+        __m128* dst = ( __m128* )&depthRt->f32[ i ];
+        *dst = vec;
     }
 }
