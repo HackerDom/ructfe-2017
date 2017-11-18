@@ -33,6 +33,7 @@
                 <th>name</th>
                 <th>type</th>
                 <th>upload by</th>
+                <th>dwnld</th>
             </tr>
             {% for file in files %}
             <tr>
@@ -41,16 +42,10 @@
                 <td>{{file.name}}</td>
                 <td>{{file.type}}</td>
                 <td>{{file.upload_by}}</td>
+                <td><a href="download?file_id={{file.uid}}">donwload</a> </td>
             </tr>
             {% endfor %}
         </table>
-        <!--<div>-->
-            <!--<form action="u" method="post" enctype="multipart/form-data">-->
-                <!--<input type="file" id="upload_file" name="upload_file">-->
-                <!--<p id="mess">Drag your files here or click in this area.</p>-->
-                <!--<button type="submit">Upload</button>-->
-            <!--</form>-->
-        <!--</div>-->
     </div>
 </body>
 </html>

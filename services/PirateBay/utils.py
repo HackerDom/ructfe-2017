@@ -3,10 +3,11 @@ from base64 import b64encode
 from random import choice
 from string import hexdigits
 import pickle
+from time import time
 
 
 def generate_uid():
-    return ''.join(choice(hexdigits) for _ in range(32))
+    return str(time() * 1000000)[:-2]
 
 
 class Singleton(type):

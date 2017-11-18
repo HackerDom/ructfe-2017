@@ -1,3 +1,5 @@
+from base64 import b64encode, b64decode
+
 from db.model import Model, TextField, IntField
 from torrent_format.bencoder import parse_dictionary
 from utils import generate_uid
@@ -10,10 +12,12 @@ class TorrentFileInfo(Model):
     name = TextField(256)
     uid = TextField(32)
     upload_by = TextField(256)
+    content = TextField(long=True)
 
     def __init__(self, data=None, upload_by=""):
         if data is None:
             return
+        self.content = b64encode(data).decode()
         meta_dict, _ = parse_dictionary(data)
         self.announce = meta_dict[b'announce'].decode()
         self.name = meta_dict[b'info'][b'name'].decode()
@@ -29,5 +33,9 @@ class TorrentFileInfo(Model):
         else:
             self.type = 'file'
 
+    def get_data(self):
+        return b64decode(self.content)
+
     def __str__(self):
         return "TorrentFileInfo({})".format(self.__dict__)
+

@@ -10,12 +10,16 @@ class ValidationError(Exception):
 
 
 class TextField:
-    def __init__(self, max_length):
+    def __init__(self, max_length=10, long=False):
         self.max_length = max_length
+        self.long = long
 
     @property
     def mysql_format(self):
-        return "VARCHAR({}) NOT NULL".format(self.max_length)
+        if not self.long:
+            return "VARCHAR({}) NOT NULL".format(self.max_length)
+        else:
+            return "TEXT NOT NULL"
 
 
 class IntField:
@@ -122,7 +126,6 @@ class Model:
 
     @classmethod
     def filter(cls, **fields):
-        print("##{}##".format(fields))
         cls.validate(fields, check_required=False)
         cls.create_table_if_not_exists()
         filter_fields = [cls.format_field_filter(*field) for field in fields.items()]

@@ -1,5 +1,6 @@
 import os
 import re
+from base64 import b64decode
 
 import cherrypy
 from jinja2 import Template
@@ -206,9 +207,20 @@ class RequestHandler:
             raise cherrypy.HTTPRedirect('/')
         return self.get_template('upload_file.html').render(authed=user.login)
 
+    @cherrypy.expose
+    def download(self, file_id):
+        tfiles = TorrentFileInfo.filter(uid=file_id)
+        if (len(tfiles) > 1) or (not tfiles):
+            raise cherrypy.HTTPError(404)
+        tfile = tfiles[0]
+        cherrypy.response.headers['Content-Type'] = 'application/x-bittorrent'
+        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="{}.torrent"'.format(tfile.name)
+        return tfile.get_data()
+
 
 def start_web_server():
     with DBClient() as db_client:
         db_client.connection.commit()
         request_handler = RequestHandler()
         cherrypy.quickstart(request_handler, '/', config='webserver/webserver.config')
+
