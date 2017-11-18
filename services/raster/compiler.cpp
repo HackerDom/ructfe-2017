@@ -70,6 +70,7 @@ int main( int argc, char* argv[] ) {
 
     //
     Shader::Header header;
+    memset( &header, 0, sizeof( header ) );
     if( strcmp( type, "vs" ) == 0 )
         header.type = SHADER_VERTEX;
     else if( strcmp( type, "ps" ) == 0 )

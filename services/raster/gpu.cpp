@@ -105,15 +105,15 @@ bool Execute( const Registers& registers, const Shader& shader ) {
             case OP_MUL:  result.f = _mm_mul_ps   ( src0.f, src1.f ); break;
             case OP_MULI:
                 {
-                    for( u32 i = 0; i < i.src0Swizzle.activeNum; i++ )
-                        result.m128_i32[ i ] = src0.m128_i32[ i ] * src1.m128_i32[ i ];
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        result.m128_i32[ j ] = src0.m128_i32[ j ] * src1.m128_i32[ j ];
                 }
                 break;
             case OP_DIV:  result.f = _mm_div_ps   ( src0.f, src1.f ); break;
             case OP_DIVI:
                 {
-                    for( u32 i = 0; i < i.src0Swizzle.activeNum; i++ )
-                        result.m128_i32[ i ] = src0.m128_i32[ i ] / src1.m128_i32[ i ];
+            for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                result.m128_i32[ j ] = src0.m128_i32[ j ] / src1.m128_i32[ j ];
                 }
                 break;
             case OP_DOT:

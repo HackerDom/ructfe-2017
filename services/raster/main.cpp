@@ -453,7 +453,7 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         pState.rt = &image;
         pState.depthRt = &depthRt;
 
-        ClearRenderTarget( pState.rt, 0, 0, 0, 1 );
+        ClearRenderTarget( pState.rt, 50, 50, 127, 255 );
         ClearDepthRenderTarget( pState.depthRt, 1.0f );
 
         const f32 MAX_DISTANCE = 100.0f;
@@ -475,10 +475,10 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             lib3ds_matrix_identity( rot );
             lib3ds_matrix_rotate_y( rot, ship->m_rotY );
             lib3ds_matrix_translate( tr, shipPos );
-            lib3ds_matrix_mult( rot, tr );
-            lib3ds_matrix_transpose( rot );
+            lib3ds_matrix_mult( tr, rot );
+            lib3ds_matrix_transpose( tr );
             // set world transform matrix
-            memcpy( &pState.constants[ 5 ], rot, 4 * 4 * sizeof( float ) );
+            memcpy( &pState.constants[ 5 ], tr, 4 * 4 * sizeof( float ) );
             // draw ship
             pState.vb = m_shipVb;
             pState.vs = &shipVs;
@@ -502,13 +502,13 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
     }
     if( ParseUrl( request.url, 1, "get_shader" ) )
     {
-        static std::string uuidKey( "uuid" );
-        std::string uuidStr;
-        if( !FindInMap( request.queryString, uuidKey, uuidStr ) )
+        static std::string idKey( "id" );
+        std::string idStr;
+        if( !FindInMap( request.queryString, idKey, idStr ) )
             return HttpResponse( MHD_HTTP_BAD_REQUEST );
 
         uuid id;
-        uuid_parse( uuidStr.c_str(), id.bytes );
+        uuid_parse( idStr.c_str(), id.bytes );
         Ship* ship = m_shipStorage->GetShip( id );
         if( !ship )
             return HttpResponse( MHD_HTTP_NOT_FOUND );
