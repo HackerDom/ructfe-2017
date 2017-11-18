@@ -1,4 +1,4 @@
-from geth_api.api import run_raw_command
+from utils import run_raw_command
 
 
 class GethController:
@@ -30,7 +30,7 @@ class GethController:
         else:
             raise GethControllerException(
                 "Got error on script ({}) running ({})"
-                    .format(script_name, command_result))
+                .format(script_name, command_result))
 
 
 class GethControllerException(Exception):

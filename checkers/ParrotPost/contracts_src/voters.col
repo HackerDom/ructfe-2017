@@ -1,0 +1,9 @@
+pragma solidity ^0.4.0;
+
+contract PublicValue{
+    address LastVoter;
+
+    function vote() public {
+        LastVoter = msg.sender;
+    }
+}
