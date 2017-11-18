@@ -1,5 +1,8 @@
 #pragma once
 #include <stdint.h>
+#define STBI_ONLY_PNG 1
+#include "stb_image.h"
+#include "stb_image_write.h"
 
 
 //
@@ -19,7 +22,11 @@ union RGBA
 //
 struct Image
 {
-    RGBA*		rgba;
+    union
+    {
+        RGBA*		rgba;
+        float*      f32;
+    };
     uint32_t 	width;
     uint32_t 	height;
 
@@ -38,6 +45,7 @@ struct Image
     Image( const Image& ) = delete;
     Image( const Image&& ) = delete;
     Image& operator=( const Image& ) = delete;
+    Image& operator=( const Image&& ) = delete;
 
     ~Image()
     {

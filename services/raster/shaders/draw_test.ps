@@ -1,0 +1,5 @@
+mov r0.xyzw i1.xyzw
+set r1.xyzw 255.0 255.0 255.0 255.0
+mul r0.xyzw r0.xyzw r1.xyzw
+cvtfi o0.xyzw r0.xyzw
+ret

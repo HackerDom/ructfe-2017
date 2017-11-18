@@ -1,19 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "types.h"
-
-//
-const char* g_opToStr[] = {
-    "inv",
-    "set",
-    "add",
-    "sub",
-    "mul",
-    "div",
-    "dot",
-    "mov",
-    "ret"
-};
+#include "gpu.h"
 
 
 //
@@ -52,16 +39,24 @@ void DumpRegister( REGISTER_TYPE type, u32 idx, Swizzle swizzle ) {
 
 //
 int main( int argc, char* argv[] ) {
+	if( argc < 2 ) {
+		printf( "./disasm <input>\n" );
+		return 1;
+	}
     Shader shader( argv[ 1 ] );
+	if( !shader.instructions ) {
+		printf( "Invalid shader\n" );
+		return 1;
+	}
 
     printf( "Instructions num: %u\n", shader.header.instructionsNum );
-    if( shader.header.type == 0 ) {
+    if( shader.header.type == SHADER_VERTEX ) {
         printf( "VS flags:\n" );
         printf( "\tVS_VARYINGS_NUM = %u\n", shader.header.vs.varyingsNum );
     }
-    if( shader.header.type == 1 ) {
+    if( shader.header.type == SHADER_PIXEL ) {
         printf( "PS flags:\n" );
-        printf( "\tPS_INTEGER_OUTPUT = %u\n", shader.header.ps.integerOutput );
+		printf( "\t\n" );
     }
 
     //
@@ -69,20 +64,30 @@ int main( int argc, char* argv[] ) {
         Instruction& inst = shader.instructions[ i ];
 
         printf( "%s ", g_opToStr[ inst.op ] );
-        if( inst.op == OP_SET ) {
+        if( g_opOperands[ inst.op ] & OPERAND_DST )
             DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
-
-            f32* floats = ( ( f32* )&inst ) + 3;
-            for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                printf( "%f ", floats[ i ] );
-        } else if( inst.op == OP_RET ) {
-        } else if( inst.op == OP_MOV ) {
-            DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
+        if( g_opOperands[ inst.op ] & OPERAND_SRC0 )
             DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
-        } else {
-            DumpRegister( ( REGISTER_TYPE )inst.dstType, inst.dst, inst.dstSwizzle );
-            DumpRegister( ( REGISTER_TYPE )inst.src0Type, inst.src0, inst.src0Swizzle );
+        if( g_opOperands[ inst.op ] & OPERAND_SRC1 )
             DumpRegister( ( REGISTER_TYPE )inst.src1Type, inst.src1, inst.src1Swizzle );
+
+        if( inst.op == OP_SET ) {
+            SetInstruction* setInst = ( SetInstruction* )&inst;
+            for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
+                printf( "%f ", setInst->floats[ i ] );
+        }
+        if( inst.op == OP_SETI ) {
+            SetInstruction* setInst = ( SetInstruction* )&inst;
+            for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
+                printf( "%d ", setInst->ints[ i ] );
+        }
+        if( inst.op == OP_TFETCH ) {
+            TFetchInstruction* tfetch = ( TFetchInstruction* )&inst;
+            printf( "t%u ", tfetch->textureReg );
+        }
+        if( inst.op == OP_JMP_TRUE || inst.op == OP_JMP_FALSE ) {
+            JumpInstruction* jmp = ( JumpInstruction* )&inst;
+            printf("%d ", jmp->offset );
         }
         printf( "\n" );
     }
