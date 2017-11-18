@@ -11,7 +11,6 @@ class InsertQuery:
             field_names=', '.join(field_names),
             values=", ".join(value for value in values)
         )
-        print(self.query)
 
 
 class GetAllQuery:
@@ -20,7 +19,6 @@ class GetAllQuery:
             field_names=', '.join(field_names),
             tbl_name=tbl_name,
         )
-        print(self.query)
 
 
 class CreateTableIfNotExistsQuery:
@@ -29,7 +27,6 @@ class CreateTableIfNotExistsQuery:
             tbl_name=tbl_name,
             fields=', '.join(' '.join(field) for field in fields),
         )
-        print(self.query)
 
 
 class FilterQuery:
@@ -39,7 +36,6 @@ class FilterQuery:
             tbl_name=tbl_name,
             filter_fields=' AND '.join(filter_fields)
         )
-        print(self.query)
 
 
 class DBClient(metaclass=Singleton):
@@ -56,5 +52,3 @@ class DBClient(metaclass=Singleton):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
-
-# '%a%'

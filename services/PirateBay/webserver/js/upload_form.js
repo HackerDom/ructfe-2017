@@ -11,6 +11,11 @@ $(document).ready(function(){
     });
 });
 
-function set_private() {
-    document.getElementById("form").setAttribute("action", "upload_private")
+function set_private(checkbox) {
+    if (checkbox.checked) {
+        document.getElementById('form').setAttribute("action", "upload_private");
+    }
+    else {
+        document.getElementById('form').setAttribute("action", "upload");
+    }
 }

@@ -96,7 +96,6 @@ class Model:
             field_names=field_names_param,
             values=field_values_param,
         ).query
-        # print(insert_query)
         with db_client.connection.cursor() as cursor:
             cursor.execute(insert_query)
         db_client.connection.commit()
