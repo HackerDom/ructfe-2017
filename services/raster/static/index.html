@@ -4,82 +4,150 @@
 	<meta charset="UTF-8">
 	<title>Service</title>
 	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 </head>
 <body>
-<form id="add_ship_form" enctype="multipart/form-data" method="post">
-	<input type="text" value="0.0" id="add_ship_pos_x"> <label for="add_ship_pos_x">pos_x</label>
-	<br/>
-	<input type="text" value="0.0" id="add_ship_pos_z"> <label for="add_ship_pos_z">pos_z</label>
-	<br/>
-	<input type="text" value="0.0" id="add_ship_rot_y"> <label for="add_ship_rot_y">rot_y</label>
-	<br/>
-	<input id="file" type="file" name="flag_shader"/><br/>
-	<input type="submit" onclick="send_file(event)" value="Send Request">
-	<span id="add_ship_state"></span>
-	<script>
-			function send_file(e) {
-				var state = document.getElementById("add_ship_state");
+<div class="container">
+<h1 class="mt-3 mb-4">Service</h1>
+	<ul class="nav nav-tabs" id="myTab" role="tablist">
+		<li class="nav-item">
+			<a class="nav-link active" id="add_ship-tab" data-toggle="tab" href="#add_ship" role="tab" aria-controls="add_ship" aria-selected="true">Add ship</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" id="draw-tab" data-toggle="tab" href="#draw" role="tab" aria-controls="draw" aria-selected="false">Draw</a>
+		</li>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane fade show active" id="add_ship" role="tabpanel" aria-labelledby="add_ship-tab">
+			<div class="row">
+				<div class="col-sm-4">
+					<h4 class="mt-5 mb-3">Add ship</h4>
+					<form id="add_ship_form" enctype="multipart/form-data" method="post">
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label" for="add_ship_pos_x">pos_x</label>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" value="0.0" id="add_ship_pos_x">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label" for="add_ship_pos_z">pos_z</label>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" value="0.0" id="add_ship_pos_z">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label" for="add_ship_rot_y">rot_y</label>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" value="0.0" id="add_ship_rot_y">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label" for="file">file</label>
+							<div class="col-sm-8">
+								<input class="form-control-file" id="file" type="file" name="flag_shader"/>
+							</div>
+						</div>
+						<button type="submit" class="btn btn-primary" onclick="send_file(event)">Submit</button>
+						<span id="add_ship_state" class="pl-3"></span>
+					</form>
+				</div>
+				<div class="col-sm-8"></div>
+			</div>
+			<script>
+				function send_file(e) {
+					var state = document.getElementById("add_ship_state");
 
-				var pos_x = document.getElementById("add_ship_pos_x").value;
-				var pos_z = document.getElementById("add_ship_pos_z").value;
-				var rot_y = document.getElementById("add_ship_rot_y").value;
+					var pos_x = document.getElementById("add_ship_pos_x").value;
+					var pos_z = document.getElementById("add_ship_pos_z").value;
+					var rot_y = document.getElementById("add_ship_rot_y").value;
 
-				var file = $('#file')[0].files[0];
-				if(file != undefined) {
-					var formData = new FormData();
-					formData.append('flag_shader', $('#file')[0].files[0]);
-					$.ajax({
-						url: './add_ship?pos_x=' + pos_x + '&pos_z=' + pos_z + '&rot_y=' + rot_y,
-						type: 'POST',
-						data: formData,
-						processData: false,
-						contentType: false,
-						success: function (data) {
-							state.innerHTML = "success";
-						},
-						error: function (data) {
-							state.innerHTML = "error";
-						}
-					});
-				} else {
-					state.innerHTML = "error";
+					var file = $('#file')[0].files[0];
+					if(file != undefined) {
+						var formData = new FormData();
+						formData.append('flag_shader', $('#file')[0].files[0]);
+						$.ajax({
+							url: './add_ship?pos_x=' + pos_x + '&pos_z=' + pos_z + '&rot_y=' + rot_y,
+							type: 'POST',
+							data: formData,
+							processData: false,
+							contentType: false,
+							success: function (data) {
+								state.innerHTML = "Success";
+							},
+							error: function (data) {
+								state.innerHTML = "Error";
+							}
+						});
+					} else {
+						state.innerHTML = "Error";
+					}
+					e.preventDefault();
 				}
-				e.preventDefault();
-			}
-	</script>
-</form>
-
-	<br/>
-	<br/>
-	<br/>
-	<br/>
-
-	<input type="text" value="0.0" id="draw_pos_x"> <label for="draw_pos_x">pos_x</label>
-	<br/>
-	<input type="text" value="0.0" id="draw_pos_y"> <label for="draw_pos_y">pos_y</label>
-	<br/>
-	<input type="text" value="0.0" id="draw_pos_z"> <label for="draw_pos_z">pos_z</label>
-	<br/>
-	<input type="text" value="0.0" id="draw_aimpos_x"> <label for="draw_aimpos_x">aimpos_x</label>
-	<br/>
-	<input type="text" value="0.0" id="draw_aimpos_y"> <label for="draw_aimpos_y">aimpos_y</label>
-	<br/>
-	<input type="text" value="0.0" id="draw_aimpos_z"> <label for="draw_aimpos_z">aimpos_z</label>
-	<br/>
-	<input id="get_image" onclick="get_image()" type="submit" value="Send Request">
-	<div id="image-container"></div>
-	<script>
-		function get_image() {
-			var container = document.getElementById("image-container");
-			var pos_x = document.getElementById("draw_pos_x").value;
-			var pos_y = document.getElementById("draw_pos_y").value;
-			var pos_z = document.getElementById("draw_pos_z").value;
-			var aimpos_x = document.getElementById("draw_aimpos_x").value;
-			var aimpos_y = document.getElementById("draw_aimpos_y").value;
-			var aimpos_z = document.getElementById("draw_aimpos_z").value;
-			container.innerHTML = '<img width="512px" height="512px" src="./draw?pos_x=' + pos_x + '&pos_y=' + pos_y + '&pos_z=' + pos_z
-			  + '&aimpos_x=' + aimpos_x + '&aimpos_y=' + aimpos_y + '&aimpos_z=' + aimpos_z + '">';
-		}
-	</script>
+			</script>
+		</div>
+		<div class="tab-pane fade show" id="draw" role="tabpanel" aria-labelledby="draw-tab">
+			<div class="row">
+				<div class="col-sm-4">
+					<h4 class="mt-5 mb-3">Draw</h4>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label" for="draw_pos_x">pos_x</label>
+						<div class="col-sm-8">
+							<input class="form-control" type="text" value="0.0" id="draw_pos_x">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label" for="draw_pos_y">pos_y</label>
+						<div class="col-sm-8">
+							<input class="form-control" type="text" value="0.0" id="draw_pos_y">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label" for="draw_pos_z">pos_z</label>
+						<div class="col-sm-8">
+							<input class="form-control" type="text" value="0.0" id="draw_pos_z">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label" for="draw_aimpos_x">aimpos_x</label>
+						<div class="col-sm-8">
+							<input class="form-control" type="text" value="0.0" id="draw_aimpos_x">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label" for="draw_aimpos_y">aimpos_y</label>
+						<div class="col-sm-8">
+							<input class="form-control" type="text" value="0.0" id="draw_aimpos_y">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label" for="draw_aimpos_z">aimpos_z</label>
+						<div class="col-sm-8">
+							<input class="form-control" type="text" value="0.0" id="draw_aimpos_z">
+						</div>
+					</div>
+					<button type="submit" class="btn btn-primary mb-3" onclick="get_image(event)">Submit</button>
+				</div>
+				<div class="mt-5 col-sm-8 text-center">
+					<div id="image-container" class="mb-5"></div>
+				</div>
+			</div>
+			<script>
+				function get_image() {
+					var container = document.getElementById("image-container");
+					var pos_x = document.getElementById("draw_pos_x").value;
+					var pos_y = document.getElementById("draw_pos_y").value;
+					var pos_z = document.getElementById("draw_pos_z").value;
+					var aimpos_x = document.getElementById("draw_aimpos_x").value;
+					var aimpos_y = document.getElementById("draw_aimpos_y").value;
+					var aimpos_z = document.getElementById("draw_aimpos_z").value;
+					container.innerHTML = '<img width="512px" height="512px" src="./draw?pos_x=' + pos_x + '&pos_y=' + pos_y + '&pos_z=' + pos_z
+					  + '&aimpos_x=' + aimpos_x + '&aimpos_y=' + aimpos_y + '&aimpos_z=' + aimpos_z + '">';
+				}
+			</script>
+		</div>
+	</div>
+</div>
 </body>
 </html>
