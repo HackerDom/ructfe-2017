@@ -1,0 +1,59 @@
+seti r20.x 0
+seti r21.x 1
+seti r22.x 2
+seti r23.x 3
+seti r24.x 4
+seti r25.x 5
+seti r26.x 6
+seti r27.x 7
+
+set r8.xy 4.0 2.0
+seti r8.z 4
+set r9.xy 0.5 0.5
+mul r10.xy i1.xy r8.xy   /* r10 = uv.xy * v2( 4.0, 2.0 ) */
+sub r10.xy r10.xy r9.xy  /* r10 = r10 - v2( 0.5, 0.5 ) */
+cvtfi r10.xy r10.xy      /* to int */
+muli r10.y r10.y r8.z    /* r10.y = r10.y * 4 */
+addi r10.x r10.y r10.x   /* i = r10.y + r10.x */
+
+cmpeqi r10.x r20.x
+jmp_false 3
+mov o0.xyzw r0.xyzw
+ret
+
+cmpeqi r10.x r21.x
+jmp_false 3
+mov o0.xyzw r1.xyzw
+ret
+
+cmpeqi r10.x r22.x
+jmp_false 3
+mov o0.xyzw r2.xyzw
+ret
+
+cmpeqi r10.x r23.x
+jmp_false 3
+mov o0.xyzw r3.xyzw
+ret
+
+cmpeqi r10.x r24.x
+jmp_false 3
+mov o0.xyzw r4.xyzw
+ret
+
+cmpeqi r10.x r25.x
+jmp_false 3
+mov o0.xyzw r5.xyzw
+ret
+
+cmpeqi r10.x r26.x
+jmp_false 3
+mov o0.xyzw r6.xyzw
+ret
+
+cmpeqi r10.x r27.x
+jmp_false 3
+mov o0.xyzw r7.xyzw
+ret
+
+ret
