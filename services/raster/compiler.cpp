@@ -174,6 +174,12 @@ int main( int argc, char* argv[] ) {
             tfetch->textureReg = atoi( str.c_str() + 1 );
         }
 
+        if( inst.op == OP_JMP_TRUE || inst.op == OP_JMP_FALSE ) {
+            JumpInstruction* jmp = ( JumpInstruction* )&inst;
+            infile >> str;
+            jmp->offset = atoi( str.c_str() );
+        }
+
         insts.push_back( inst );
     }
 

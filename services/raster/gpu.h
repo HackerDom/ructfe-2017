@@ -56,7 +56,9 @@ enum OPERANDS
     YOUR_DEFINE( OP_SUB,	"sub"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
     YOUR_DEFINE( OP_SUBI,	"subi"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
     YOUR_DEFINE( OP_MUL,	"mul"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_MULI,	"muli"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
     YOUR_DEFINE( OP_DIV,	"div"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_DIVI,	"divi"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
     YOUR_DEFINE( OP_DOT,	"dot"	, OPERAND_DST | OPERAND_SRC0 | OPERAND_SRC1 ) \
     YOUR_DEFINE( OP_LENGTH, "length", OPERAND_DST | OPERAND_SRC0 ) \
     YOUR_DEFINE( OP_NORMALIZE, "normalize", OPERAND_DST | OPERAND_SRC0 ) \
@@ -66,6 +68,16 @@ enum OPERANDS
     YOUR_DEFINE( OP_CVTFI,	"cvtfi"	, OPERAND_DST | OPERAND_SRC0 ) \
     YOUR_DEFINE( OP_CVTIF,	"cvtif"	, OPERAND_DST | OPERAND_SRC0 ) \
     YOUR_DEFINE( OP_TFETCH,	"tfetch", OPERAND_DST | OPERAND_SRC0 ) \
+    YOUR_DEFINE( OP_CMPEQ,  "cmpeq",  OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPLT,  "cmplt",  OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPLE,  "cmple",  OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPGT,  "cmpgt",  OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPGE,  "cmpge",  OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPEQI, "cmpeqi", OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPLTI, "cmplti", OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_CMPGTI, "cmpgti", OPERAND_SRC0 | OPERAND_SRC1 ) \
+    YOUR_DEFINE( OP_JMP_TRUE, "jmp_true", 0 ) \
+    YOUR_DEFINE( OP_JMP_FALSE, "jmp_false", 0 ) \
     YOUR_DEFINE( OP_RET,	"ret"   , 0 )
 
 
@@ -204,9 +216,19 @@ struct TFetchInstruction
     u32 textureReg;
     u16 padding;
 };
+
+
+//
+struct JumpInstruction
+{
+    OP op;
+    i8 offset;
+    u8 padding[ 23 ];
+};
 static_assert( sizeof( Instruction ) == 28, "" );
 static_assert( sizeof( SetInstruction ) == 28, "" );
 static_assert( sizeof( TFetchInstruction ) == 28, "" );
+static_assert( sizeof( JumpInstruction ) == 28, "" );
 
 
 //

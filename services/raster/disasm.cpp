@@ -79,11 +79,15 @@ int main( int argc, char* argv[] ) {
         if( inst.op == OP_SETI ) {
             SetInstruction* setInst = ( SetInstruction* )&inst;
             for( u32 i = 0; i < inst.dstSwizzle.activeNum; i++ )
-                printf( "%i ", setInst->ints[ i ] );
+                printf( "%d ", setInst->ints[ i ] );
         }
         if( inst.op == OP_TFETCH ) {
             TFetchInstruction* tfetch = ( TFetchInstruction* )&inst;
             printf( "t%u ", tfetch->textureReg );
+        }
+        if( inst.op == OP_JMP_TRUE || inst.op == OP_JMP_FALSE ) {
+            JumpInstruction* jmp = ( JumpInstruction* )&inst;
+            printf("%d ", jmp->offset );
         }
         printf( "\n" );
     }

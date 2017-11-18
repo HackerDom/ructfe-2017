@@ -4,6 +4,9 @@
 #include "gpu.h"
 
 
+#define _mm_movemask_ps( m ) _mm_movemask_ps( ( __m128 )m )
+
+
 //
 union Registers
 {
@@ -45,7 +48,15 @@ void StoreRegister( const Registers& registers, u32 regType, u32 regIdx, Swizzle
 
 //
 bool Execute( const Registers& registers, const Shader& shader ) {
-    for( u32 ip = 0; ip < shader.header.instructionsNum; ip++ ) {
+    const i32 MAX_ITERATIONS_NUM = 1024;
+    u32 cmpMask = 0;
+    for( i32 ip = 0, iter = 0; ip < ( i32 )shader.header.instructionsNum; ip++ ) {
+        if( iter >= MAX_ITERATIONS_NUM ) {
+            printf( "Infinite loop detected, force exit\n" );
+            return false;
+        }
+        iter++;
+
         Instruction& i = shader.instructions[ ip ];
 		__m128_union src0, src1, result;
 
@@ -92,7 +103,19 @@ bool Execute( const Registers& registers, const Shader& shader ) {
             case OP_SUB:  result.f = _mm_sub_ps   ( src0.f, src1.f ); break;
             case OP_SUBI: result.i = _mm_sub_epi32( src0.i, src1.i ); break;
             case OP_MUL:  result.f = _mm_mul_ps   ( src0.f, src1.f ); break;
+            case OP_MULI:
+                {
+                    for( u32 i = 0; i < i.src0Swizzle.activeNum; i++ )
+                        result.m128_i32[ i ] = src0.m128_i32[ i ] * src1.m128_i32[ i ];
+                }
+                break;
             case OP_DIV:  result.f = _mm_div_ps   ( src0.f, src1.f ); break;
+            case OP_DIVI:
+                {
+                    for( u32 i = 0; i < i.src0Swizzle.activeNum; i++ )
+                        result.m128_i32[ i ] = src0.m128_i32[ i ] / src1.m128_i32[ i ];
+                }
+                break;
             case OP_DOT:
                 {
 #if DEBUG
@@ -150,6 +173,36 @@ bool Execute( const Registers& registers, const Shader& shader ) {
             case OP_MOV:   result = src0; break;
             case OP_CVTFI: result.i = _mm_cvtps_epi32( src0 ); break;
             case OP_CVTIF: result.f = _mm_cvtepi32_ps( src0.i ); break;
+            case OP_CMPEQ: cmpMask = _mm_movemask_ps( _mm_cmpeq_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPLT: cmpMask = _mm_movemask_ps( _mm_cmplt_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPLE: cmpMask = _mm_movemask_ps( _mm_cmple_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPGT: cmpMask = _mm_movemask_ps( _mm_cmpgt_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPGE: cmpMask = _mm_movemask_ps( _mm_cmpge_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPEQI:cmpMask = _mm_movemask_ps( _mm_cmpeq_epi32( src0.i, src1.i ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPLTI:cmpMask = _mm_movemask_ps( _mm_cmplt_epi32( src0.i, src1.i ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_CMPGTI:cmpMask = _mm_movemask_ps( _mm_cmpgt_epi32( src0.i, src1.i ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
+            case OP_JMP_TRUE:
+                if( cmpMask ) {
+                    JumpInstruction jmp = *( JumpInstruction* )&i;
+                    ip += jmp.offset;
+                    ip -= 1;
+                    if( ip < -1 ) {
+                        printf( "Invalid jump, force exit\n" );
+                        return false;
+                    }
+                }
+                break;
+            case OP_JMP_FALSE:
+                if( !cmpMask ) {
+                    JumpInstruction jmp = *( JumpInstruction* )&i;
+                    ip += jmp.offset;
+                    ip -= 1;
+                    if( ip < -1 ) {
+                        printf( "Invalid jump, force exit\n" );
+                        return false;
+                    }
+                }
+                break;
             case OP_RET: return true;
         }
 
