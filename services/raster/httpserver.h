@@ -10,15 +10,17 @@ class HttpRequestState;
 class HttpRequestHandler;
 
 using Headers = std::map< std::string, std::string >;
+using GetArgs = std::map< std::string, std::string >;
 
 struct HttpRequest
 {
 	HttpRequest();
-    HttpRequest(const char *url, const char *method, const Headers& headers, MHD_Connection *connection);
+    HttpRequest(const char *url, const char *method, const Headers& headers, GetArgs& getArgs, MHD_Connection *connection);
 
 	const char *url;
     const char *method;
     Headers headers;
+    GetArgs getArgs;
 
 	MHD_Connection *connection;
 };
@@ -48,6 +50,7 @@ private:
 	static int HandleRequest(void *param, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **context);
 	static void PostProcessRequest(void *param, MHD_Connection *connection, void **context, MHD_RequestTerminationCode toe);
     static int IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const char *key, const char *value );
+    static int IterateQueryString( void *cls, enum MHD_ValueKind kind, const char *key, const char *value );
 	static int SendResponse(MHD_Connection *connection, HttpResponse response);
 	static void OnFatalError(void *param, const char *file, uint32_t line, const char *reason);
 
@@ -95,7 +98,34 @@ public:
 
 
 //
-bool GetHeader( const Headers& headers, const std::string& key, std::string& val );
-bool GetHeader( const Headers& headers, const std::string& key, int& val );
-bool GetHeader( const Headers& headers, const std::string& key, float& val );
+template< class Map >
+bool FindInMap( const Map& map, const std::string& key, std::string& val ) {
+    auto iter = map.find( key );
+    if( iter != map.end() ) {
+        val = iter->second;
+        return true;
+    }
+    return false;
+}
 
+
+//
+template< class Map >
+bool FindInMap( const Map& map, const std::string& key, int& val ) {
+    std::string valStr;
+    if( !FindInMap( map, key, valStr ) )
+        return false;
+    val = atoi( valStr.c_str() );
+    return true;
+}
+
+
+//
+template< class Map >
+bool FindInMap( const Map& map, const std::string& key, float& val ) {
+    std::string valStr;
+    if( !FindInMap( map, key, valStr ) )
+        return false;
+    val = atof( valStr.c_str() );
+    return true;
+}

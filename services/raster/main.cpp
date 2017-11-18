@@ -305,18 +305,18 @@ AddShipProcessor::AddShipProcessor( const HttpRequest& request, ShipStorage* shi
     static std::string rotYKeyStr( "rot_y" );
     int headerRead = 0;
 
-    if( GetHeader( request.headers, contentLengthKeyStr, m_flagShaderSize ) ) {
+    if( FindInMap( request.headers, contentLengthKeyStr, m_flagShaderSize ) ) {
         m_flagShader = new u8[ m_flagShaderSize ];
         headerRead++;
     }
 
-    if( GetHeader( request.headers, posXKeyStr, m_shipPosX ) )
+    if( FindInMap( request.headers, posXKeyStr, m_shipPosX ) )
         headerRead++;
 
-    if( GetHeader( request.headers, posZKeyStr, m_shipPosZ ) )
+    if( FindInMap( request.headers, posZKeyStr, m_shipPosZ ) )
         headerRead++;
 
-    if( GetHeader( request.headers, rotYKeyStr, m_shipRotY ) )
+    if( FindInMap( request.headers, rotYKeyStr, m_shipRotY ) )
         headerRead++;
 
     m_isHeadersValid = headerRead == 4;
@@ -385,17 +385,16 @@ RequestHandler::RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb )
 HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
     if( ParseUrl( request.url, 1, "draw" ) )
     {
-        static std::string camPosXStr( "cam_pos_x" );
-        static std::string camPosYStr( "cam_pos_y" );
-        static std::string camPosZStr( "cam_pos_z" );
-        static std::string camAimPosXStr( "cam_aimpos_x" );
-        static std::string camAimPosYStr( "cam_aimpos_y" );
-        static std::string camAimPosZStr( "cam_aimpos_z" );
-        int headerRead = 0;
+        static std::string camPosXStr( "pos_x" );
+        static std::string camPosYStr( "pos_y" );
+        static std::string camPosZStr( "pos_z" );
+        static std::string camAimPosXStr( "aimpos_x" );
+        static std::string camAimPosYStr( "aimpos_y" );
+        static std::string camAimPosZStr( "aimpos_z" );
 
         Lib3dsVector camPos, camAt, camUp;
-        camPos[ 0 ] = 1.0f;
-        camPos[ 1 ] = 1.0f;
+        camPos[ 0 ] = 0.0f;
+        camPos[ 1 ] = 0.0f;
         camPos[ 2 ] = -10.0f;
         camAt[ 0 ] = 0.0f;
         camAt[ 1 ] = 0.0f;
@@ -404,12 +403,12 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         //camUp[ 1 ] = 1.0f;
         //camUp[ 2 ] = 0.0f;
 
-        GetHeader( request.headers, camPosXStr, camPos[ 0 ] );
-        GetHeader( request.headers, camPosYStr, camPos[ 1 ] );
-        GetHeader( request.headers, camPosZStr, camPos[ 2 ] );
-        GetHeader( request.headers, camAimPosXStr, camAt[ 0 ] );
-        GetHeader( request.headers, camAimPosYStr, camAt[ 1 ] );
-        GetHeader( request.headers, camAimPosZStr, camAt[ 2 ] );
+        FindInMap( request.getArgs, camPosXStr, camPos[ 0 ] );
+        FindInMap( request.getArgs, camPosYStr, camPos[ 1 ] );
+        FindInMap( request.getArgs, camPosZStr, camPos[ 2 ] );
+        FindInMap( request.getArgs, camAimPosXStr, camAt[ 0 ] );
+        FindInMap( request.getArgs, camAimPosYStr, camAt[ 1 ] );
+        FindInMap( request.getArgs, camAimPosZStr, camAt[ 2 ] );
 
         // build camUp vector
         Lib3dsVector upVector, temp, dir;
@@ -430,33 +429,46 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
 
         Image image( 512, 512 );
         Image depthRt( 512, 512 );
-        Shader vs( "shaders/ship.vs.bin" );
-        Shader ps( "shaders/ship.ps.bin" );
+        Shader shipVs( "shaders/ship.vs.bin" );
+        Shader shipPs( "shaders/ship.ps.bin" );
 
         PipelineState pState;
         memcpy( pState.constants, viewProj, 4 * 4 * sizeof( float ) );
         memcpy( &pState.constants[ 4 ], camPos, 4 * sizeof( float ) );
-        pState.vb = m_shipVb;
         pState.ib = nullptr;
-        pState.vs = &vs;
-        //pState.textures[ 0 ] = &texture;
-        pState.ps = &ps;
         pState.rt = &image;
         pState.depthRt = &depthRt;
 
         CleanDepthRenderTarget( pState.depthRt, 1.0f );
 
+        const f32 MAX_DISTANCE = 100.0f;
         Ship* ship = m_shipStorage->GetListTail();
         while( ship ) {
+            // simple visibility test
+            Lib3dsVector shipPos, dir;
+            shipPos[ 0 ] = ship->m_posX; shipPos[ 1 ] = 0.0f; shipPos[ 2 ] = ship->m_posZ;
+            lib3ds_vector_sub( dir, shipPos, camPos );
+            f32 distanceSqr = lib3ds_vector_squared( dir );
+            if( distanceSqr > MAX_DISTANCE * MAX_DISTANCE )
+                continue;
+
+            // prepare world transform matrix
             Lib3dsMatrix tr, rot;
             lib3ds_matrix_identity( tr );
             lib3ds_matrix_identity( rot );
             lib3ds_matrix_rotate_y( rot, ship->m_rotY );
-            lib3ds_matrix_translate_xyz( tr, ship->m_posX, 0.0f, ship->m_posZ );
+            lib3ds_matrix_translate( tr, shipPos );
             lib3ds_matrix_mult( rot, tr );
             lib3ds_matrix_transpose( rot );
+            // set world transform matrix
             memcpy( &pState.constants[ 5 ], rot, 4 * 4 * sizeof( float ) );
+            // draw ship
+            pState.vb = m_shipVb;
+            pState.vs = &shipVs;
+            pState.ps = &shipPs;
             Draw( pState );
+            // TODO draw flag
+
             ship = ship->m_previousShip;
         }
 

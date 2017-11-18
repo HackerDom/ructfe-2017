@@ -74,6 +74,7 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 	printf("Received request: %s %s\n", method, url);
 
     Headers headers;
+    GetArgs getArgs;
 	if (!*context)
 	{
 		if (!strcmp(method, "POST"))
@@ -82,7 +83,7 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 
             MHD_get_connection_values( connection, MHD_HEADER_KIND, IterateHeadersBase, &headers );
 
-            HttpResponse response = self->requestHandler->HandlePost(HttpRequest(url, method, headers, connection), &postProcessor);
+            HttpResponse response = self->requestHandler->HandlePost(HttpRequest(url, method, headers, getArgs, connection), &postProcessor);
 
 			if (!postProcessor)
 			{
@@ -100,8 +101,8 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 
 	if (!strcmp (method, "GET"))
 	{
-        MHD_get_connection_values( connection, MHD_HEADER_KIND, IterateHeadersBase, &headers );
-        SendResponse( connection, self->requestHandler->HandleGet( HttpRequest( url, method, headers, connection ) ) );
+        MHD_get_connection_values( connection, MHD_GET_ARGUMENT_KIND, IterateQueryString, &getArgs );
+        SendResponse( connection, self->requestHandler->HandleGet( HttpRequest( url, method, headers, getArgs, connection ) ) );
 		return MHD_YES;
 	}
 
@@ -142,7 +143,7 @@ void HttpServer::PostProcessRequest(void *param, MHD_Connection *connection, voi
 	if (!postProcessor)
 		return;
 
-	delete postProcessor;
+    delete postProcessor;
 	*context = NULL;
 }
 
@@ -154,6 +155,17 @@ int HttpServer::IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const ch
     std::transform( keyStr.begin(), keyStr.end(), keyStr.begin(), ::tolower );
     std::transform( valueStr.begin(), valueStr.end(), valueStr.begin(), ::tolower );
     headers->insert( { keyStr, valueStr } );
+    return MHD_YES;
+}
+
+int HttpServer::IterateQueryString( void *cls, enum MHD_ValueKind kind, const char *key, const char *value )
+{
+    GetArgs* args = ( GetArgs* )cls;
+    std::string keyStr = key;
+    std::string valueStr = value;
+    std::transform( keyStr.begin(), keyStr.end(), keyStr.begin(), ::tolower );
+    std::transform( valueStr.begin(), valueStr.end(), valueStr.begin(), ::tolower );
+    args->insert( { keyStr, valueStr } );
     return MHD_YES;
 }
 
@@ -246,12 +258,13 @@ HttpRequest::HttpRequest()
 	this->connection = NULL;
 };
 
-HttpRequest::HttpRequest(const char *url, const char *method, const Headers& headers, MHD_Connection *connection)
+HttpRequest::HttpRequest(const char *url, const char *method, const Headers& headers, GetArgs& getArgs, MHD_Connection *connection)
 {
 	this->url = url;
 	this->method = method;
 	this->connection = connection;
     this->headers = headers;
+    this->getArgs = getArgs;
 };
 
 HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0)
@@ -333,35 +346,4 @@ bool HttpRequestHandler::ParseUrl(const char *url, int parts, ...)
 	va_end(args);
 
 	return result;
-}
-
-
-//
-bool GetHeader( const Headers& headers, const std::string& key, std::string& val ) {
-    auto iter = headers.find( key );
-    if( iter != headers.end() ) {
-        val = iter->second;
-        return true;
-    }
-    return false;
-}
-
-
-//
-bool GetHeader( const Headers& headers, const std::string& key, int& val ) {
-    std::string valStr;
-    if( !GetHeader( headers, key, valStr ) )
-        return false;
-    val = atoi( valStr.c_str() );
-    return true;
-}
-
-
-//
-bool GetHeader( const Headers& headers, const std::string& key, float& val ) {
-    std::string valStr;
-    if( !GetHeader( headers, key, valStr ) )
-        return false;
-    val = atof( valStr.c_str() );
-    return true;
 }
