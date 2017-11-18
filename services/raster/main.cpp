@@ -177,6 +177,7 @@ VertexBuffer* LoadShip()
         }
     }
     lib3ds_file_free( file );
+    delete[] normalL;
 
     return vb;
 }
