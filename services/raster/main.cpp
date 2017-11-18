@@ -310,13 +310,13 @@ AddShipProcessor::AddShipProcessor( const HttpRequest& request, ShipStorage* shi
         headerRead++;
     }
 
-    if( FindInMap( request.headers, posXKeyStr, m_shipPosX ) )
+    if( FindInMap( request.queryString, posXKeyStr, m_shipPosX ) )
         headerRead++;
 
-    if( FindInMap( request.headers, posZKeyStr, m_shipPosZ ) )
+    if( FindInMap( request.queryString, posZKeyStr, m_shipPosZ ) )
         headerRead++;
 
-    if( FindInMap( request.headers, rotYKeyStr, m_shipRotY ) )
+    if( FindInMap( request.queryString, rotYKeyStr, m_shipRotY ) )
         headerRead++;
 
     m_isHeadersValid = headerRead == 4;
@@ -385,7 +385,8 @@ RequestHandler::RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb )
 void png_to_mem(void *context, void *data, int size)
 {
     HttpResponse* response = ( HttpResponse* )context;
-    response->content = ( char* )data;
+    response->content = ( char* )malloc( size );
+    memcpy( response->content, data, size );
     response->contentLength = size;
 }
 

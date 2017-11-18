@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Service</title>
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+</head>
+<body>
+<form id="add_ship_form" enctype="multipart/form-data" method="post">
+	<input type="text" value="0.0" id="add_ship_pos_x"> <label for="add_ship_pos_x">pos_x</label>
+	<br/>
+	<input type="text" value="0.0" id="add_ship_pos_z"> <label for="add_ship_pos_z">pos_z</label>
+	<br/>
+	<input type="text" value="0.0" id="add_ship_rot_y"> <label for="add_ship_rot_y">rot_y</label>
+	<br/>
+	<input id="file" type="file" name="flag_shader"/><br/>
+	<input type="submit" onclick="send_file(event)" value="Send Request">
+	<span id="add_ship_state"></span>
+	<script>
+			function send_file(e) {
+				var state = document.getElementById("add_ship_state");
+
+				var pos_x = document.getElementById("add_ship_pos_x").value;
+				var pos_z = document.getElementById("add_ship_pos_z").value;
+				var rot_y = document.getElementById("add_ship_rot_y").value;
+
+				var file = $('#file')[0].files[0];
+				if(file != undefined) {
+					var formData = new FormData();
+					formData.append('flag_shader', $('#file')[0].files[0]);
+					$.ajax({
+						url: './add_ship?pos_x=' + pos_x + '&pos_z=' + pos_z + '&rot_y=' + rot_y,
+						type: 'POST',
+						data: formData,
+						processData: false,
+						contentType: false,
+						success: function (data) {
+							state.innerHTML = "success";
+						},
+						error: function (data) {
+							state.innerHTML = "error";
+						}
+					});
+				} else {
+					state.innerHTML = "error";
+				}
+				e.preventDefault();
+			}
+	</script>
+</form>
+
+	<br/>
+	<br/>
+	<br/>
+	<br/>
+
+	<input type="text" value="0.0" id="draw_pos_x"> <label for="draw_pos_x">pos_x</label>
+	<br/>
+	<input type="text" value="0.0" id="draw_pos_y"> <label for="draw_pos_y">pos_y</label>
+	<br/>
+	<input type="text" value="0.0" id="draw_pos_z"> <label for="draw_pos_z">pos_z</label>
+	<br/>
+	<input type="text" value="0.0" id="draw_aimpos_x"> <label for="draw_aimpos_x">aimpos_x</label>
+	<br/>
+	<input type="text" value="0.0" id="draw_aimpos_y"> <label for="draw_aimpos_y">aimpos_y</label>
+	<br/>
+	<input type="text" value="0.0" id="draw_aimpos_z"> <label for="draw_aimpos_z">aimpos_z</label>
+	<br/>
+	<input id="get_image" onclick="get_image()" type="submit" value="Send Request">
+	<div id="image-container"></div>
+	<script>
+		function get_image() {
+			var container = document.getElementById("image-container");
+			var pos_x = document.getElementById("draw_pos_x").value;
+			var pos_y = document.getElementById("draw_pos_y").value;
+			var pos_z = document.getElementById("draw_pos_z").value;
+			var aimpos_x = document.getElementById("draw_aimpos_x").value;
+			var aimpos_y = document.getElementById("draw_aimpos_y").value;
+			var aimpos_z = document.getElementById("draw_aimpos_z").value;
+			container.innerHTML = '<img width="512px" height="512px" src="./draw?pos_x=' + pos_x + '&pos_y=' + pos_y + '&pos_z=' + pos_z
+			  + '&aimpos_x=' + aimpos_x + '&aimpos_y=' + aimpos_y + '&aimpos_z=' + aimpos_z + '">';
+		}
+	</script>
+</body>
+</html>

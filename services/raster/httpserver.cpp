@@ -181,14 +181,14 @@ int HttpServer::SendResponse(MHD_Connection *connection, HttpResponse response)
 	if (!mhdResponse)
 		return MHD_NO;
 
-    for( const auto& iter : response.headers ) {
+    for( const auto& iter : response.headers )
         MHD_add_response_header( mhdResponse, iter.first.c_str(), iter.second.c_str() );//"Content-Type", MIMETYPE);
-    }
-
 
 	int result = MHD_queue_response(connection, response.code, mhdResponse);
 
     MHD_destroy_response(mhdResponse);
+
+    free( response.content );
 
 	return result;
 }
