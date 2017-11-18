@@ -1,5 +1,5 @@
 db
-tokens_hashed
+slots
 list_snapshots.sh
 ssh_keys.sh
 root_passwds

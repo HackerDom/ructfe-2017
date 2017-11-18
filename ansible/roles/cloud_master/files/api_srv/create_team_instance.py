@@ -7,8 +7,9 @@ import os
 import traceback
 
 import do_api
-from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
-                          SSH_OPTS, SSH_DO_OPTS, SSH_YA_OPTS, DOMAIN)
+from cloud_common import (get_cloud_ip, log_progress, take_cloud_ip,
+                          call_unitl_zero_exit,SSH_OPTS, SSH_DO_OPTS,
+                          SSH_YA_OPTS, DOMAIN)
 
 TEAM = int(sys.argv[1])
 VM_NAME = "router-team%d" % TEAM
@@ -23,6 +24,13 @@ def log_stderr(*params):
 
 def main():
     net_state = open("db/team%d/net_deploy_state" % TEAM).read().strip()
+
+    cloud_ip = get_cloud_ip(TEAM)
+    if not cloud_ip:
+        cloud_ip = take_cloud_ip(TEAM)
+        if not cloud_ip:
+            print("msg: ERR, no free vm slots remaining")
+            return 1
 
     log_progress("0%")
     droplet_id = None
@@ -126,11 +134,6 @@ def main():
     log_progress("75%")
 
     if net_state == "DO_DEPLOYED":
-        cloud_ip = get_cloud_ip(TEAM, may_generate=True)
-        if not cloud_ip:
-            log_stderr("no cloud_ip ip, exiting")
-            return 1
-
         log_progress("77%")
 
         file_from = "db/team%d/client_intracloud.conf" % TEAM
@@ -159,12 +162,6 @@ def main():
 
     if net_state == "READY":
         if image_state == "NOT_STARTED":
-            cloud_ip = get_cloud_ip(TEAM)
-
-            if not cloud_ip:
-                log_stderr("no cloud_ip ip, exiting")
-                return 1
-
             file_from = "db/team%d/root_passwd_hash.txt" % TEAM
             file_to = "%s:/home/cloud/root_passwd_hash_team%d.txt" % (cloud_ip,
                                                                       TEAM)

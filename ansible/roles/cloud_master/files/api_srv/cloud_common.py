@@ -1,15 +1,13 @@
 import subprocess
 import sys
 import time
-import random
+import os
+import shutil
 
 DOMAIN = "cloud.alexbers.com"
 
-CLOUD_HOSTS = ["5.45.248.218"]
-
 # change me before the game
 ROUTER_HOST = "router2.ructfe.clients.haas.yandex.net"
-
 
 SSH_OPTS = [
     "-o", "StrictHostKeyChecking=no",
@@ -31,23 +29,45 @@ SSH_YA_OPTS = SSH_OPTS + [
     "-o", "IdentityFile=ructf2017_ya_deploy"
 ]
 
+def untake_cloud_ip(team):
+    for slot in os.listdir("db/team%d" % team):
+        if not slot.startswith("slot_"):
+            continue
+        os.rename("db/team%d/%s" % (team, slot), "slots/%s" % slot)
+    
+    try:
+        os.remove("db/team%d/cloud_ip" % team)
+    except FileNotFoundError:
+        return
 
-def gen_cloud_ip():
-    cloud_ip = random.choice(CLOUD_HOSTS)
-    return cloud_ip
+
+def take_cloud_ip(team):
+    for slot in os.listdir("db/team%d" % team):
+        if not slot.startswith("slot_"):
+            continue
+        shutil.copy2("db/team%d/%s" % (team, slot), "db/team%d/cloud_ip" % team)
+        cloud_ip = open("db/team%d/cloud_ip" % team).read().strip()
+        print("Retaking slot %s, taken %s", (slot, cloud_ip), file=sys.stderr)
+        return cloud_ip
+
+    for slot in os.listdir("slots"):
+        try:
+            os.rename("slots/%s" % slot, "db/team%d/%s" % (team, slot))
+        except FileNotFoundError:
+            continue
+
+        shutil.copy2("db/team%d/%s" % (team,slot), "db/team%d/cloud_ip" % team)
+        cloud_ip = open("db/team%d/cloud_ip" % team).read().strip()
+        print("Taking slot %s, taken %s", (slot, cloud_ip), file=sys.stderr)
+        return cloud_ip
+    return None
 
 
-def get_cloud_ip(team, may_generate=False):
+def get_cloud_ip(team):
     try:
         return open("db/team%d/cloud_ip" % team).read().strip()
     except FileNotFoundError as e:
-        if may_generate:
-            cloud_ip = gen_cloud_ip()
-            print("Generating cloud_ip, assigned " + cloud_ip, file=sys.stderr)
-            open("db/team%d/cloud_ip" % team, "w").write(cloud_ip)
-            return cloud_ip
-        else:
-            return None
+        return None
 
 
 def log_progress(*params):
