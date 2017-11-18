@@ -10,17 +10,17 @@ class HttpRequestState;
 class HttpRequestHandler;
 
 using Headers = std::map< std::string, std::string >;
-using GetArgs = std::map< std::string, std::string >;
+using QueryString = std::map< std::string, std::string >;
 
 struct HttpRequest
 {
 	HttpRequest();
-    HttpRequest(const char *url, const char *method, const Headers& headers, GetArgs& getArgs, MHD_Connection *connection);
+    HttpRequest(const char *url, const char *method, const Headers& headers, QueryString& queryString, MHD_Connection *connection);
 
 	const char *url;
     const char *method;
     Headers headers;
-    GetArgs getArgs;
+    QueryString queryString;
 
 	MHD_Connection *connection;
 };

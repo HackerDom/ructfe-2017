@@ -74,7 +74,7 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 	printf("Received request: %s %s\n", method, url);
 
     Headers headers;
-    GetArgs getArgs;
+    QueryString queryString;
 	if (!*context)
 	{
 		if (!strcmp(method, "POST"))
@@ -82,8 +82,9 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 			HttpPostProcessor *postProcessor = NULL;
 
             MHD_get_connection_values( connection, MHD_HEADER_KIND, IterateHeadersBase, &headers );
+            MHD_get_connection_values( connection, MHD_GET_ARGUMENT_KIND, IterateQueryString, &queryString );
 
-            HttpResponse response = self->requestHandler->HandlePost(HttpRequest(url, method, headers, getArgs, connection), &postProcessor);
+            HttpResponse response = self->requestHandler->HandlePost(HttpRequest(url, method, headers, queryString, connection), &postProcessor);
 
 			if (!postProcessor)
 			{
@@ -101,8 +102,8 @@ int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const cha
 
 	if (!strcmp (method, "GET"))
 	{
-        MHD_get_connection_values( connection, MHD_GET_ARGUMENT_KIND, IterateQueryString, &getArgs );
-        SendResponse( connection, self->requestHandler->HandleGet( HttpRequest( url, method, headers, getArgs, connection ) ) );
+        MHD_get_connection_values( connection, MHD_GET_ARGUMENT_KIND, IterateQueryString, &queryString );
+        SendResponse( connection, self->requestHandler->HandleGet( HttpRequest( url, method, headers, queryString, connection ) ) );
 		return MHD_YES;
 	}
 
@@ -160,7 +161,7 @@ int HttpServer::IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const ch
 
 int HttpServer::IterateQueryString( void *cls, enum MHD_ValueKind kind, const char *key, const char *value )
 {
-    GetArgs* args = ( GetArgs* )cls;
+    QueryString* args = ( QueryString* )cls;
     std::string keyStr = key;
     std::string valueStr = value;
     std::transform( keyStr.begin(), keyStr.end(), keyStr.begin(), ::tolower );
@@ -261,13 +262,13 @@ HttpRequest::HttpRequest()
 	this->connection = NULL;
 };
 
-HttpRequest::HttpRequest(const char *url, const char *method, const Headers& headers, GetArgs& getArgs, MHD_Connection *connection)
+HttpRequest::HttpRequest(const char *url, const char *method, const Headers& headers, QueryString& queryString, MHD_Connection *connection)
 {
 	this->url = url;
 	this->method = method;
 	this->connection = connection;
     this->headers = headers;
-    this->getArgs = getArgs;
+    this->queryString = queryString;
 };
 
 HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0, Headers() )

@@ -412,12 +412,12 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         //camUp[ 1 ] = 1.0f;
         //camUp[ 2 ] = 0.0f;
 
-        FindInMap( request.getArgs, camPosXStr, camPos[ 0 ] );
-        FindInMap( request.getArgs, camPosYStr, camPos[ 1 ] );
-        FindInMap( request.getArgs, camPosZStr, camPos[ 2 ] );
-        FindInMap( request.getArgs, camAimPosXStr, camAt[ 0 ] );
-        FindInMap( request.getArgs, camAimPosYStr, camAt[ 1 ] );
-        FindInMap( request.getArgs, camAimPosZStr, camAt[ 2 ] );
+        FindInMap( request.queryString, camPosXStr, camPos[ 0 ] );
+        FindInMap( request.queryString, camPosYStr, camPos[ 1 ] );
+        FindInMap( request.queryString, camPosZStr, camPos[ 2 ] );
+        FindInMap( request.queryString, camAimPosXStr, camAt[ 0 ] );
+        FindInMap( request.queryString, camAimPosYStr, camAt[ 1 ] );
+        FindInMap( request.queryString, camAimPosZStr, camAt[ 2 ] );
 
         // build camUp vector
         Lib3dsVector upVector, temp, dir;
