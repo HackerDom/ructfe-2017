@@ -376,5 +376,6 @@ struct PipelineState
 };
 
 //
-void CleanDepthRenderTarget(Image* depthRt, float value );
+void ClearRenderTarget( Image* rt, u8 r , u8 g, u8 b, u8 a );
+void ClearDepthRenderTarget(Image* depthRt, float value );
 void Draw( const PipelineState& pState );

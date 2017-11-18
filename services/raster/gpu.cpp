@@ -223,6 +223,7 @@ void Draw( const PipelineState& pState ) {
         i16 maxX = 0;
         i16 maxY = 0;
         Point2D v[ 3 ];
+        bool skipTriangle = false;
         for( u32 vi = 0; vi < 3; vi++ )
         {
             Registers vsRegs;
@@ -240,6 +241,13 @@ void Draw( const PipelineState& pState ) {
             invW.f = _mm_shuffle_ps( pos, pos, 0xFF );
             invW.f = _mm_div_ps( ones, invW.f );
             pos.f = _mm_mul_ps( pos, invW.f );
+
+            // near and far planes clip
+            if( pos.m128_f32[ 2 ] > 1.0f || pos.m128_f32[ 2 ] < 0.0f ) {
+                skipTriangle = true;
+                break;
+            }
+
             pos.m128_f32[ 3 ] = invW.m128_f32[ 3 ];
             // ...and ndc to screen space conversion
 			pos.f = _mm_add_ps( _mm_mul_ps( pos, vpScale ), vpOffset );
@@ -264,7 +272,7 @@ void Draw( const PipelineState& pState ) {
 
         // fixed function stage
         int doubleTriArea = EdgeFunction( v[ 0 ], v[ 1 ], v[ 2 ] );
-        if( doubleTriArea <= 0 )
+        if( doubleTriArea <= 0 || skipTriangle )
             continue;
         f32 invDoubleArea = 1.0f / ( f32 )doubleTriArea;
 
@@ -330,7 +338,24 @@ void Draw( const PipelineState& pState ) {
 }
 
 
-void CleanDepthRenderTarget( Image* depthRt, float value ) {
+//
+void ClearRenderTarget( Image* rt, u8 r, u8 g, u8 b, u8 a ) {
+    if( !rt )
+        return;
+
+    for( u32 y = 0; y < rt->height; y++ ) {
+        for( u32 x = 0; x < rt->width; x++ ){
+            rt->rgba[ y * rt->width + x ].r = r;
+            rt->rgba[ y * rt->width + x ].g = g;
+            rt->rgba[ y * rt->width + x ].b = b;
+            rt->rgba[ y * rt->width + x ].a = a;
+        }
+    }
+}
+
+
+//
+void ClearDepthRenderTarget( Image* depthRt, float value ) {
     if( !depthRt )
         return;
 

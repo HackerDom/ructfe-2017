@@ -242,7 +242,7 @@ void DrawShip()
     pState.ps = &ps;
     pState.rt = &image;
     pState.depthRt = &depthRt;
-    CleanDepthRenderTarget( pState.depthRt, 1.0f );
+    ClearDepthRenderTarget( pState.depthRt, 1.0f );
     Draw( pState );
     save_png( "ship.png", image );
 
@@ -449,7 +449,8 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         pState.rt = &image;
         pState.depthRt = &depthRt;
 
-        CleanDepthRenderTarget( pState.depthRt, 1.0f );
+        ClearRenderTarget( pState.rt, 0, 0, 0, 1 );
+        ClearDepthRenderTarget( pState.depthRt, 1.0f );
 
         const f32 MAX_DISTANCE = 100.0f;
         Ship* ship = m_shipStorage->GetListTail();
@@ -459,8 +460,10 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             shipPos[ 0 ] = ship->m_posX; shipPos[ 1 ] = 0.0f; shipPos[ 2 ] = ship->m_posZ;
             lib3ds_vector_sub( dir, shipPos, camPos );
             f32 distanceSqr = lib3ds_vector_squared( dir );
-            if( distanceSqr > MAX_DISTANCE * MAX_DISTANCE )
+            if( distanceSqr > MAX_DISTANCE * MAX_DISTANCE ) {
+                ship = ship->m_previousShip;
                 continue;
+            }
 
             // prepare world transform matrix
             Lib3dsMatrix tr, rot;
