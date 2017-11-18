@@ -47,7 +47,7 @@ def take_cloud_ip(team):
             continue
         shutil.copy2("db/team%d/%s" % (team, slot), "db/team%d/cloud_ip" % team)
         cloud_ip = open("db/team%d/cloud_ip" % team).read().strip()
-        print("Retaking slot %s, taken %s", (slot, cloud_ip), file=sys.stderr)
+        print("Retaking slot %s, taken %s" % (slot, cloud_ip), file=sys.stderr)
         return cloud_ip
 
     for slot in os.listdir("slots"):
@@ -58,7 +58,7 @@ def take_cloud_ip(team):
 
         shutil.copy2("db/team%d/%s" % (team,slot), "db/team%d/cloud_ip" % team)
         cloud_ip = open("db/team%d/cloud_ip" % team).read().strip()
-        print("Taking slot %s, taken %s", (slot, cloud_ip), file=sys.stderr)
+        print("Taking slot %s, taken %s" % (slot, cloud_ip), file=sys.stderr)
         return cloud_ip
     return None
 
