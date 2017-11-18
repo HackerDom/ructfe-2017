@@ -7,6 +7,7 @@
 //
 struct ShipHeader
 {
+    uuid name;
     f32 posX;
     f32 posZ;
     f32 rotY;
@@ -14,8 +15,8 @@ struct ShipHeader
 };
 
 
-Ship::Ship( float posX, float posZ, float rotY, const u8* shader, Ship *previousShip )
-    : m_posX( posX ), m_posZ( posZ ), m_rotY( rotY ), m_flagShader( shader ), m_previousShip( previousShip )
+Ship::Ship( uuid name, float posX, float posZ, float rotY, const u8* shader, Ship *previousShip )
+    : m_name( name ), m_posX( posX ), m_posZ( posZ ), m_rotY( rotY ), m_flagShader( shader ), m_previousShip( previousShip )
 {
 
 }
@@ -49,7 +50,7 @@ ShipStorage::ShipStorage( const char* path )
         u8* shader = new u8[ header.shaderSize ];
         fread( shader, 1, header.shaderSize, m_backingFile );
 
-        AddShipInternal( header.posX, header.posZ, header.rotY, shader );
+        AddShipInternal( header.name, header.posX, header.posZ, header.rotY, shader );
 
         delete[] shader;
 	}
@@ -67,14 +68,15 @@ ShipStorage::~ShipStorage()
     fclose( m_backingFile );
 }
 
-bool ShipStorage::AddShip( float posX, float posZ, float rotY, const u8 *shader )
+bool ShipStorage::AddShip( uuid name, float posX, float posZ, float rotY, const u8 *shader )
 {
     pthread_mutex_lock( &m_sync );
 
-    Ship* ship = AddShipInternal( posX, posZ, rotY, shader );
+    Ship* ship = AddShipInternal( name, posX, posZ, rotY, shader );
     if( ship ){
         ShipHeader header;
 
+        header.name = name;
         header.posX = posX;
         header.posZ = posZ;
         header.rotY = rotY;
@@ -90,9 +92,9 @@ bool ShipStorage::AddShip( float posX, float posZ, float rotY, const u8 *shader 
     return ship != nullptr;
 }
 
-Ship* ShipStorage::AddShipInternal( float posX, float posZ, float rotY, const u8* shader )
+Ship* ShipStorage::AddShipInternal( uuid name,float posX, float posZ, float rotY, const u8* shader )
 {
-    Ship* d = new Ship( posX, posZ, rotY, shader, m_ships );
+    Ship* d = new Ship( name, posX, posZ, rotY, shader, m_ships );
 
     m_ships = d;
     m_shipsCount++;
@@ -116,15 +118,15 @@ Ship* ShipStorage::AddShipInternal( float posX, float posZ, float rotY, const u8
 	}
 
 	return list;
-}
+}*/
 
 Ship *ShipStorage::GetShip(uuid name)
 {
-    for (Ship *d = detectors; d != NULL; d = d->previousShip)
+    for( Ship* d = m_ships; d != NULL; d = d->m_previousShip )
 	{
-		if (!memcmp(&name, &d->name, sizeof(name)))
+        if( !memcmp( &name, &d->m_name, sizeof( name ) ) )
 			return d;
 	}
 
 	return NULL;
-}*/
+}

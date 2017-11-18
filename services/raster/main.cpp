@@ -286,8 +286,6 @@ public:
 
 protected:
     virtual void FinalizeRequest();
-
-private:
 };
 
 
@@ -341,9 +339,15 @@ void AddShipProcessor::FinalizeRequest() {
         return;
     }
 
-    if( m_shipStorage->AddShip( m_shipPosX, m_shipPosZ, m_shipRotY, m_flagShader ) )
-        Complete( HttpResponse( MHD_HTTP_OK ) );
-    else
+    uuid id;
+    uuid_generate( id.bytes );
+
+    if( m_shipStorage->AddShip( id, m_shipPosX, m_shipPosZ, m_shipRotY, m_flagShader ) ) {
+        char* uuidStr = ( char* )malloc( 64 );
+        memset( uuidStr, 0, 64 );
+        uuid_unparse( id.bytes, uuidStr );
+        Complete( HttpResponse( MHD_HTTP_OK, uuidStr, strlen( uuidStr ), Headers() ) );
+     } else
         Complete( HttpResponse(MHD_HTTP_BAD_REQUEST) );
 }
 
@@ -495,6 +499,26 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         stbi_write_png_to_func( png_to_mem, &response, image.width, image.height, 4, image.rgba, image.width * sizeof( u32 ) );
 
         return response;
+    }
+    if( ParseUrl( request.url, 1, "get_shader" ) )
+    {
+        static std::string uuidKey( "uuid" );
+        std::string uuidStr;
+        if( !FindInMap( request.queryString, uuidKey, uuidStr ) )
+            return HttpResponse( MHD_HTTP_BAD_REQUEST );
+
+        uuid id;
+        uuid_parse( uuidStr.c_str(), id.bytes );
+        Ship* ship = m_shipStorage->GetShip( id );
+        if( !ship )
+            return HttpResponse( MHD_HTTP_NOT_FOUND );
+
+        char* responseData = ( char* )malloc( ship->m_flagShader.GetSize() );
+        char* copyDst = responseData;
+        memcpy( copyDst, &ship->m_flagShader.header, sizeof( Shader::Header ) );
+        copyDst += sizeof( Shader::Header );
+        memcpy( copyDst, ship->m_flagShader.instructions, ship->m_flagShader.GetSize() -sizeof( Shader::Header ) );
+        return HttpResponse( MHD_HTTP_OK, responseData, ship->m_flagShader.GetSize(), Headers() );
     }
     return HttpResponse( MHD_HTTP_NOT_FOUND );
 }
