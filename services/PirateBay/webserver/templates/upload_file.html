@@ -13,12 +13,14 @@
         <a href="/">Home</a>
         <a href="/signout">Sign out</a>
         <a href="/storage">Files</a>
+        <a href="/private_storage">Private files</a>
         <p>Hello, {{ authed }}!</p>
     </div>
-<form action="upload" method="post" enctype="multipart/form-data">
+<form action="upload" method="post" enctype="multipart/form-data" id="form">
     <input type="file" id="upload_file" name="upload_file">
     <p id="mess">Drag your files here or click in this area.</p>
     <button type="submit">Upload</button>
 </form>
+<button onclick="set_private()">Private</button>
 </body>
 </html>

@@ -5,7 +5,7 @@ from torrent_format.bencoder import parse_dictionary
 from utils import generate_uid
 
 
-class TorrentFileInfo(Model):
+class TorrentFile(Model):
     announce = TextField(256)
     length = IntField()
     type = TextField(256)
@@ -39,3 +39,12 @@ class TorrentFileInfo(Model):
     def __str__(self):
         return "TorrentFileInfo({})".format(self.__dict__)
 
+
+class PrivateTorrentFile(TorrentFile):
+    announce = TextField(256)
+    length = IntField()
+    type = TextField(256)
+    name = TextField(256)
+    uid = TextField(32)
+    upload_by = TextField(256)
+    content = TextField(long=True)

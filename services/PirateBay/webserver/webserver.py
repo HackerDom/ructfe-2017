@@ -7,7 +7,7 @@ from jinja2 import Template
 
 from db.client import DBClient
 from db.model import Model, TextField
-from torrent_format.torrent_file import TorrentFileInfo
+from torrent_format.torrent_file import TorrentFile, PrivateTorrentFile
 from utils import generate_uid, get_base_of_hash
 
 LOGIN_PATTERN = re.compile("^[a-z0-9_-]{3,16}$")
@@ -99,9 +99,9 @@ def authenticate(login, password):
 
 def get_torrent_info_files(fields_filter):
     if fields_filter:
-        files = TorrentFileInfo.filter(name__contains=fields_filter)
+        files = TorrentFile.filter(name__contains=fields_filter)
     else:
-        files = TorrentFileInfo.all()
+        files = TorrentFile.all()
     return files
 
 
@@ -182,7 +182,7 @@ class RequestHandler:
         if user is None:
             raise cherrypy.HTTPRedirect('/')
         return self.get_template('files_storage.html').render(
-            model_fields=TorrentFileInfo.get_field_names(),
+            model_fields=TorrentFile.get_field_names(),
             files=get_torrent_info_files(adjust_search_filter(search_filter)),
             authed=user.login,
             value=search_filter,
@@ -197,7 +197,7 @@ class RequestHandler:
                 break
             raw_torrent_info_file += data
         user_login = get_authorized_user().login
-        TorrentFileInfo(bytes(raw_torrent_info_file), upload_by=user_login).save()
+        TorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
         raise cherrypy.HTTPRedirect('/storage')
 
     @cherrypy.expose
@@ -209,7 +209,7 @@ class RequestHandler:
 
     @cherrypy.expose
     def download(self, file_id):
-        tfiles = TorrentFileInfo.filter(uid=file_id)
+        tfiles = TorrentFile.filter(uid=file_id)
         if (len(tfiles) > 1) or (not tfiles):
             raise cherrypy.HTTPError(404)
         tfile = tfiles[0]
@@ -217,10 +217,58 @@ class RequestHandler:
         cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="{}.torrent"'.format(tfile.name)
         return tfile.get_data()
 
+    @cherrypy.expose
+    def download_private(self, file_id):
+        user = get_authorized_user()
+        if user is None:
+            raise cherrypy.HTTPError(404)
+        tfiles = PrivateTorrentFile.filter(uid=file_id)
+        if (len(tfiles) > 1) or (not tfiles):
+            raise cherrypy.HTTPError(404)
+        tfile = tfiles[0]
+        if user.login != tfile.upload_by:
+            raise cherrypy.HTTPError(404)
+        cherrypy.response.headers['Content-Type'] = 'application/x-bittorrent'
+        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="{}.torrent"'.format(tfile.name)
+        return tfile.get_data()
+
+    @cherrypy.expose
+    def upload_private(self, upload_file):
+        raw_torrent_info_file = bytearray()
+        while True:
+            data = upload_file.file.read(8192)
+            if not data:
+                break
+            raw_torrent_info_file += data
+        user_login = get_authorized_user().login
+        PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
+
+        raise cherrypy.HTTPRedirect('/storage')
+
+    @cherrypy.expose
+    def private_storage(self, search_filter=""):
+        user = get_authorized_user()
+        if user is None:
+            raise cherrypy.HTTPRedirect('/')
+        if search_filter:
+            files = PrivateTorrentFile.filter(
+                name__contains=adjust_search_filter(search_filter),
+                upload_by=user.login
+            )
+        else:
+            files = PrivateTorrentFile.filter(
+                upload_by=user.login
+            )
+        return self.get_template('private_files_storage.html').render(
+            model_fields=PrivateTorrentFile.get_field_names(),
+            files=files,
+            authed=user.login,
+            value=search_filter,
+        )
+
 
 def start_web_server():
     with DBClient() as db_client:
         db_client.connection.commit()
         request_handler = RequestHandler()
         cherrypy.quickstart(request_handler, '/', config='webserver/webserver.config')
-

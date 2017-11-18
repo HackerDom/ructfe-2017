@@ -10,3 +10,7 @@ $(document).ready(function(){
         $('form p').text(this.files.length + " file(s) selected");
     });
 });
+
+function set_private() {
+    document.getElementById("form").setAttribute("action", "upload_private")
+}

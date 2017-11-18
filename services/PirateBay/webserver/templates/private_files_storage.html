@@ -18,7 +18,7 @@
     <div class="topbar">
         <a href="/">Home</a>
         <a href="/signout">Sign out</a>
-        <a href="/private_storage">Private files</a>
+        <a href="/storage">Files</a>
         <a href="/upload_file">Upload file</a>
         <form action="storage">
             <input value="{{ value }}" type="search" id="search_field" name="search_filter" placeholder="Search..." autofocus/>
@@ -43,7 +43,7 @@
                 <td>{{file.name}}</td>
                 <td>{{file.type}}</td>
                 <td>{{file.upload_by}}</td>
-                <td><a href="download?file_id={{file.uid}}">donwload</a> </td>
+                <td><a href="download_private?file_id={{file.uid}}">donwload</a> </td>
             </tr>
             {% endfor %}
         </table>
