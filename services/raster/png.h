@@ -1,5 +1,8 @@
 #pragma once
 #include <stdint.h>
+#define STBI_ONLY_PNG 1
+#include "stb_image.h"
+#include "stb_image_write.h"
 
 
 //

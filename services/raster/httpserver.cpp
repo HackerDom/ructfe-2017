@@ -180,11 +180,14 @@ int HttpServer::SendResponse(MHD_Connection *connection, HttpResponse response)
 	if (!mhdResponse)
 		return MHD_NO;
 
+    for( const auto& iter : response.headers ) {
+        MHD_add_response_header( mhdResponse, iter.first.c_str(), iter.second.c_str() );//"Content-Type", MIMETYPE);
+    }
+
+
 	int result = MHD_queue_response(connection, response.code, mhdResponse);
 
-	MHD_destroy_response(mhdResponse);
-
-	delete[] response.content;
+    MHD_destroy_response(mhdResponse);
 
 	return result;
 }
@@ -267,19 +270,20 @@ HttpRequest::HttpRequest(const char *url, const char *method, const Headers& hea
     this->getArgs = getArgs;
 };
 
-HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0)
+HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0, Headers() )
 {
 }
 
-HttpResponse::HttpResponse(uint32_t code) : HttpResponse(code, NULL, 0)
+HttpResponse::HttpResponse(uint32_t code) : HttpResponse( code, NULL, 0, Headers() )
 {
 }
 
-HttpResponse::HttpResponse(uint32_t code, char *content, size_t contentLength)
+HttpResponse::HttpResponse(uint32_t code, char *content, size_t contentLength, const Headers& headers)
 {
 	this->code = code;
 	this->content = content;
 	this->contentLength = contentLength;
+    this->headers = headers;
 }
 
 bool HttpRequestHandler::ParseUrl(const char *url, int parts, ...)

@@ -29,12 +29,12 @@ struct HttpResponse
 {
 	HttpResponse();
 	HttpResponse(uint32_t code);
-	HttpResponse(uint32_t code, char *content, size_t contentLength);
+    HttpResponse(uint32_t code, char *content, size_t contentLength, const Headers& headers );
 
 	uint32_t code;
-
 	char *content;
 	size_t contentLength;
+    Headers headers;
 };
 
 class HttpServer

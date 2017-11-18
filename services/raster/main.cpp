@@ -382,6 +382,15 @@ RequestHandler::RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb )
 
 
 //
+void png_to_mem(void *context, void *data, int size)
+{
+    HttpResponse* response = ( HttpResponse* )context;
+    response->content = ( char* )data;
+    response->contentLength = size;
+}
+
+
+//
 HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
     if( ParseUrl( request.url, 1, "draw" ) )
     {
@@ -472,8 +481,16 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             ship = ship->m_previousShip;
         }
 
-        save_png( "draw.png", image );
-        return HttpResponse( MHD_HTTP_OK );
+        Headers responseHeaders;
+        responseHeaders.insert( { "Content-Type", "image/png" } );
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers = responseHeaders;
+
+        stbi_write_png_to_func( png_to_mem, &response, image.width, image.height, 4, image.rgba, image.width * sizeof( u32 ) );
+
+        return response;
     }
     return HttpResponse( MHD_HTTP_NOT_FOUND );
 }
