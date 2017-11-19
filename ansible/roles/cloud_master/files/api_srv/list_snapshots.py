@@ -37,7 +37,7 @@ def main():
         cmd = ["sudo", "/cloud/scripts/list_snapshots.sh", str(TEAM)]
 
         try:
-            snapshots = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd, encoding="utf-8")
+            snapshots = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd).decode("utf-8")
         except subprocess.CalledProcessError:
             log_stderr("get shapshots list failed")
             return 1

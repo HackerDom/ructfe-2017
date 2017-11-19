@@ -126,14 +126,14 @@ def check_do_domains(records, team, expected_ip):
 
 def get_intraopenvpns_running_on_cloud_ip(cloud_ip):
     cmd = ["ps", "aux"]
-    output = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd, encoding="utf-8")
+    output = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd).decode("utf-8")
     
     teams = [int(team) for team in re.findall(YA_INTRAOPENVPN_RE, output)]
     return teams
 
 def get_vms_on_cloud_ip(cloud_ip):
     cmd = ["sudo", "/cloud/scripts/list_vms.sh"]
-    output = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd, encoding="utf-8")
+    output = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd).decode("utf-8")
     
     teams = [int(team) for team in re.findall(YA_VBOXNAME_RE, output)]
     return teams
@@ -141,7 +141,7 @@ def get_vms_on_cloud_ip(cloud_ip):
 
 def get_running_vms_on_cloud_ip(cloud_ip):
     cmd = ["sudo", "/cloud/scripts/list_vms.sh running"]
-    output = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd, encoding="utf-8")
+    output = subprocess.check_output(["ssh"] + SSH_YA_OPTS + [cloud_ip] + cmd).decode("utf-8")
     
 
     teams = [int(team) for team in re.findall(YA_VBOXNAME_RE, output)]

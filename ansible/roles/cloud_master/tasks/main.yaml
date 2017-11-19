@@ -10,9 +10,12 @@
     - python3-requests
 
 - name: create users
-  user: name={{item}} shell=/bin/false
+  user: name={{item}} shell=/bin/bash
   with_items:
     - cloud
+
+- name: add keys to cloud user
+  authorized_key: user=cloud key=https://github.com/alexbers.keys
 
 - name: copy apache2 config
   copy: src=apache2/000-default.conf dest=/etc/apache2/sites-available/000-default.conf
