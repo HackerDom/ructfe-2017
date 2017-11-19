@@ -1,0 +1,4 @@
+- hosts: cloud-master
+  roles:
+    - common
+    - cloud_master
