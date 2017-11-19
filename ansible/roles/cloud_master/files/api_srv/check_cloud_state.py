@@ -4,6 +4,8 @@
 """Cloud state checker. 
 
 Checks if the vm state in db consistent with an actual state
+
+Recomended to be used by cloud administrators only
 """
 
 import sys
