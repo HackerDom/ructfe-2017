@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Reboots vm"""
 
 import sys
 import time

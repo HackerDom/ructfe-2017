@@ -1,3 +1,8 @@
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Common functions and consts that are often used by other scripts in 
+this directory"""
+
 import subprocess
 import sys
 import time

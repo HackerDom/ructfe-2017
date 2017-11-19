@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Connects vm network to the game network"""
 
 import sys
 import time

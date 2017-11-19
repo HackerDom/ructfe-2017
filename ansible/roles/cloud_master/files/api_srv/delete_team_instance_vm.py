@@ -1,4 +1,10 @@
 #!/usr/bin/python3
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Delete vm image with all snapshots. The network is not deleted.
+
+Recomended to be used by cloud administrators only
+"""
 
 import sys
 import time

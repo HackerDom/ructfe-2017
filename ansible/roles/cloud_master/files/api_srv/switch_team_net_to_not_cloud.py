@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Disconnects vm network from the game network"""
 
 import sys
 import time

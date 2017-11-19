@@ -1,3 +1,7 @@
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Common functions that make requests to digital ocean api"""
+
 import requests
 import time
 import json

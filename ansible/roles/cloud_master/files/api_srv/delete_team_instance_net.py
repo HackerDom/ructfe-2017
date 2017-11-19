@@ -1,4 +1,10 @@
 #!/usr/bin/python3
+# Developed by Alexander Bersenev from Hackerdom team, bay@hackerdom.ru
+
+"""Delete the router do instance for team. The vm image is not deleted.
+
+Recomended to be used by cloud administrators only
+"""
 
 import sys
 import time
