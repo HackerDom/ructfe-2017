@@ -190,7 +190,7 @@ def create_task(team, task_name, script_name, args, timeout=600):
 
 
 def cmd_create_vm(team, args):
-    return create_task(team, "create_vm", "create_team_instance.py", [str(team)])
+    return create_task(team, "create_vm", "create_team_instance.py", [str(team)], timeout=1200)
 
 def cmd_get_team_openvpn_config(team, args):
     if not DEV_MODE:

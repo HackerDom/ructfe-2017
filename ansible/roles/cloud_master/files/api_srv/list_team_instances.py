@@ -43,7 +43,7 @@ def get_vm_states():
             team_states[team] = team_state
         except FileNotFoundError: 
             log_team(team, "failed to load states")
-    return net_states, image_states, net_states
+    return net_states, image_states, team_states
 
 
 def get_cloud_ips():
