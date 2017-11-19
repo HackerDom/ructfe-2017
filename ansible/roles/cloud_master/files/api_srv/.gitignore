@@ -1,8 +1,3 @@
 db
 slots
-list_snapshots.sh
-ssh_keys.sh
-root_passwds
-openvpn_team_main_net_client
-openvpn_team_net
 do_token.py
