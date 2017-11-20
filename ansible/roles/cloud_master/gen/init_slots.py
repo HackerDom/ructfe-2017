@@ -4,10 +4,10 @@ import sys
 import os
 
 CLOUD_PHYS_SERVERS = [
-    ("5.45.248.218", "cld0"),
+    ("93.158.156.122", "cld10"),
 ]
 
-VM_PER_SERVER = 30
+VM_PER_SERVER = 25
 
 if __name__ != "__main__":
     raise Exception("I am not a module")
