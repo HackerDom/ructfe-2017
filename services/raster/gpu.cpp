@@ -112,8 +112,8 @@ bool Execute( const Registers& registers, const Shader& shader ) {
             case OP_DIV:  result.f = _mm_div_ps   ( src0.f, src1.f ); break;
             case OP_DIVI:
                 {
-            for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
-                result.m128_i32[ j ] = src0.m128_i32[ j ] / src1.m128_i32[ j ];
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        result.m128_i32[ j ] = src0.m128_i32[ j ] / src1.m128_i32[ j ];
                 }
                 break;
             case OP_DOT:
@@ -203,13 +203,27 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                     }
                 }
                 break;
+            case OP_OR: result.f = _mm_or_ps( src0.f, src1.f ); break;
+            case OP_AND: result.f = _mm_and_ps( src0.f, src1.f ); break;
+            case OP_XOR: result.f = _mm_xor_ps( src0.f, src1.f ); break;
+            case OP_SHL:
+                {
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        result.m128_i32[ j ] = src0.m128_i32[ j ] << src1.m128_i32[ j ];
+                }
+                break;
+            case OP_SHR:
+                {
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                        result.m128_i32[ j ] = src0.m128_i32[ j ] >> src1.m128_i32[ j ];
+                }
+                break;
             case OP_RET: return true;
         }
 
         if( g_opOperands[ i.op ] & OPERAND_DST )
             StoreRegister( registers, i.dstType, i.dst, i.dstSwizzle, result );
     }
-
     return true;
 }
 
