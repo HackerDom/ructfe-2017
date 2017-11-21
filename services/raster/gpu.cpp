@@ -89,7 +89,7 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                     } else {
                         __m128_union textureSize, texelPos;
                         textureSize.f = _mm_cvtepi32_ps( _mm_set_epi32( 0, 0, texture->height, texture->width ) );
-                        texelPos.i = _mm_cvtps_epi32( _mm_mul_ps( src0.f, textureSize ) );
+                        texelPos.i = _mm_cvttps_epi32( _mm_sub_ps( _mm_mul_ps( src0.f, textureSize.f ), _mm_set1_ps( 0.5f ) ) );
                         // wrap sampling mode
                         int x = texelPos.m128_i32[ 0 ] % texture->width;
                         int y = texelPos.m128_i32[ 1 ] % texture->height;
@@ -171,7 +171,7 @@ bool Execute( const Registers& registers, const Shader& shader ) {
                 }
                 break;
             case OP_MOV:   result = src0; break;
-            case OP_CVTFI: result.i = _mm_cvtps_epi32( src0 ); break;
+            case OP_CVTFI: result.i = _mm_cvttps_epi32( src0 ); break;
             case OP_CVTIF: result.f = _mm_cvtepi32_ps( src0.i ); break;
             case OP_CMPEQ: cmpMask = _mm_movemask_ps( _mm_cmpeq_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
             case OP_CMPLT: cmpMask = _mm_movemask_ps( _mm_cmplt_ps   ( src0.f, src1.f ) ) & ( ( 1 << i.src0Swizzle.activeNum ) - 1 ); break;
