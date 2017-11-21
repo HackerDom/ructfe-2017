@@ -1,5 +1,8 @@
+from copy import deepcopy
+
 from config import TORRENT_FILES_TABLE_NAME
-from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery
+from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery, IncCountQuery, \
+    CreateIfCounterNotExists, GetCountQuery
 from utils import cached_method
 
 db_client = DBClient()
@@ -73,22 +76,23 @@ class Model:
             tbl_name=table_name,
             fields=fields,
         ).query
+        create_if_counter_not_exists_query = CreateIfCounterNotExists(
+            tbl_name=TORRENT_FILES_TABLE_NAME + "_counter",
+            model_name=table_name,
+        ).query
+        print(create_if_counter_not_exists_query)
         with db_client.connection.cursor() as cursor:
             cursor.execute(create_table_if_not_exists_query)
+            cursor.execute(create_if_counter_not_exists_query)
         db_client.connection.commit()
-
-    @staticmethod
-    def check_field(field):
-        return str(field).replace("'", r"\'").replace('"', r'\"')
 
     @classmethod
     def create(cls, **fields):
         cls.validate(fields)
-        cls.create_table_if_not_exists()
         table_name = cls.table_name()
         model_fields = cls.get_fields()
         sorted_field_names = sorted(model_fields.keys())
-        field_values = ["'{}'".format(cls.check_field(fields[field_name])) for field_name in sorted_field_names]
+        field_values = ["'{}'".format(fields[field_name]) for field_name in sorted_field_names]
         field_names_param = sorted_field_names
         field_values_param = field_values
         insert_query = InsertQuery(
@@ -99,14 +103,39 @@ class Model:
         with db_client.connection.cursor() as cursor:
             cursor.execute(insert_query)
         db_client.connection.commit()
+        cls.inc_count()
+
+    @classmethod
+    def inc_count(cls):
+        inc_counter_query = IncCountQuery(
+            TORRENT_FILES_TABLE_NAME + "_counter",
+            cls.table_name(),
+        ).query
+        with db_client.connection.cursor() as cursor:
+            cursor.execute(inc_counter_query)
+        db_client.connection.commit()
 
     def save(self):
         type(self).create(**self.__dict__)
 
     @classmethod
-    def all(cls):
-        cls.create_table_if_not_exists()
-        get_all_query = GetAllQuery(tbl_name=cls.table_name(), field_names=cls.get_field_names()).query
+    def get_count(cls):
+        get_count_query = GetCountQuery(
+            TORRENT_FILES_TABLE_NAME + "_counter",
+            cls.table_name(),
+        ).query
+        with db_client.connection.cursor() as cursor:
+            cursor.execute(get_count_query)
+            return cursor.fetchone()[0]
+
+    @classmethod
+    def all(cls, lower_bound, count):
+        get_all_query = GetAllQuery(
+            tbl_name=cls.table_name(),
+            field_names=cls.get_field_names(),
+            lower_bound=lower_bound,
+            count=count,
+        ).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(get_all_query)
             object_tuples = cursor.fetchall()
@@ -126,7 +155,6 @@ class Model:
     @classmethod
     def filter(cls, **fields):
         cls.validate(fields, check_required=False)
-        cls.create_table_if_not_exists()
         filter_fields = [cls.format_field_filter(*field) for field in fields.items()]
         filter_query = FilterQuery(
             tbl_name=cls.table_name(),
@@ -137,3 +165,7 @@ class Model:
             cursor.execute(filter_query)
             object_tuples = cursor.fetchall()
             return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
+
+    @classmethod
+    def initialize(cls):
+        cls.create_table_if_not_exists()
