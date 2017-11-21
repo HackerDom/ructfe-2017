@@ -80,3 +80,5 @@
     - ructf2017_ya_deploy
     - do_token.py
 
+- name: copy root cloud scripts
+  copy: src=root_cloud_scripts dest=/root/ mode=0755
