@@ -159,7 +159,7 @@ class Model:
         filter_query = FilterQuery(
             tbl_name=cls.table_name(),
             field_names=sorted(cls.get_fields().keys()),
-            filter_fields=filter_fields
+            filter_fields=filter_fields,
         ).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(filter_query)

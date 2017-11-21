@@ -33,10 +33,10 @@ class CreateTableIfNotExistsQuery:
 
 class FilterQuery:
     def __init__(self, tbl_name, field_names, filter_fields):
-        self.query = "SELECT {field_names} FROM {tbl_name} WHERE {filter_fields};".format(
+        self.query = "SELECT {field_names} FROM {tbl_name} WHERE {filter_fields} LIMIT 0, 20;".format(
             field_names=', '.join(field_names),
             tbl_name=tbl_name,
-            filter_fields=' AND '.join(filter_fields)
+            filter_fields=' AND '.join(filter_fields),
         )
 
 
