@@ -69,7 +69,7 @@ table {
     border-collapse: collapse;
     width: 100%;
     color: #fff;
-    background-color: #013101;
+    background-color: rgba(1, 1, 1, 0.2);
 }
 
 td, th {
@@ -79,7 +79,7 @@ td, th {
 }
 
 tr:nth-child(even) {
-    background-color: #010110;
+    background-color: #013101;
 }
 
 [class*="fontawesome-"]:before {
@@ -221,4 +221,27 @@ input {
 
 .checkbox:focus + label:before {
   box-shadow: 0 0 0 3px rgba(255,255,0,.5);
+}
+
+.pagination {
+    display: inline-block;
+    margin: 0 auto;
+}
+
+.pagination a {
+    color: green;
+    background-color: #010110;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+}
+
+.pagination a.active {
+    background-color: #4CAF50;
+    color: black;
+}
+
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+    color: black;
 }

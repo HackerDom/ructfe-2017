@@ -1,6 +1,5 @@
 import os
 import re
-from base64 import b64decode
 
 import cherrypy
 from jinja2 import Template
@@ -97,11 +96,14 @@ def authenticate(login, password):
     return user.uid
 
 
-def get_torrent_info_files(fields_filter):
+LINES_FOR_QUERY = 20
+
+
+def get_torrent_files(fields_filter, page_number):
     if fields_filter:
         files = TorrentFile.filter(name__contains=fields_filter)
     else:
-        files = TorrentFile.all()
+        files = TorrentFile.all(page_number * LINES_FOR_QUERY, LINES_FOR_QUERY)
     return files
 
 
@@ -177,15 +179,23 @@ class RequestHandler:
         return self.get_template('main.html').render(authed=authed)
 
     @cherrypy.expose
-    def storage(self, search_filter=""):
+    def storage(self, search_filter="", page_number=0):
         user = get_authorized_user()
         if user is None:
-            raise cherrypy.HTTPRedirect('/')
+            raise cherrypy.HTTPRedirect("/index")
+        else:
+            authed = user.login
+        if search_filter == "":
+            max_page = int(TorrentFile.get_count() / LINES_FOR_QUERY)
+        else:
+            max_page = -1
         return self.get_template('files_storage.html').render(
             model_fields=TorrentFile.get_field_names(),
-            files=get_torrent_info_files(adjust_search_filter(search_filter)),
-            authed=user.login,
+            files=get_torrent_files(adjust_search_filter(search_filter), int(page_number)),
+            authed=authed,
             value=search_filter,
+            page_number=page_number,
+            max_page=max_page,
         )
 
     @cherrypy.expose
