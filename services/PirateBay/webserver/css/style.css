@@ -82,6 +82,10 @@ tr:nth-child(even) {
     background-color: #013101;
 }
 
+a {
+    color: white;
+}
+
 [class*="fontawesome-"]:before {
   font-family: 'FontAwesome', sans-serif;
 }

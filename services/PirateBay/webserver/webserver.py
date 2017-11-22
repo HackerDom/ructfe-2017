@@ -99,6 +99,10 @@ def authenticate(login, password):
 LINES_FOR_QUERY = 20
 
 
+def error_page_404(status, message, traceback, version):
+    return "404 Error!"
+
+
 def get_torrent_files(fields_filter, page_number):
     if fields_filter:
         files = TorrentFile.filter(name__contains=fields_filter)
@@ -177,6 +181,10 @@ class RequestHandler:
         user = get_authorized_user()
         authed = "" if user is None else user.login
         return self.get_template('main.html').render(authed=authed)
+
+    @cherrypy.expose
+    def default(self, _):
+        return self.get_template('page_404.html').render()
 
     @cherrypy.expose
     def storage(self, search_filter="", page_number=0):
