@@ -298,10 +298,13 @@ function call_api(t, cmd, args) {
                     console_print("]")
                 }
 
-                if("msg" in resp) {
+                if (cur_req.status != 202) {
                     if (is_progress) {
                         console_print("\n")
                     }
+                }
+                
+                if("msg" in resp) {
                     console_print(resp["msg"] + "\n")
                 } else if ("result" in resp && resp["result"] != "ok") {
                     if (is_progress) {

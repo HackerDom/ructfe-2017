@@ -126,21 +126,28 @@ def create_task(team, task_name, script_name, args, timeout=600):
     if not re.fullmatch(r"[a-z_]+\.?[a-z]*", script_name):
         return "400 Failed to create a task", {"result": "bad script name"}
     
-    task_result_file = open("%s/team%d/task_%s.out" % (DB_PATH, team, task_name), "a+", 1)
+    task_lock_file = open("%s/team%d/lock" % (DB_PATH, team), "a+", 1)
+    task_lock_file.seek(0)
+
     try:
-        fcntl.flock(task_result_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(task_lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        task_lock_file.truncate()
+        task_lock_file.write(task_name + "\n")
+
     except BlockingIOError:
-        return "202 Attaching to task", {"result": "ok", "task": task_name}
+        lock_trgt = task_lock_file.read().strip()
+        if lock_trgt == task_name:
+            return "202 Attaching to task", {"result": "ok", "task": task_name}
+        else:
+            return "409 Conflict", {"result": "another task (%s) is running" % lock_trgt}
 
     retry_after = get_rate_limit_remaining(team, task_name)
     if retry_after > 0:
         return "429 Too fast", {"result": "too fast", "msg": "too fast, try again after %d secs" % retry_after}
 
-
     print("starting task", task_name, args, file=sys.stderr)
-
-    task_result_file.seek(0)
-    task_result_file.truncate()
+    task_result_file = open("%s/team%d/task_%s.out" % (DB_PATH, team, task_name), "w", 1)
 
     sys.stdout.flush()
     sys.stderr.flush()
@@ -156,6 +163,10 @@ def create_task(team, task_name, script_name, args, timeout=600):
     
             new_stderr = open("%s/team%d/tasks.log" % (DB_PATH, team), "a+", 1)
             os.dup2(new_stderr.fileno(), 2)
+
+            # pass fd to child process as aliveness indicator
+            os.dup2(task_lock_file.fileno(), 3)
+            os.close(task_lock_file.fileno())           
     
             os.chdir("/")
             os.setsid()
@@ -167,7 +178,6 @@ def create_task(team, task_name, script_name, args, timeout=600):
     
             # child survives, now init handles him
             signal.alarm(timeout)
-            # time.sleep(1000)
     
             new_args = [str(arg) for arg in args]
             exec_name = "%s/%s" % (SCRIPTS_PATH, script_name)
@@ -317,11 +327,14 @@ def cmd_poll(team, args):
         return "400 Bad request", {"result": "bad task name"}
 
     is_running = False
-    try:
-        with open("%s/team%d/task_%s.out" % (DB_PATH, team, task_name), "a+", 1) as task_result_file:
-            fcntl.flock(task_result_file, fcntl.LOCK_SH | fcntl.LOCK_NB)
-    except BlockingIOError:
-        is_running = True
+    with open("%s/team%d/lock" % (DB_PATH, team), "a+", 1) as task_lock_file:
+        task_lock_file.seek(0)
+        try:
+            fcntl.flock(task_lock_file, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        except BlockingIOError:
+            lock_trgt = task_lock_file.read().strip()
+            if lock_trgt == task_name:
+                is_running = True
 
     result = parse_task_file(team, task_name)
     if not result:
@@ -338,6 +351,8 @@ def cmd_poll(team, args):
         status = "200 Ok"
         if "msg" not in ans and not start_time and not end_time and not progress and not exit_code:
             ans["msg"] = "ERR, task silently died"
+        elif exit_code != 0 and msg not in ans:
+            ans["msg"] = "ERR"
     else:
         status = "202 Wait more"
 
