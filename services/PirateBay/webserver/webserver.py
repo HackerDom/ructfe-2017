@@ -199,6 +199,31 @@ class RequestHandler:
         )
 
     @cherrypy.expose
+    def private_storage(self, search_filter="", page_number=0):
+        user = get_authorized_user()
+        if user is None:
+            raise cherrypy.HTTPRedirect('/index')
+        if search_filter:
+            max_page = -1
+            files = PrivateTorrentFile.filter(
+                name__contains=adjust_search_filter(search_filter),
+                upload_by=user.login
+            )
+        else:
+            max_page = int(PrivateTorrentFile.get_count() / LINES_FOR_QUERY)
+            files = PrivateTorrentFile.filter(
+                upload_by=user.login
+            )
+        return self.get_template('private_files_storage.html').render(
+            model_fields=PrivateTorrentFile.get_field_names(),
+            files=files,
+            authed=user.login,
+            value=search_filter,
+            max_page=max_page,
+            page_number=page_number,
+        )
+
+    @cherrypy.expose
     def upload(self, upload_file):
         raw_torrent_info_file = bytearray()
         while True:
@@ -254,27 +279,6 @@ class RequestHandler:
         PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
 
         raise cherrypy.HTTPRedirect('/storage')
-
-    @cherrypy.expose
-    def private_storage(self, search_filter=""):
-        user = get_authorized_user()
-        if user is None:
-            raise cherrypy.HTTPRedirect('/')
-        if search_filter:
-            files = PrivateTorrentFile.filter(
-                name__contains=adjust_search_filter(search_filter),
-                upload_by=user.login
-            )
-        else:
-            files = PrivateTorrentFile.filter(
-                upload_by=user.login
-            )
-        return self.get_template('private_files_storage.html').render(
-            model_fields=PrivateTorrentFile.get_field_names(),
-            files=files,
-            authed=user.login,
-            value=search_filter,
-        )
 
 
 def start_web_server():

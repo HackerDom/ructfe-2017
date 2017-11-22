@@ -48,5 +48,20 @@
             {% endfor %}
         </table>
     </div>
+    {% if max_page|int != -1 %}
+        <div class="pagination">
+            <a href="/private_storage?page_number=0">&laquo;</a>
+            {% if page_number|int != 0 %}
+            <a href="/private_storage?page_number={{page_number|int - 1}}">{{page_number}}</a>
+            {% endif %}
+
+            <a class="active" href="/private_storage?page_number={{page_number|int}}">{{page_number|int + 1}}</a>
+
+            {% if page_number|int != max_page|int %}
+            <a href="/private_storage?page_number={{page_number|int + 1}}">{{page_number|int + 2}}</a>
+            {% endif %}
+            <a href="/private_storage?page_number={{max_page}}">&raquo;</a>
+        </div>
+    {% endif %}
 </body>
 </html>

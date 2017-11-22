@@ -54,9 +54,7 @@
             {% if page_number|int != 0 %}
             <a href="/storage?page_number={{page_number|int - 1}}">{{page_number}}</a>
             {% endif %}
-
             <a class="active" href="/storage?page_number={{page_number|int}}">{{page_number|int + 1}}</a>
-
             {% if page_number|int != max_page|int %}
             <a href="/storage?page_number={{page_number|int + 1}}">{{page_number|int + 2}}</a>
             {% endif %}
