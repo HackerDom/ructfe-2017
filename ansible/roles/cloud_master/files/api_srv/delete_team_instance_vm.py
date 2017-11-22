@@ -53,6 +53,7 @@ def main():
     return 1
 
 if __name__ == "__main__":
+    sys.stdout = os.fdopen(1, 'w', 1)
     print("started: %d" % time.time())
     exitcode = 1
     try:
