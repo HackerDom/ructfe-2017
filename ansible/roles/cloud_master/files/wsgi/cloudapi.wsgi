@@ -351,7 +351,7 @@ def cmd_poll(team, args):
         status = "200 Ok"
         if "msg" not in ans and not start_time and not end_time and not progress and not exit_code:
             ans["msg"] = "ERR, task silently died"
-        elif exit_code != 0 and msg not in ans:
+        elif exit_code != 0 and "msg" not in ans:
             ans["msg"] = "ERR"
     else:
         status = "202 Wait more"
