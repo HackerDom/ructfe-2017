@@ -193,10 +193,13 @@ class RequestHandler:
             raise cherrypy.HTTPRedirect("/index")
         else:
             authed = user.login
-        if search_filter == "":
+        if not search_filter:
             max_page = int(TorrentFile.get_count() / LINES_FOR_QUERY)
+            if (int(page_number) < 0) or (int(page_number) > max_page):
+                raise cherrypy.HTTPError(404)
         else:
             max_page = -1
+            page_number = 0
         return self.get_template('files_storage.html').render(
             model_fields=TorrentFile.get_field_names(),
             files=get_torrent_files(adjust_search_filter(search_filter), int(page_number)),
@@ -207,7 +210,7 @@ class RequestHandler:
         )
 
     @cherrypy.expose
-    def private_storage(self, search_filter="", page_number=0):
+    def private_storage(self, search_filter="", page_number="0"):
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect('/index')
@@ -220,6 +223,8 @@ class RequestHandler:
         else:
             max_page = int(PrivateTorrentFile.get_count() / LINES_FOR_QUERY)
             files = PrivateTorrentFile.filter(
+                lower_bound=int(page_number) * LINES_FOR_QUERY,
+                count=LINES_FOR_QUERY,
                 upload_by=user.login
             )
         return self.get_template('private_files_storage.html').render(

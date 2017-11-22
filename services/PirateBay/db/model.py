@@ -80,7 +80,6 @@ class Model:
             tbl_name=TORRENT_FILES_TABLE_NAME + "_counter",
             model_name=table_name,
         ).query
-        print(create_if_counter_not_exists_query)
         with db_client.connection.cursor() as cursor:
             cursor.execute(create_table_if_not_exists_query)
             cursor.execute(create_if_counter_not_exists_query)
@@ -153,14 +152,17 @@ class Model:
                 raise ValueError("Unexpected options: {}".format(",".join(params)))
 
     @classmethod
-    def filter(cls, **fields):
+    def filter(cls, lower_bound=0, count=20, **fields):
         cls.validate(fields, check_required=False)
         filter_fields = [cls.format_field_filter(*field) for field in fields.items()]
         filter_query = FilterQuery(
             tbl_name=cls.table_name(),
             field_names=sorted(cls.get_fields().keys()),
             filter_fields=filter_fields,
+            lower_bound=lower_bound,
+            count=count,
         ).query
+        print(filter_query)
         with db_client.connection.cursor() as cursor:
             cursor.execute(filter_query)
             object_tuples = cursor.fetchall()
