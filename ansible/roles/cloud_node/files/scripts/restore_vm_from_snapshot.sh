@@ -3,6 +3,11 @@
 TEAM=${1?Syntax: ./restore_vm_from_snapshot.sh <team_id> <name>}
 NAME=${2?Syntax: ./restore_vm_from_snapshot.sh <team_id> <name>}
 
+if ! [[ $TEAM =~ ^[0-9]+$ ]]; then
+  echo "team number validation error"
+  exit 1
+fi
+
 vm="test_team${TEAM}"
 
 # check if snapshot exists

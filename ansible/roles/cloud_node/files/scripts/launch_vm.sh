@@ -2,6 +2,11 @@
 
 TEAM=${1?Syntax: ./launch_vm.sh <team_id>}
 
+if ! [[ $TEAM =~ ^[0-9]+$ ]]; then
+  echo "team number validation error"
+  exit 1
+fi
+
 br_dev="br$(($TEAM+10000))"
 
 vm="test_team${TEAM}"
