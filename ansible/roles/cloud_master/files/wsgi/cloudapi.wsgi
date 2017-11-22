@@ -27,10 +27,11 @@ RESP_HEADERS = [
 RATE_LIMITS = {
     "create_vm": 20,
     "take_snapshot": 30,
-    "restore_vm_from_snapshot": 30,
     "connect_vm_to_game_network": 30,
     "disconnect_vm_from_game_network": 30,
     "list_snapshots": 10,
+    "restore_vm_from_snapshot": 30,
+    "remove_snapshot": 30,
     "reboot_vm": 10
 }
 
@@ -230,7 +231,7 @@ def cmd_get_state(team, args):
 def cmd_login(team, args):
     AUTOCOMPLETE = ["create_vm", "get_team_openvpn_config", "get_vm_root_password",
                     "get_vm_addr", "connect_vm_to_game_network", "disconnect_vm_from_game_network",
-                    "take_snapshot", "list_snapshots", "restore_vm_from_snapshot",
+                    "take_snapshot", "list_snapshots", "restore_vm_from_snapshot", "remove_snapshot",
                     "reboot_vm", "get_state", "help", "man", "oblaka"]
     return "200 Ok", {"result": "ok", "msg": "access granted\n", "team": team, 
                       "autocomplete": AUTOCOMPLETE}
@@ -256,6 +257,12 @@ def cmd_restore_vm_from_snapshot(team, args):
         return "400 Failed to take snapshot", {"result": "bad snapshot name"}    
     return create_task(team, "restore_vm_from_snapshot", "restore_vm_from_snapshot.py", [str(team), name])
 
+def cmd_remove_snapshot(team, args):
+    name = str(args[0])
+    if not re.fullmatch(r"[0-9a-zA-Z_]+", name):
+        return "400 Failed to remove snapshot", {"result": "bad snapshot name"}    
+    return create_task(team, "remove_snapshot", "remove_snapshot.py", [str(team), name])
+
 def cmd_reboot_vm(team, args):
     return create_task(team, "reboot_vm", "reboot_vm.py", [str(team)])
 
@@ -271,6 +278,7 @@ def cmd_help(team, args):
   take_snapshot <name>             - take a snapshot
   list_snapshots                   - list snapshots
   restore_vm_from_snapshot <name>  - restore vm from the snapshot
+  remove_snapshot <name>           - remove a snapshot
   reboot_vm                        - reboot vm
   help                             - help
   man                              - instructions
@@ -418,6 +426,7 @@ def application(environ, start_response):
         "take_snapshot": (cmd_take_snapshot, 1, True),
         "list_snapshots": (cmd_list_snapshots, 0, True),
         "restore_vm_from_snapshot": (cmd_restore_vm_from_snapshot, 1, True),
+        "remove_snapshot": (cmd_remove_snapshot, 1, True),
         "reboot_vm": (cmd_reboot_vm, 0, True),
         "get_state": (cmd_get_state, 0, False),
         "help": (cmd_help, 0, False),

@@ -6,5 +6,6 @@ cloud  ALL=NOPASSWD:/cloud/scripts/reboot_vm.sh
 cloud  ALL=NOPASSWD:/cloud/scripts/take_snapshot.sh
 cloud  ALL=NOPASSWD:/cloud/scripts/list_snapshots.sh
 cloud  ALL=NOPASSWD:/cloud/scripts/restore_vm_from_snapshot.sh
+cloud  ALL=NOPASSWD:/cloud/scripts/remove_snapshot.sh
 cloud  ALL=NOPASSWD:/cloud/scripts/list_vms.sh
 cloud  ALL=NOPASSWD:/cloud/scripts/reimport_vm.sh
