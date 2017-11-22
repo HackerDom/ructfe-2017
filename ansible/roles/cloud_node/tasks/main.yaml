@@ -43,6 +43,16 @@
   with_items:
     - virtualbox-5.2
 
+- name: load some modules
+  modprobe:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - vboxpci
+    - vboxnetadp
+    - vboxnetflt
+    - vboxdrv
+
 - name: copy cloud scripts
   copy: src=scripts dest=/cloud/ mode=755
 

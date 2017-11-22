@@ -73,6 +73,14 @@
       - "--chmod=D0700,F0600"
       - "--chown=cloud:cloud"
 
+- name: copy slots for addition
+  synchronize: 
+    src: api_srv/slots_for_addition
+    dest: /cloud/backend/
+    rsync_opts:
+      - "--chmod=D0700,F0600"
+      - "--chown=cloud:cloud"
+
 - name: copy keys
   copy: src=api_srv/{{item}} dest=/cloud/backend/ mode=0600 owner=cloud group=cloud
   with_items:
