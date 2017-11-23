@@ -1,4 +1,5 @@
 from utils import run_raw_command
+from json import loads
 
 
 class GethController:
@@ -19,6 +20,13 @@ class GethController:
 
     def start_miner(self, threads_num=1):
         return self.__run_geth_js_script("miner.start({})".format(threads_num))
+
+    def create_account(self, password):
+        return self.__run_geth_js_script(
+            "personal.newAccount(\"{}\")".format(password))
+
+    def get_accounts(self):
+        return loads(self.__run_geth_js_script("personal.listAccounts"))
 
     def run_script(self, script_name):
         command_result = run_raw_command(
