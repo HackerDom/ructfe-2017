@@ -303,7 +303,7 @@ function call_api(t, cmd, args) {
                         console_print("\n")
                     }
                 }
-                
+
                 if("msg" in resp) {
                     console_print(resp["msg"] + "\n")
                 } else if ("result" in resp && resp["result"] != "ok") {
@@ -355,7 +355,7 @@ function handle_command(cmd) {
     if (cmd.startsWith("token: ")) {
         t = cmd.substring(7)
         console.log("token", t)
-        call_api(t, "login", [])
+        call_api(t, "login", [window.localStorage["session"]])
     } else if (cmd.startsWith("# ")) {
         cmd_history.unshift(cmd)
         cmd_history_pos = -1
@@ -463,6 +463,13 @@ document.onkeydown = function(e) {
     }
     return false
 };
+
+if (!window.localStorage["session"]) {
+    var r = new Uint32Array(2);
+    window.crypto.getRandomValues(r);
+    window.localStorage["session"] = r[0].toString(16) + r[1].toString(16)
+}
+
 
 var console_el = document.getElementById("console")
 console_el.setAttribute("contenteditable", true)
