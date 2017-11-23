@@ -14,4 +14,5 @@ if ! VBoxManage list runningvms | grep -qP "\W${vm}\W"; then
   exit 1
 fi
 
-VBoxManage controlvm "$vm" reset
+# hack around unstable VirtualBox work
+timeout 20 VBoxManage controlvm "$vm" reset || [ $? -ne 124 ] || (pkill -9 -f "VBoxHeadless --comment ${vm} --startvm"; echo "That's why nobody uses VirtualBox in clouds"; sleep 5; VBoxManage startvm "$vm" --type headless)
