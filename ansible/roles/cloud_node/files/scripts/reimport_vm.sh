@@ -20,3 +20,4 @@ while VBoxManage showvminfo "$vm" &>/dev/null; do
 done
 
 VBoxManage import "$vm_path" --vsys 0 --vmname "$vm"
+vboxmanage snapshot "$vm" take initial
