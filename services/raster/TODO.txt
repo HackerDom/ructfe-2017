@@ -3,6 +3,7 @@ check infinite loop detection - DONE
 limit render target size - DONE
 limit far plane - DONE
 limit max ships num in frame - DONE
+fix presion
 new ship model
 draw flag
 checker get: image analyze
