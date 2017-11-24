@@ -60,7 +60,7 @@ def load_templates():
 
 def validate_login(login):
     if re.match(LOGIN_PATTERN, login) is None:
-        raise UserError('Username "{}" is invalid. Username must match regex {}'.format(login, LOGIN_PATTERN.pattern))
+        raise UserError('Username "{}" is invalid. Username must match regex {}.'.format(login, LOGIN_PATTERN.pattern))
 
 
 BAD_CHARS = [
@@ -82,17 +82,17 @@ def register(login, password):
     validate_login(login)
     users = User.filter(login=login)
     if users:
-        raise UserError('username "{}" already exists'.format(login))
+        raise UserError('Username "{}" is already exists.'.format(login))
     User.create(uid=generate_uid(), login=login, password_hash=get_base_of_hash(password))
 
 
 def authenticate(login, password):
     users = User.filter(login=login)
     if not users:
-        raise UserError("user {} doesn't exists".format(login))
+        raise UserError("User {} doesn't exists.".format(login))
     user = users[0]
     if user.password_hash != get_base_of_hash(password):
-        raise UserError("wrong password")
+        raise UserError("Wrong password.")
     return user.uid
 
 
@@ -142,6 +142,7 @@ def reset_cookie():
 class RequestHandler:
     def __init__(self):
         self.templates_dict = load_templates()
+        self.error = ""
 
     def get_template(self, template_name):
         return self.templates_dict[template_name]
@@ -150,8 +151,10 @@ class RequestHandler:
     def signin(self, login, password):
         try:
             set_cookie(login, password)
+            self.error = ""
             raise cherrypy.HTTPRedirect('/')
-        except UserError:
+        except UserError as user_error:
+            self.error = str(user_error)
             raise cherrypy.HTTPRedirect('/signin_page')
 
     @cherrypy.expose
@@ -159,17 +162,19 @@ class RequestHandler:
         try:
             register(login, password)
             set_cookie(login, password)
+            self.error = ""
             raise cherrypy.HTTPRedirect('/')
-        except UserError:
+        except UserError as user_error:
+            self.error = user_error
             raise cherrypy.HTTPRedirect('/signup_page')
 
     @cherrypy.expose
     def signup_page(self):
-        return self.get_template('signup.html').render()
+        return self.get_template('signup.html').render(error_message=self.error)
 
     @cherrypy.expose
     def signin_page(self):
-        return self.get_template('signin.html').render()
+        return self.get_template('signin.html').render(error_message=self.error)
 
     @cherrypy.expose
     def signout(self):

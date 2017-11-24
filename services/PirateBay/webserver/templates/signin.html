@@ -18,7 +18,7 @@
         <div id="login">
             <form name='form-login' action="signin">
                 <div>
-                    <p class="error" id="login_message"></p>
+                    <p class="error" id="login_message">{{ error_message}}</p>
                     <span class="fontawesome-user"></span>
                     <input type="text" name="login" placeholder="Username" onchange="validate_login(this.form)">
                     <span class="fontawesome-lock"></span>
