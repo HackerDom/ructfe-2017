@@ -442,8 +442,8 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         lib3ds_matrix_mult( viewProj, view );
         lib3ds_matrix_transpose( viewProj );
 
-        Image image( 512, 512 );
-        Image depthRt( 512, 512 );
+        Image image( 128, 128 );
+        Image depthRt( 128, 128 );
         Shader shipVs( "shaders/ship.vs.bin" );
         Shader shipPs( "shaders/ship.ps.bin" );
 
@@ -457,9 +457,14 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         ClearRenderTarget( pState.rt, 50, 50, 127, 255 );
         ClearDepthRenderTarget( pState.depthRt, 1.0f );
 
-        const f32 MAX_DISTANCE = 100.0f;
+        const f32 MAX_DISTANCE = 40.0f;
+		const u32 MAX_SHIPS_TO_DRAW = 10;
+		u32 shipsDrawn = 0;
         Ship* ship = m_shipStorage->GetListTail();
         while( ship ) {
+			if( shipsDrawn >= MAX_SHIPS_TO_DRAW )
+				break;
+			
             // simple visibility test
             Lib3dsVector shipPos, dir;
             shipPos[ 0 ] = ship->m_posX; shipPos[ 1 ] = 0.0f; shipPos[ 2 ] = ship->m_posZ;
@@ -487,7 +492,8 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             Draw( pState );
             // TODO draw flag
 
-            ship = ship->m_previousShip;
+            ship = ship->m_previousShip;			
+			shipsDrawn++;
         }
 
         Headers responseHeaders;
