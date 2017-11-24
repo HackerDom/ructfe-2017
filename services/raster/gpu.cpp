@@ -52,7 +52,7 @@ bool Execute( const Registers& registers, const Shader& shader ) {
     u32 cmpMask = 0;
     for( i32 ip = 0, iter = 0; ip < ( i32 )shader.header.instructionsNum; ip++ ) {
         if( iter >= MAX_ITERATIONS_NUM ) {
-            printf( "Infinite loop detected, force exit\n" );
+            printf( "Execution break: infinite loop detected\n" );
             return false;
         }
         iter++;
@@ -68,9 +68,7 @@ bool Execute( const Registers& registers, const Shader& shader ) {
         switch( i.op )
         {
             case OP_INVALID:
-#if DEBUG
-                printf( "Invalid op\n" );
-#endif
+                printf( "Execution break: invalid op\n" );
                 return false;
                 break;
             case OP_SET:
@@ -112,8 +110,13 @@ bool Execute( const Registers& registers, const Shader& shader ) {
             case OP_DIV:  result.f = _mm_div_ps   ( src0.f, src1.f ); break;
             case OP_DIVI:
                 {
-                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ )
+                    for( u32 j = 0; j < i.src0Swizzle.activeNum; j++ ) {
+						if( src1.m128_i32[ j ] == 0 ) {
+							printf( "Execution break: integer division by zero\n" );
+            				return false;
+						}
                         result.m128_i32[ j ] = src0.m128_i32[ j ] / src1.m128_i32[ j ];
+					}
                 }
                 break;
             case OP_DOT:
@@ -300,7 +303,8 @@ void Draw( const PipelineState& pState ) {
             vsRegs.CR = const_cast< __m128_union* >( &pState.constants[ 0 ] );
             vsRegs.GPR = GPR;
             vsRegs.TR = pState.textures;
-            Execute( vsRegs, *pState.vs );
+            if( !Execute( vsRegs, *pState.vs ) )
+				return;
 
             // o0 is always position, so perform perspective divide on it
             __m128_union& pos = vsRegs.OR[ 0 ];
@@ -389,7 +393,8 @@ void Draw( const PipelineState& pState ) {
                     psRegs.CR = const_cast< __m128_union* >( &pState.constants[ 0 ] );
                     psRegs.GPR = GPR;
                     psRegs.TR = pState.textures;
-                    Execute( psRegs, *pState.ps );
+                    if( !Execute( psRegs, *pState.ps ) )
+						return;
 
                     RGBA& rgba = pState.rt->rgba[ p.y * pState.rt->width + p.x ];
 					rgba.r = output.m128_u32[ 0 ];

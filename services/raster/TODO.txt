@@ -1,0 +1,11 @@
+fix interger division by zero - DONE
+check infinite loop detection - DONE
+limit render target size
+limit far plane
+limit max ships num in frame
+new ship model
+draw flag
+checker get: image analyze
+checker check: check all instructions
+draw sea and sky
+exploit
