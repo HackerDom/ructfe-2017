@@ -6,6 +6,10 @@ LIST_START = b'l'
 LICT_END = b'e'  # list and dict end
 
 
+class ParseError(Exception):
+    pass
+
+
 def parse_integer(data: bytes, start_index=0):
     end_index = data.find(INT_END, start_index)
     return int(data[start_index + 1:end_index]), end_index + 1
@@ -30,9 +34,12 @@ def parse_list(data: bytes, start_index=0):
 
 
 def parse_dictionary(data: bytes, start_index=0):
-    result, index = parse_list(data, start_index)
-    result_iterator = iter(result)
-    return dict(zip(result_iterator, result_iterator)), index
+    try:
+        result, index = parse_list(data, start_index)
+        result_iterator = iter(result)
+        return dict(zip(result_iterator, result_iterator)), index
+    except Exception:
+        raise ParseError
 
 
 def get_parser(current_byte):

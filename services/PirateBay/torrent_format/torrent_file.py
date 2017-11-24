@@ -7,8 +7,12 @@ from time import time
 from mimesis import Food
 
 from db.model import Model, TextField, IntField
-from torrent_format.bencoder import parse_dictionary, make_dictionary
+from torrent_format.bencoder import parse_dictionary, make_dictionary, ParseError
 from utils import generate_uid
+
+
+class InvalidTorrentFileError(Exception):
+    pass
 
 
 class TorrentFile(Model):
@@ -21,21 +25,24 @@ class TorrentFile(Model):
     content = TextField(long=True)
 
     def __init__(self, data=None, upload_by=""):
-        if data is None:
-            return
-        self.content = b64encode(data).decode()
-        meta_dict, _ = parse_dictionary(data)
-        self.announce = meta_dict[b'announce'].decode()
-        self.name = meta_dict[b'info'][b'name'].decode()
-        self.comment = meta_dict[b'comment'].decode()
-        self.length = meta_dict[b'info'].get(b'length')
-        self.uid = generate_uid()
-        self.upload_by = upload_by
-        if self.length is None:
-            length = 0
-            for file in meta_dict[b'info'][b'files']:
-                length += file[b'length']
-            self.length = length
+        try:
+            if data is None:
+                return
+            self.content = b64encode(data).decode()
+            meta_dict, _ = parse_dictionary(data)
+            self.announce = meta_dict[b'announce'].decode()
+            self.name = meta_dict[b'info'][b'name'].decode()
+            self.comment = meta_dict[b'comment'].decode()
+            self.length = meta_dict[b'info'].get(b'length')
+            self.uid = generate_uid()
+            self.upload_by = upload_by
+            if self.length is None:
+                length = 0
+                for file in meta_dict[b'info'][b'files']:
+                    length += file[b'length']
+                self.length = length
+        except (ParseError, KeyError):
+            raise InvalidTorrentFileError
 
     def get_data(self):
         return b64decode(self.content)
