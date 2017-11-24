@@ -424,7 +424,13 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         FindInMap( request.queryString, camAimPosXStr, camAt[ 0 ] );
         FindInMap( request.queryString, camAimPosYStr, camAt[ 1 ] );
         FindInMap( request.queryString, camAimPosZStr, camAt[ 2 ] );
-
+		
+		// move to origin to improve precision
+		Lib3dsVector offset;
+		offset[ 0 ]= camPos[ 0 ]; offset[ 1 ]= camPos[ 1 ]; offset[ 2 ]= camPos[ 2 ];
+		lib3ds_vector_sub( camPos, camPos, offset );
+		lib3ds_vector_sub( camAt, camAt, offset );
+		
         // build camUp vector
         Lib3dsVector upVector, temp, dir;
         upVector[ 0 ] = 0.0f; upVector[ 1 ] = 1.0f; upVector[ 2 ] = 0.0f;
@@ -468,6 +474,7 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             // simple visibility test
             Lib3dsVector shipPos, dir;
             shipPos[ 0 ] = ship->m_posX; shipPos[ 1 ] = 0.0f; shipPos[ 2 ] = ship->m_posZ;
+			lib3ds_vector_sub( shipPos, shipPos, offset ); // move to origin
             lib3ds_vector_sub( dir, shipPos, camPos );
             f32 distanceSqr = lib3ds_vector_squared( dir );
             if( distanceSqr > MAX_DISTANCE * MAX_DISTANCE ) {
