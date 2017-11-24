@@ -299,9 +299,13 @@ class RequestHandler:
                 break
             raw_torrent_info_file += data
         user_login = get_authorized_user().login
-        PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
-
-        raise cherrypy.HTTPRedirect('/storage')
+        try:
+            PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
+            self.error = ""
+            raise cherrypy.HTTPRedirect('/storage')
+        except InvalidTorrentFileError:
+            self.error = 'File "{}" is invalid .torrent file.'.format(upload_file.filename)
+            raise cherrypy.HTTPRedirect("/upload_file")
 
 
 def start_web_server():
