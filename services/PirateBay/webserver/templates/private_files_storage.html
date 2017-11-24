@@ -48,7 +48,7 @@
             {% endfor %}
         </table>
     </div>
-    {% if max_page|int != -1 %}
+    {% if (max_page|int != -1) and (max_page|int != 0) %}
         <div class="pagination">
             <a href="/private_storage?page_number=0">&laquo;</a>
             {% if page_number|int != 0 %}
