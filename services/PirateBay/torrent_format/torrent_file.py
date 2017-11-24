@@ -14,7 +14,7 @@ from utils import generate_uid
 class TorrentFile(Model):
     announce = TextField(256)
     length = IntField()
-    type = TextField(256)
+    comment = TextField(256)
     name = TextField(256)
     uid = TextField(32)
     upload_by = TextField(256)
@@ -27,6 +27,7 @@ class TorrentFile(Model):
         meta_dict, _ = parse_dictionary(data)
         self.announce = meta_dict[b'announce'].decode()
         self.name = meta_dict[b'info'][b'name'].decode()
+        self.comment = meta_dict[b'comment'].decode()
         self.length = meta_dict[b'info'].get(b'length')
         self.uid = generate_uid()
         self.upload_by = upload_by
@@ -35,9 +36,6 @@ class TorrentFile(Model):
             for file in meta_dict[b'info'][b'files']:
                 length += file[b'length']
             self.length = length
-            self.type = 'directory'
-        else:
-            self.type = 'file'
 
     def get_data(self):
         return b64decode(self.content)
@@ -49,12 +47,14 @@ class TorrentFile(Model):
 class PrivateTorrentFile(TorrentFile):
     announce = TextField(256)
     length = IntField()
-    type = TextField(256)
+    comment = TextField(256)
     name = TextField(256)
     uid = TextField(32)
     upload_by = TextField(256)
     content = TextField(long=True)
 
+    def __str__(self):
+        return "PrivateTorrentFileInfo({})".format(self.__dict__)
 
 food = Food('en')
 food_regex = re.compile(r'^[a-zA-Z\s]+$')
