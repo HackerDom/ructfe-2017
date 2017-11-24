@@ -169,83 +169,30 @@ input {
   color: white;
 }
 
-.checkbox {
-  vertical-align: top;
-  margin: 0 3px 0 0;
-  width: 17px;
-  height: 17px;
-}
-
-.checkbox + label {
-  cursor: pointer;
-    color: white;
-}
-
-.checkbox:not(checked) {
-  position: absolute;
-  opacity: 0;
-}
-.checkbox:not(checked) + label {
-  position: relative;
-  padding: 0 100px 0 60px;
-}
-
-.checkbox:not(checked) + label:before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: 0;
-  width: 50px;
-  height: 26px;
-  border-radius: 13px;
-  background: #CDD1DA;
-  box-shadow: inset 0 2px 3px rgba(0,0,0,.2);
-}
-
-.checkbox:not(checked) + label:after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: 2px;
-  width: 22px;
-  height: 22px;
-  border-radius: 10px;
-  background: #FFF;
-  box-shadow: 0 2px 5px rgba(0,0,0,.3);
-  transition: all .2s;
-}
-
-.checkbox:checked + label:before {
-  background: #9FD468;
-}
-
-.checkbox:checked + label:after {
-  left: 26px;
-}
-
-.checkbox:focus + label:before {
-  box-shadow: 0 0 0 3px rgba(255,255,0,.5);
-}
-
 .pagination {
-    display: inline-block;
-    margin: 0 auto;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    bottom: 0;
+    left: 45%;
 }
 
 .pagination a {
-    color: green;
-    background-color: #010110;
     float: left;
-    padding: 8px 16px;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
     text-decoration: none;
+    font-size: 17px;
+}
+
+.pagination a:hover {
+  background-color: #ddd;
+  color: black;
 }
 
 .pagination a.active {
     background-color: #4CAF50;
-    color: black;
-}
-
-.pagination a:hover:not(.active) {
-    background-color: #ddd;
-    color: black;
+    color: white;
 }
