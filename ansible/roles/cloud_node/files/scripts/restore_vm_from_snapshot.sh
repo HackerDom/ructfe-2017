@@ -23,4 +23,9 @@ if ! VBoxManage snapshot "$vm" restore "$NAME"; then
  echo 'msg: ERR, restore failed, trying to relaunch vm from the last saved state'
 fi
 
-VBoxManage startvm "$vm" --type headless
+# go to script dir
+MY_NAME="`readlink -f "$0"`"
+MY_DIR="`dirname "$MY_NAME"`"
+cd "${MY_DIR}"
+
+./launch_vm.sh "$TEAM"
