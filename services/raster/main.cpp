@@ -578,26 +578,6 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
 
         return response;
     }
-    if( ParseUrl( request.url, 1, "get_shader" ) )
-    {
-        static std::string idKey( "id" );
-        std::string idStr;
-        if( !FindInMap( request.queryString, idKey, idStr ) )
-            return HttpResponse( MHD_HTTP_BAD_REQUEST );
-
-        uuid id;
-        uuid_parse( idStr.c_str(), id.bytes );
-        Ship* ship = m_shipStorage->GetShip( id );
-        if( !ship )
-            return HttpResponse( MHD_HTTP_NOT_FOUND );
-
-        char* responseData = ( char* )malloc( ship->m_flagShader.GetSize() );
-        char* copyDst = responseData;
-        memcpy( copyDst, &ship->m_flagShader.header, sizeof( Shader::Header ) );
-        copyDst += sizeof( Shader::Header );
-        memcpy( copyDst, ship->m_flagShader.instructions, ship->m_flagShader.GetSize() -sizeof( Shader::Header ) );
-        return HttpResponse( MHD_HTTP_OK, responseData, ship->m_flagShader.GetSize(), Headers() );
-    }
     return HttpResponse( MHD_HTTP_NOT_FOUND );
 }
 

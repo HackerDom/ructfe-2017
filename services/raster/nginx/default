@@ -15,8 +15,4 @@ server {
 	location /draw {
 		proxy_pass http://127.0.0.1:16780;
 	}
-
-	location /get_shader {
-		proxy_pass http://127.0.0.1:16780;
-	}
 }
