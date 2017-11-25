@@ -11,7 +11,6 @@ set r8.xy 4.0 2.0
 seti r8.z 4
 set r9.xy 0.5 0.5
 mul r10.xy i1.xy r8.xy   /* r10 = uv.xy * v2( 4.0, 2.0 ) */
-sub r10.xy r10.xy r9.xy  /* r10 = r10 - v2( 0.5, 0.5 ) */
 cvtfi r10.xy r10.xy      /* to int */
 muli r10.y r10.y r8.z    /* r10.y = r10.y * 4 */
 addi r10.x r10.y r10.x   /* i = r10.y + r10.x */
