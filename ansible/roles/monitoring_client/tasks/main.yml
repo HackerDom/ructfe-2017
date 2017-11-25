@@ -8,6 +8,10 @@
   copy: src=diamond dest=/etc/
   notify: enable and restart diamond
 
+- name: change permissions on userscript
+  file: name=/etc/diamond/user_scripts/vbox_cnt.sh mode=755
+  notify: enable and restart diamond
+
 - name: create diamond dirs
   file: path=/var/log/diamond/ state=directory owner=diamond group=diamond
   notify: enable and restart diamond
