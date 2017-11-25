@@ -9,6 +9,7 @@
 #include <list>
 #include <math.h>
 #include <time.h>
+#include <tuple>
 
 void DrawTest()
 {
@@ -180,6 +181,60 @@ VertexBuffer* LoadShip()
     delete[] normalL;
 
     return vb;
+}
+
+
+//
+std::tuple< VertexBuffer*, IndexBuffer* > CreateFlagVb()
+{
+    f32 left = 0.1;
+    f32 right = 0.6f;
+    f32 bottom = 1.5f;
+    f32 top = 1.8f;
+    f32 z = 0.1f;
+
+    VertexBuffer* vb = new VertexBuffer( 8, 2 );
+    // front
+    vb->vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, z,    bottom,left );
+    vb->vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 1.0f,  0.0f );
+
+    vb->vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, z,    top,   left );
+    vb->vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 0.0f,  0.0f );
+
+    vb->vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, z,    top,   right);
+    vb->vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 0.0f,  1.0f );
+
+    vb->vertices[ 3 * 2 + 0 ].f = _mm_set_ps( 1.0f, z,    bottom,right );
+    vb->vertices[ 3 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 1.0f,  1.0f );
+    // back
+    vb->vertices[ 4 * 2 + 0 ].f = _mm_set_ps( 1.0f, -z,   bottom,right );
+    vb->vertices[ 4 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 1.0f,  0.0f );
+
+    vb->vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, -z,   top,   right );
+    vb->vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 0.0f,  0.0f );
+
+    vb->vertices[ 6 * 2 + 0 ].f = _mm_set_ps( 1.0f, -z,   top,   left);
+    vb->vertices[ 6 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 0.0f,  1.0f );
+
+    vb->vertices[ 7 * 2 + 0 ].f = _mm_set_ps( 1.0f, -z,   bottom,left );
+    vb->vertices[ 7 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f, 1.0f,  1.0f );
+
+    IndexBuffer* ib = new IndexBuffer( 12 );
+    ib->indices[ 0 ] = 0;
+    ib->indices[ 1 ] = 1;
+    ib->indices[ 2 ] = 2;
+    ib->indices[ 3 ] = 0;
+    ib->indices[ 4 ] = 2;
+    ib->indices[ 5 ] = 3;
+    // back
+    ib->indices[ 6 ] = 4;
+    ib->indices[ 7 ] = 5;
+    ib->indices[ 8 ] = 6;
+    ib->indices[ 9 ] = 4;
+    ib->indices[ 10 ] = 6;
+    ib->indices[ 11 ] = 7;
+
+    return std::make_tuple( vb, ib );
 }
 
 
@@ -367,7 +422,7 @@ int AddShipProcessor::IteratePostData( MHD_ValueKind kind, const char *key, cons
 class RequestHandler : public HttpRequestHandler
 {
 public:
-    RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb );
+    RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb, VertexBuffer* flagVb, IndexBuffer* flagIb );
 
     HttpResponse HandleGet( HttpRequest request );
     HttpResponse HandlePost( HttpRequest request, HttpPostProcessor **postProcessor );
@@ -375,13 +430,17 @@ public:
 private:
     ShipStorage* m_shipStorage;
     VertexBuffer* m_shipVb;
+    VertexBuffer* m_flagVb;
+    IndexBuffer* m_flagIb;
 };
 
 
 //
-RequestHandler::RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb )
+RequestHandler::RequestHandler(ShipStorage* shipStorage, VertexBuffer* shipVb , VertexBuffer *flagVb, IndexBuffer *flagIb)
     : m_shipStorage( shipStorage )
     , m_shipVb( shipVb )
+    , m_flagVb( flagVb )
+    , m_flagIb( flagIb )
 {
 }
 
@@ -448,8 +507,9 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         lib3ds_matrix_mult( viewProj, view );
         lib3ds_matrix_transpose( viewProj );
 
-        Image image( 128, 128 );
-        Image depthRt( 128, 128 );
+        const u32 S = 64;
+        Image image( S, S );
+        Image depthRt( S, S );
         Shader shipVs( "shaders/ship.vs.bin" );
         Shader shipPs( "shaders/ship.ps.bin" );
 
@@ -497,7 +557,11 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             pState.vs = &shipVs;
             pState.ps = &shipPs;
             Draw( pState );
-            // TODO draw flag
+            // draw flag
+            pState.vb = m_flagVb;
+            pState.ib = m_flagIb;
+            pState.ps = &ship->m_flagShader;
+            Draw( pState );
 
             ship = ship->m_previousShip;			
 			shipsDrawn++;
@@ -570,8 +634,11 @@ void GpuTests()
 void Service()
 {
     VertexBuffer* shipVb = LoadShip();
+    VertexBuffer* flagVb;
+    IndexBuffer* flagIb;
+    std::tie( flagVb, flagIb ) = CreateFlagVb();
     ShipStorage shipStorage( "storage.dat" );
-    RequestHandler handler( &shipStorage, shipVb );
+    RequestHandler handler( &shipStorage, shipVb, flagVb, flagIb );
     HttpServer server(&handler);
 
     server.Start(16780);
@@ -582,6 +649,8 @@ void Service()
 
     server.Stop();
     delete shipVb;
+    delete flagVb;
+    delete flagIb;
 }
 
 
