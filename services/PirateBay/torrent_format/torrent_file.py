@@ -21,7 +21,7 @@ class TorrentFile(Model):
     comment = TextField(256)
     name = TextField(256)
     uid = TextField(32)
-    upload_by = TextField(256)
+    upload_by = TextField(50)
     content = TextField(long=True)
 
     def __init__(self, data=None, upload_by=""):
