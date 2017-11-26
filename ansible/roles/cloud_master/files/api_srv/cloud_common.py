@@ -25,6 +25,7 @@ SSH_OPTS = [
 ]
 
 SSH_DO_OPTS = SSH_OPTS + [
+    "-o", "Port=2222",
     "-o", "User=root",
     "-o", "IdentityFile=ructf2017_do_deploy"
 ]

@@ -17,7 +17,7 @@ from cloud_common import (get_cloud_ip, log_progress, take_cloud_ip,
 TEAM = int(sys.argv[1])
 VM_NAME = "router-team%d" % TEAM
 
-DO_IMAGE = 29261612
+DO_IMAGE = 29644588
 DO_SSH_KEYS = [435386, 15240256]
 
 
@@ -126,6 +126,13 @@ def main():
         log_progress("72%")
 
         cmd = ["systemctl start openvpn@server_outside_team%d" % TEAM]
+        ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
+        if not ret:
+            log_stderr("start internal tun")
+            return 1
+
+        dest = "10.%d.%d.2" % (60 + TEAM//256, TEAM%256)
+        cmd = ["iptables -t nat -A PREROUTING -p tcp --dport 22 -j DNAT --to-destination %s:22" % dest]
         ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
         if not ret:
             log_stderr("start internal tun")
