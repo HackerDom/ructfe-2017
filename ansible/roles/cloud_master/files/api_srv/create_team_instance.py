@@ -131,12 +131,14 @@ def main():
             log_stderr("start internal tun")
             return 1
 
-        dest = "10.%d.%d.2" % (60 + TEAM//256, TEAM%256)
-        cmd = ["iptables -t nat -A PREROUTING -p tcp --dport 22 -j DNAT --to-destination %s:22" % dest]
-        ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
-        if not ret:
-            log_stderr("start internal tun")
-            return 1
+        # UNCOMMENT BEFORE THE GAME
+        # dest = "10.%d.%d.2" % (60 + TEAM//256, TEAM%256)
+        # cmd = ["iptables -t nat -A PREROUTING -d %s -p tcp " % ip +
+        #        "--dport 22 -j DNAT --to-destination %s:22" % dest]
+        # ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
+        # if not ret:
+        #    log_stderr("unable to nat port 22")
+        #    return 1
 
         net_state = "DO_DEPLOYED"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)
