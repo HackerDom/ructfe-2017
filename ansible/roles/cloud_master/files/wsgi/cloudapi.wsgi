@@ -429,7 +429,7 @@ def application(environ, start_response):
     CMDS = {
         "create_vm": (cmd_create_vm, 0, False),
         "get_team_openvpn_config": (cmd_get_team_openvpn_config, 0, True),
-        "get_vm_info": (cmd_get_vm_info, 0, True),
+        "get_vm_info": (cmd_get_vm_info, 0, False),
         "connect_vm_to_game_network": (cmd_connect_vm_to_game_network, 0, True),
         "disconnect_vm_from_game_network": (cmd_disconnect_vm_from_game_network, 0, True),
         "take_snapshot": (cmd_take_snapshot, 1, True),
