@@ -12,6 +12,8 @@ SCRIPTS_PATH="/cloud/backend"
 
 DEV_MODE = True
 
+DOMAIN = "cloud.alexbers.com"
+
 RESP_HEADERS = [
     ("Content-Type", "application/json"), 
     ("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"),
@@ -212,27 +214,38 @@ def cmd_get_team_openvpn_config(team, args):
         config = "DEV_MODE=ON\nTake the config here:\n%s" % url
     return "200 Ok", {"result": "ok", "msg": config}
 
-def cmd_get_vm_addr(team, args):
-    return "200 Ok", {"result": "ok", "msg": "10.%d.%d.2" % (60 + team//256, team%256)}
-
-def cmd_get_vm_root_password(team, args):
-    config = open("%s/team%d/root_passwd.txt" % (DB_PATH, team)).read().strip()
-    return "200 Ok", {"result": "ok", "msg": config}
-
-def cmd_get_state(team, args):
+def cmd_get_vm_info(team, args):
     net_state = open("%s/team%d/net_deploy_state" % (DB_PATH, team)).read().strip()
     image_state = open("%s/team%d/image_deploy_state" % (DB_PATH, team)).read().strip()
     team_state = open("%s/team%d/team_state" % (DB_PATH, team)).read().strip()
 
-    msg = "NET_STATE   : %s\nIMAGE_STATE : %s\nTEAM_STATE  : %s" % (net_state, image_state, team_state)
+    info = {"state": "not started", "external addr": "none", "internal addr": "none", 
+            "root passwd": "none", "net": "disconnected from game"}
 
-    return "200 Ok", {"result": "ok", "msg": msg}
+    img_ready = (net_state == "READY" and image_state == "RUNNING")
+    if img_ready:
+        root_passwd = open("%s/team%d/root_passwd.txt" % (DB_PATH, team)).read().strip()
+
+        info["state"] = "running"
+        info["external addr"] = "team%d.%s" % (team, DOMAIN)
+        info["internal addr"] = "10.%d.%d.2" % (60 + team//256, team%256)
+        info["root passwd"] = root_passwd
+        
+    if team_state == "CLOUD":
+        info["net"] = "connected to game"
+        
+    msglines = []
+    for field in ["state", "external addr", "internal addr", "root passwd", "net"]:
+        msglines.append("  %-13s : %s" % (field, info[field]))
+    
+    config = open("%s/team%d/root_passwd.txt" % (DB_PATH, team)).read().strip()
+    return "200 Ok", {"result": "ok", "msg": "\n".join(msglines)}
 
 def cmd_login(team, args):
-    AUTOCOMPLETE = ["create_vm", "get_team_openvpn_config", "get_vm_root_password",
-                    "get_vm_addr", "connect_vm_to_game_network", "disconnect_vm_from_game_network",
+    AUTOCOMPLETE = ["create_vm", "get_team_openvpn_config", "get_vm_info",
+                    "connect_vm_to_game_network", "disconnect_vm_from_game_network",
                     "take_snapshot", "list_snapshots", "restore_vm_from_snapshot", "remove_snapshot",
-                    "reboot_vm", "get_state", "help", "man", "oblaka"]
+                    "reboot_vm", "help", "man", "oblaka"]
     return "200 Ok", {"result": "ok", "msg": "access granted\n", "team": team, 
                       "autocomplete": AUTOCOMPLETE}
 
@@ -269,10 +282,8 @@ def cmd_reboot_vm(team, args):
 def cmd_help(team, args):
     help_msg = """
   create_vm                        - create vm
-  get_team_openvpn_config          - get openvpn config to access vm and game
-  get_vm_addr                      - get vm addr inside the game network
-  get_vm_root_password             - get vm root password
-  get_state                        - get state of vm and network
+  get_team_openvpn_config          - get openvpn config for your team members
+  get_vm_info                      - get info about vm
   connect_vm_to_game_network       - connect vm to the game network
   disconnect_vm_from_game_network  - disconnect vm from the game network
   take_snapshot <name>             - take a snapshot
@@ -302,8 +313,7 @@ def cmd_man(team, args):
     Of course, they have to have OpenVPN installed
   Step 4:
     Connect to vulnerable vm using ssh client: 
-      # get_vm_addr
-      # get_vm_root_password
+      # get_vm_info
   Step 5:
     After initial setup, make your first vm snapshot, so you can recover to
     that saved state later:
@@ -419,8 +429,7 @@ def application(environ, start_response):
     CMDS = {
         "create_vm": (cmd_create_vm, 0, False),
         "get_team_openvpn_config": (cmd_get_team_openvpn_config, 0, True),
-        "get_vm_root_password": (cmd_get_vm_root_password, 0, True),
-        "get_vm_addr": (cmd_get_vm_addr, 0, True),
+        "get_vm_info": (cmd_get_vm_info, 0, True),
         "connect_vm_to_game_network": (cmd_connect_vm_to_game_network, 0, True),
         "disconnect_vm_from_game_network": (cmd_disconnect_vm_from_game_network, 0, True),
         "take_snapshot": (cmd_take_snapshot, 1, True),
@@ -428,7 +437,6 @@ def application(environ, start_response):
         "restore_vm_from_snapshot": (cmd_restore_vm_from_snapshot, 1, True),
         "remove_snapshot": (cmd_remove_snapshot, 1, True),
         "reboot_vm": (cmd_reboot_vm, 0, True),
-        "get_state": (cmd_get_state, 0, False),
         "help": (cmd_help, 0, False),
         "?": (cmd_help, 0, False),
         "man": (cmd_man, 0, False),
