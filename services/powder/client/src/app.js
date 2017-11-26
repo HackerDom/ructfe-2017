@@ -1,8 +1,15 @@
 import React, { Component } from 'react';
-import AppBar from 'material-ui/AppBar';
+
+import { Header } from './header'
+import { Page } from './page'
 
 export class App extends Component {
     render() {
-        return <AppBar title='Powder'/>
+        return (
+                <div>
+                    <Header/>
+                    <Page/>
+                </div>
+        );
     }
 }
