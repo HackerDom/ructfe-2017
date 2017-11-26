@@ -1,0 +1,29 @@
+- name: copy virtualbox.list
+  copy: src=virtualbox.list dest=/etc/apt/sources.list.d/
+
+- name: add virtualbox repo keys
+  apt_key:
+    url: "{{item}}"
+    state: present
+  with_items:
+    - https://www.virtualbox.org/download/oracle_vbox_2016.asc
+    - https://www.virtualbox.org/download/oracle_vbox.asc
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: install virtualbox
+  apt: name={{item}} state=latest
+  with_items:
+    - virtualbox-5.2
+
+- name: load some modules
+  modprobe:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - vboxpci
+    - vboxnetadp
+    - vboxnetflt
+    - vboxdrv
