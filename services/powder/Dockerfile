@@ -15,7 +15,7 @@ ADD client/src /go/src/github.com/ructfe-2017/services/powder/client/src
 RUN /usr/bin/npm install --prefix /go/src/github.com/ructfe-2017/services/powder/client
 RUN /usr/bin/npm run --prefix /go/src/github.com/ructfe-2017/services/powder/client build
 
-RUN go-bindata -o /go/src/github.com/ructfe-2017/services/powder/bindata.go -prefix '/go/src/github.com/ructfe-2017/services/powder/client/build/' /go/src/github.com/ructfe-2017/services/powder/client/build/ /go/src/github.com/ructfe-2017/services/powder/client/build/static/js
+RUN go-bindata -o /go/src/github.com/ructfe-2017/services/powder/bindata.go -prefix '/go/src/github.com/ructfe-2017/services/powder/client/build/' /go/src/github.com/ructfe-2017/services/powder/client/build/ /go/src/github.com/ructfe-2017/services/powder/client/build/static/js /go/src/github.com/ructfe-2017/services/powder/client/build/static/css
 
 ADD *.go /go/src/github.com/ructfe-2017/services/powder/
 
