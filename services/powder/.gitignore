@@ -1,4 +1,5 @@
 bindata.go
+powder
 
 # dependencies
 client/node_modules
