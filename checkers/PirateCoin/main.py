@@ -31,7 +31,7 @@ geth_run_command = "geth " \
                    " --port 30303" \
                    " --netrestrict '10.60.0.0/14,10.80.0.0/14'" \
                    " --bootnodes 'enode://2a564b0cd7c823fa66212cff17f06b5de73325cd09fc59beacc5cf16a331b48b33fdb3e1cf96adff2057f9e2ba5a6ce06e80959a63c201add0cceb8d92a305e9@10.82.201.2:31337'" \
-                   " --ethstats node_{}:ructfe_secret_key@10.82.201.2:38030 >> {}"\
+                   " --ethstats node_{}:ructfe_secret_key@10.82.201.2:38030 2>> {}"\
     .format(PATH_TO_GETH_DIR, get_local_ip(), PATH_TO_GETH_LOGS)
 
 if not os.path.isdir(PATH_TO_GETH_DIR):
