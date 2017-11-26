@@ -7,6 +7,11 @@ import {
 } from './actions'
 
 const initialState = {
+    user: {
+        authorized: false,
+        data: {
+        }
+    },
     dialogs: {
         auth: false
     },
@@ -40,6 +45,11 @@ function dialogs(state = initialState.dialogs, action) {
     }
 }
 
+function user(state = initialState.user, action) {
+    return state
+}
+
 export const doReduce = combineReducers({
-    dialogs
+    dialogs,
+    user
 })
