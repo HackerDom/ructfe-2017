@@ -3,7 +3,8 @@ import update from 'immutability-helper'
 
 import {
     OPEN_DIALOG,
-    CLOSE_DIALOG
+    CLOSE_DIALOG,
+    CHANGE_TEXT_FIELD
 } from './actions'
 
 const initialState = {
@@ -17,14 +18,10 @@ const initialState = {
     },
     changes: {
         auth: {
-            login: {
-                login: '',
-                password: '',
-            },
-            signup: {
-                login: '',
-                password: '',
-            }
+            loginLogin: '',
+            loginPassword: '',
+            signupLogin: '',
+            signupPassword: '',
         }
     }
 }
@@ -46,10 +43,25 @@ function dialogs(state = initialState.dialogs, action) {
 }
 
 function user(state = initialState.user, action) {
-    return state
+    switch(action.type) {
+        default:
+            return state
+    }
+}
+
+function changes(state = initialState.changes, action) {
+    switch(action.type) {
+        case CHANGE_TEXT_FIELD:
+            return update(state, {
+                [action.group]: {[action.name]: {$set: action.value}}
+            })
+        default:
+            return state
+    }
 }
 
 export const doReduce = combineReducers({
     dialogs,
-    user
+    user,
+    changes
 })

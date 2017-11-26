@@ -6,21 +6,39 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 
 import { connect } from 'react-redux'
-import { closeDialog } from './actions'
+import { closeDialog, changeTextField } from './actions'
 
 export class AuthDialog extends Component {
     render() {
         let dialogTabs = [
             <Tabs key='tabs'>
                 <Tab label="Login">
-                    <TextField fullWidth={true} floatingLabelText="Username"/>
-                    <TextField fullWidth={true} floatingLabelText="Password" type="password"/>
+                    <TextField
+                        fullWidth={true}
+                        floatingLabelText="Username"
+                        onChange={this.props.onChangeTextField('loginLogin')}
+                    />
+                    <TextField
+                        fullWidth={true}
+                        floatingLabelText="Password"
+                        type="password"
+                        onChange={this.props.onChangeTextField('loginPassword')}
+                    />
                     <br/>
                     <FlatButton label="Login" fullWidth={true}/>
                 </Tab>
                 <Tab label="Sign up">
-                    <TextField fullWidth={true} floatingLabelText="Username"/>
-                    <TextField fullWidth={true} floatingLabelText="Password" type="password"/>
+                    <TextField
+                        fullWidth={true}
+                        floatingLabelText="Username"
+                        onChange={this.props.onChangeTextField('signupLogin')}
+                    />
+                    <TextField
+                        fullWidth={true}
+                        floatingLabelText="Password"
+                        type="password"
+                        onChange={this.props.onChangeTextField('signupPassword')}
+                    />
                     <br/>
                     <FlatButton label="Sign up" fullWidth={true}/>
                 </Tab>
@@ -40,7 +58,12 @@ AuthDialog = connect(
     return {open: state.dialogs.auth}
 },
 (dispatch) => {
-	return {onCloseAuthDialog: () => {dispatch(closeDialog('auth'))}}
+	return {
+        onCloseAuthDialog: () => {dispatch(closeDialog('auth'))},
+        onChangeTextField: (name) => {
+            return (e) => {dispatch(changeTextField('auth', name, e.target.value))}
+        },
+    }
 })(AuthDialog)
 
 export class Dialogs extends Component {
