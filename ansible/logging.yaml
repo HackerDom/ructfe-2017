@@ -1,0 +1,4 @@
+- hosts: logging
+  roles:
+    - common
+    - logging
