@@ -23,8 +23,8 @@ from cloud_common import (get_cloud_ip, log_progress,
                           SSH_YA_OPTS, DOMAIN)
 
 
-DO_VM_NAME_RE = r"router-team([0-9]+)"
-DO_VM_NAME_FMT = "router-team%d"
+DO_VM_NAME_RE = r"team([0-9]+)"
+DO_VM_NAME_FMT = "team%d"
 
 YA_INTRAOPENVPN_RE = r"client_intracloud_team([0-9]+)\.conf"
 YA_VBOXNAME_RE = r"test_team([0-9]+)"

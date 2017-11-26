@@ -15,7 +15,7 @@ from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
                           untake_cloud_ip, SSH_OPTS, SSH_YA_OPTS)
 
 TEAM = int(sys.argv[1])
-VM_NAME = "router-team%d" % TEAM
+VM_NAME = "team%d" % TEAM
 
 
 def log_stderr(*params):

@@ -15,7 +15,7 @@ from cloud_common import (get_cloud_ip, log_progress, take_cloud_ip,
                           SSH_YA_OPTS, DOMAIN)
 
 TEAM = int(sys.argv[1])
-VM_NAME = "router-team%d" % TEAM
+VM_NAME = "team%d" % TEAM
 
 DO_IMAGE = 29644588
 DO_SSH_KEYS = [435386, 15240256]
