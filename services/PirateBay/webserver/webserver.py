@@ -9,7 +9,7 @@ from db.model import Model, TextField
 from torrent_format.torrent_file import TorrentFile, PrivateTorrentFile, InvalidTorrentFileError
 from utils import generate_uid, get_base_of_hash
 
-LOGIN_PATTERN = re.compile("^[a-z0-9_-]{3,16}$")
+LOGIN_PATTERN = re.compile("^[a-zA-Z0-9_-]{3,50}$")
 
 
 class UserError(Exception):
