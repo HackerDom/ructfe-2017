@@ -25,6 +25,12 @@ class GethController:
         return self.__run_geth_js_script(
             "personal.newAccount(\"{}\")".format(password))
 
+    def unlock_account(self, account_id, password):
+        return self.__run_geth_js_script(
+            "personal.unlockAccount(\"{}\", \"{}\")"
+            .format(account_id, password)
+        )
+
     def get_accounts(self):
         return loads(self.__run_geth_js_script("personal.listAccounts"))
 
