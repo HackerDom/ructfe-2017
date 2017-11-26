@@ -8,14 +8,23 @@ import './index.css';
 import { App } from './app'
 import { doReduce } from './reducers'
 
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import { createLogger } from 'redux-logger'
+import thunkMiddleware from 'redux-thunk'
 
-let store = createStore(doReduce)
+let loggerMiddleware = createLogger()
 
-ReactDOM.render(                                                                
-<Provider store={store}> 
+let store = createStore(
+    doReduce,
+    applyMiddleware(
+        thunkMiddleware,
+        loggerMiddleware
+))
+
+ReactDOM.render(
+<Provider store={store}>
     <MuiThemeProvider>
         <App/>
     </MuiThemeProvider>
 </Provider>,
-document.getElementById('root'));  
+document.getElementById('root'));
