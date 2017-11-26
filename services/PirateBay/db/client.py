@@ -11,6 +11,7 @@ class InsertQuery:
             field_names=', '.join(field_names),
             values=", ".join(value for value in values)
         )
+        print(self.query)
 
 
 class GetAllQuery:
@@ -42,27 +43,10 @@ class FilterQuery:
         )
 
 
-class IncCountQuery:
-    def __init__(self, tbl_name, model_name):
-        self.query = "UPDATE {tbl_name} SET cnt = cnt + 1 WHERE name = '{model_name}';".format(
-            tbl_name=tbl_name,
-            model_name=model_name,
-        )
-
-
-class CreateIfCounterNotExists:
-    def __init__(self, tbl_name, model_name):
-        self.query = "INSERT INTO {tbl_name} (`NAME`, `CNT`) SELECT * FROM (SELECT '{model_name}', 0) AS TMP WHERE NOT EXISTS ( SELECT NAME FROM {tbl_name} WHERE NAME={model_name}) LIMIT 1;".format(
-            tbl_name=tbl_name,
-            model_name=model_name,
-        )
-
-
 class GetCountQuery:
-    def __init__(self, tbl_name, model_name):
-        self.query = "SELECT CNT FROM {tbl_name} WHERE NAME='{model_name}';".format(
+    def __init__(self, tbl_name):
+        self.query = "SELECT COUNT(*) FROM {tbl_name};".format(
             tbl_name=tbl_name,
-            model_name=model_name,
         )
 
 

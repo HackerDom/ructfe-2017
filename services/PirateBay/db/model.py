@@ -1,8 +1,7 @@
 from copy import deepcopy
 
 from config import TORRENT_FILES_TABLE_NAME
-from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery, IncCountQuery, \
-    CreateIfCounterNotExists, GetCountQuery
+from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery, GetCountQuery
 from utils import cached_method
 
 db_client = DBClient()
@@ -76,13 +75,8 @@ class Model:
             tbl_name=table_name,
             fields=fields,
         ).query
-        create_if_counter_not_exists_query = CreateIfCounterNotExists(
-            tbl_name=TORRENT_FILES_TABLE_NAME + "_counter",
-            model_name=table_name,
-        ).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(create_table_if_not_exists_query)
-            cursor.execute(create_if_counter_not_exists_query)
         db_client.connection.commit()
 
     @classmethod
@@ -102,17 +96,6 @@ class Model:
         with db_client.connection.cursor() as cursor:
             cursor.execute(insert_query)
         db_client.connection.commit()
-        cls.inc_count()
-
-    @classmethod
-    def inc_count(cls):
-        inc_counter_query = IncCountQuery(
-            TORRENT_FILES_TABLE_NAME + "_counter",
-            cls.table_name(),
-        ).query
-        with db_client.connection.cursor() as cursor:
-            cursor.execute(inc_counter_query)
-        db_client.connection.commit()
 
     def save(self):
         type(self).create(**self.__dict__)
@@ -120,12 +103,11 @@ class Model:
     @classmethod
     def get_count(cls):
         get_count_query = GetCountQuery(
-            TORRENT_FILES_TABLE_NAME + "_counter",
             cls.table_name(),
         ).query
         with db_client.connection.cursor() as cursor:
             cursor.execute(get_count_query)
-            return cursor.fetchone()[0]
+            return int(cursor.fetchone()[0])
 
     @classmethod
     def all(cls, lower_bound, count):
