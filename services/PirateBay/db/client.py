@@ -1,6 +1,7 @@
 import pymysql
+import sqlite3
 
-from config import CONNECTION_PARAMS, DATABASE_NAME
+from config import DATABASE_FULL_PATH, DATABASE_NAME
 from utils import Singleton
 
 
@@ -11,7 +12,6 @@ class InsertQuery:
             field_names=', '.join(field_names),
             values=", ".join(value for value in values)
         )
-        print(self.query)
 
 
 class GetAllQuery:
@@ -51,13 +51,8 @@ class GetCountQuery:
 
 
 class DBClient(metaclass=Singleton):
-    def use(self, db_name=DATABASE_NAME):
-        self.connection.close()
-        CONNECTION_PARAMS['db'] = db_name
-        self.connection = pymysql.connect(**CONNECTION_PARAMS)
-
     def __init__(self):
-        self.connection = pymysql.connect(**CONNECTION_PARAMS)
+        self.connection = sqlite3.connect(DATABASE_FULL_PATH, check_same_thread=False)
 
     def __enter__(self):
         return self
