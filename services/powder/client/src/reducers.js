@@ -4,7 +4,10 @@ import update from 'immutability-helper'
 import {
     OPEN_DIALOG,
     CLOSE_DIALOG,
-    CHANGE_TEXT_FIELD
+    CHANGE_TEXT_FIELD,
+    SHOW_NOTIFICATIONS,
+    HIDE_NOTIFICATIONS,
+    SUCCESS_LOGIN
 } from './actions'
 
 const initialState = {
@@ -23,6 +26,10 @@ const initialState = {
             signupLogin: '',
             signupPassword: '',
         }
+    },
+    notifications: {
+        open: false,
+        message: ''
     }
 }
 
@@ -44,6 +51,11 @@ function dialogs(state = initialState.dialogs, action) {
 
 function user(state = initialState.user, action) {
     switch(action.type) {
+        case SUCCESS_LOGIN:
+            return update(state, {
+                authorized: {$set: true},
+                data: {token: {$set: action.response.token}}
+            })
         default:
             return state
     }
@@ -60,8 +72,25 @@ function changes(state = initialState.changes, action) {
     }
 }
 
+function notifications(state = initialState.notifications, action) {
+    switch (action.type) {
+        case SHOW_NOTIFICATIONS:
+            return update(state, {
+                open: {$set: true},
+                message: {$set: action.text}
+            })
+        case HIDE_NOTIFICATIONS:
+            return update(state, {
+                open: {$set: false},
+            })
+        default:
+            return state
+    }
+}
+
 export const doReduce = combineReducers({
     dialogs,
     user,
-    changes
+    changes,
+    notifications
 })

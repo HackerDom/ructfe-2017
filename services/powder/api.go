@@ -1,62 +1,75 @@
 package main
 
 import (
+    "fmt"
+    "bytes"
+
     "github.com/labstack/echo"
 )
 
-type Users struct {
-    state map[string]string
-}
-
 type API struct {
-    users *Users
-}
-
-func NewUsers() *Users {
-    return &Users{state: make(map[string]string)}
+    storage *Storage
 }
 
 func NewAPI() *API {
-    return &API{users: NewUsers()}
+    return &API{storage: NewStorage()}
 }
 
-func (api *API) OK(c echo.Context, value map[string]interface{}) error {
-    value["error"] = false;
-    value["status"] = "ok";
-    return c.JSON(200, value)
+func (api *API) OK(c echo.Context, result map[string]interface{}) error {
+    result["error"] = false
+    return c.JSON(200, result)
 }
 
-func (users *Users) GetUsers() []string {
-    keys := make([]string, 0, len(users.state))
-    for k := range users.state {
-        keys = append(keys, k)
-    }
-    return keys
-}
+func (api *API) Error(c echo.Context, errorMessage string) error {
+    result := map[string]interface{}{}
 
-func (users *Users) AddUser(name string) {
-    users.state[name] = name
+    result["error"] = true
+    result["errorMessage"] = errorMessage
+
+    return c.JSON(200, result)
 }
 
 func (api *API) Bind(group *echo.Group) {
-    group.GET("/v1/user", api.ListUsers)
-    group.POST("/v1/user", api.AddUser)
-    group.POST("/v1/token", api.GetToken)
+    group.POST("/v1/auth/login", api.Login)
+    group.POST("/v1/auth/signup", api.SignUp)
 }
 
-func (api *API) ListUsers(c echo.Context) error {
-    return c.JSON(200, api.users.GetUsers())
-}
+func (api *API) Login(c echo.Context) error {
+    login := c.FormValue("login")
+    password := PasswordHash("", c.FormValue("password"))
 
-func (api *API) AddUser(c echo.Context) error {
-    name := c.FormValue("name")
-    api.users.AddUser(name)
-    return c.JSON(200, map[string]interface{}{})
-}
-
-func (api *API) GetToken(c echo.Context) error {
-    result := map[string]interface{}{
-        "token": "qwer",
+    hash := api.storage.GetUserProperty(login, "hash")
+    if hash == nil {
+        return api.Error(c,
+                        fmt.Sprintf("Can't find user %s", login))
     }
+
+    if !bytes.Equal(hash, password) {
+        return api.Error(c, "Wrong password")
+    }
+
+    result := map[string]interface{}{
+        "token": login,
+    }
+
+    return api.OK(c, result)
+}
+
+func (api *API) SignUp(c echo.Context) error {
+    login := c.FormValue("login")
+    password := PasswordHash("", c.FormValue("password"))
+
+    hash := api.storage.GetUserProperty(login, "hash")
+    if hash != nil {
+        return api.Error(c,
+                        fmt.Sprintf("User %s already exists", login))
+    }
+
+    api.storage.SetUserProperty(login, "hash", password)
+
+    result := map[string]interface{}{
+        "token": login,
+    }
+
     return api.OK(c, result)
 }

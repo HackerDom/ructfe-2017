@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 
 import { Header } from './header'
 import { Page } from './page'
+import { Notifications } from './notifications'
 
 export class App extends Component {
     render() {
@@ -9,6 +10,7 @@ export class App extends Component {
                 <div>
                     <Header/>
                     <Page/>
+                    <Notifications/>
                 </div>
         );
     }

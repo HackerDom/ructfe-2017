@@ -6,7 +6,7 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 
 import { connect } from 'react-redux'
-import { closeDialog, changeTextField, tryLogin } from './actions'
+import { closeDialog, changeTextField, tryLogin, trySignUp } from './actions'
 
 export class AuthDialog extends Component {
     render() {
@@ -28,7 +28,7 @@ export class AuthDialog extends Component {
                     <FlatButton
                         label="Login"
                         fullWidth={true}
-                        onClick={this.props.onLoginButtonClick}
+                        onClick={this.props.onLoginButtonClick(this.props.login.login, this.props.login.password)}
                     />
                 </Tab>
                 <Tab label="Sign up">
@@ -47,12 +47,13 @@ export class AuthDialog extends Component {
                     <FlatButton
                         label="Sign up"
                         fullWidth={true}
+                        onClick={this.props.onSignUpButtonClick(this.props.signup.login, this.props.signup.password)}
                     />
                 </Tab>
             </Tabs>
         ]
         return (
-				<Dialog open={this.props.open}
+                <Dialog open={this.props.open}
                         modal={false}
                         onRequestClose={this.props.onCloseAuthDialog}
                         children={dialogTabs}
@@ -62,15 +63,30 @@ export class AuthDialog extends Component {
 }
 AuthDialog = connect(
 (state) => {
-    return {open: state.dialogs.auth}
+    return {
+        open: state.dialogs.auth,
+        login: {
+            login: state.changes.auth.loginLogin,
+            password: state.changes.auth.loginPassword
+        },
+        signup: {
+            login: state.changes.auth.signupLogin,
+            password: state.changes.auth.signupPassword
+        }
+    }
 },
 (dispatch) => {
-	return {
+    return {
         onCloseAuthDialog: () => {dispatch(closeDialog('auth'))},
         onChangeTextField: (name) => {
             return (e) => {dispatch(changeTextField('auth', name, e.target.value))}
         },
-        onLoginButtonClick: () => {dispatch(tryLogin())},
+        onLoginButtonClick: (login, password) => {
+            return () => {dispatch(tryLogin(login, password))}
+        },
+        onSignUpButtonClick: (login, password) => {
+            return () => {dispatch(trySignUp(login, password))}
+        },
     }
 })(AuthDialog)
 

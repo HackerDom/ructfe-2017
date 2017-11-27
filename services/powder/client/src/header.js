@@ -20,13 +20,13 @@ export class Header extends Component {
         } else {
             iconRight = <FlatButton
                 label="Login"
-		        onClick={this.props.onLoginButtonClick}
-		    />
+                onClick={this.props.onLoginButtonClick}
+            />
         }
 
         return <AppBar
                     title='Powder'
-					iconElementRight={iconRight}
+                    iconElementRight={iconRight}
                />
     }
 }
@@ -35,5 +35,5 @@ Header = connect(
     return {user: state.user}
 },
 (dispatch) => {
-	return {onLoginButtonClick: () => {dispatch(openDialog('auth'))}}
+    return {onLoginButtonClick: () => {dispatch(openDialog('auth'))}}
 })(Header)
