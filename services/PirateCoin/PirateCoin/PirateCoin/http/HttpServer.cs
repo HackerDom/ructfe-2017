@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 
 namespace PirateCoin.http
 {
@@ -27,17 +28,17 @@ namespace PirateCoin.http
 			token.Register(() =>
 			{
 				listener.Stop();
-				Console.Error.WriteLine("HttpServer stopped");
+				log.Info("HttpServer stopped");
 			});
 
 			listener.Start();
-			Console.Error.WriteLine($"HttpServer started at '{string.Join(";", listener.Prefixes)}'");
+			log.Info($"HttpServer started at '{string.Join(";", listener.Prefixes)}'");
 			while(!token.IsCancellationRequested)
 			{
 				try
 				{
 					var context = await listener.GetContextAsync().ConfigureAwait(false);
-					//Console.WriteLine($"[{context.Request.RemoteEndPoint}] {context.Request.HttpMethod} {context.Request.Url.PathAndQuery}");
+					//log.Info(($"[{context.Request.RemoteEndPoint}] {context.Request.HttpMethod} {context.Request.Url.PathAndQuery}");
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 					Task.Run(() => TryProcessRequestAsync(context), token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -45,7 +46,7 @@ namespace PirateCoin.http
 				catch(Exception e)
 				{
 					if(!token.IsCancellationRequested)
-						Console.Error.WriteLine(e);
+						log.Info(e);
 				}
 			}
 		}
@@ -65,7 +66,7 @@ namespace PirateCoin.http
 				catch(HttpConnectionClosed) {}
 				catch(Exception e)
 				{
-					//Console.Error.WriteLine(e);
+					//log.Info(e);
 					var httpException = e as HttpException;
 					response.StatusCode = httpException?.Status ?? 500;
 					response.ContentType = "text/plain; charset=utf-8";
@@ -79,7 +80,7 @@ namespace PirateCoin.http
 			catch(Exception e)
 			{
 				if(!(e is InvalidOperationException))
-					Console.Error.WriteLine(e);
+					log.Info(e);
 			}
 		}
 
@@ -118,6 +119,8 @@ namespace PirateCoin.http
 
 		private readonly List<Handler> handlers = new List<Handler>();
 		private readonly HttpListener listener;
+
+		private static readonly ILog log = LogManager.GetLogger(typeof(HttpServer));
 	}
 
 	public class HttpException : Exception

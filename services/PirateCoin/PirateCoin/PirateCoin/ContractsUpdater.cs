@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
@@ -63,8 +59,8 @@ namespace PirateCoin
 			worker.Start();
 		}
 
-		private readonly HexBigInteger contractDeployGas = new HexBigInteger(900000);
-		private readonly TimeSpan contractDeployPeriod = TimeSpan.FromSeconds(30);
+		private readonly HexBigInteger contractDeployGas = new HexBigInteger(Settings.ContactCreationGas);
+		private readonly TimeSpan contractDeployPeriod = TimeSpan.FromSeconds(Settings.ContractDeployPeriod);
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(ContractsUpdater));
 
