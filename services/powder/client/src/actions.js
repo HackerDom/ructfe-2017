@@ -14,6 +14,8 @@ export const FAILED_SIGNUP = 'FAILED_SIGNUP'
 export const SHOW_NOTIFICATIONS = 'SHOW_NOTIFICATIONS'
 export const HIDE_NOTIFICATIONS = 'HIDE_NOTIFICATIONS'
 
+export const LOGOUT = 'LOGOUT'
+
 export function openDialog(name) {
     return {
         type: OPEN_DIALOG,
@@ -134,5 +136,11 @@ export function showNotifications(text) {
 export function hideNotifications() {
     return {
         type: HIDE_NOTIFICATIONS
+    }
+}
+
+export function logout() {
+    return {
+        type: LOGOUT
     }
 }

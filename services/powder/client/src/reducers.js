@@ -7,7 +7,8 @@ import {
     CHANGE_TEXT_FIELD,
     SHOW_NOTIFICATIONS,
     HIDE_NOTIFICATIONS,
-    SUCCESS_LOGIN
+    SUCCESS_LOGIN,
+    LOGOUT
 } from './actions'
 
 const initialState = {
@@ -55,6 +56,11 @@ function user(state = initialState.user, action) {
             return update(state, {
                 authorized: {$set: true},
                 data: {token: {$set: action.response.token}}
+            })
+        case LOGOUT:
+            return update(state, {
+                authorized: {$set: false},
+                data: {token: {$set: ''}}
             })
         default:
             return state

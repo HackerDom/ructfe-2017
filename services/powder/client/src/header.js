@@ -9,7 +9,7 @@ import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 
 import { connect } from 'react-redux'
 
-import { openDialog } from './actions'
+import { openDialog, logout } from './actions'
 
 export class Header extends Component {
     render() {
@@ -24,7 +24,7 @@ export class Header extends Component {
                     <MenuItem primaryText="Profile"/>
                     <MenuItem
                         primaryText="Sign out"
-                        onClick={() => {alert(1)}}
+                        onClick={this.props.onLogoutButtonClick}
                      />
                 </IconMenu>
             </div>
@@ -47,5 +47,8 @@ Header = connect(
     return {user: state.user}
 },
 (dispatch) => {
-    return {onLoginButtonClick: () => {dispatch(openDialog('auth'))}}
+    return {
+        onLoginButtonClick: () => {dispatch(openDialog('auth'))},
+        onLogoutButtonClick: () => {dispatch(logout())}
+    }
 })(Header)
