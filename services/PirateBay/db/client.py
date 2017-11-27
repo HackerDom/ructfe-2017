@@ -1,7 +1,6 @@
-import pymysql
 import sqlite3
 
-from config import DATABASE_FULL_PATH, DATABASE_NAME
+from config import DATABASE_FULL_PATH
 from utils import Singleton
 
 
