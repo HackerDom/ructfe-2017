@@ -8,18 +8,22 @@ import './index.css';
 import { App } from './app'
 import { doReduce } from './reducers'
 
-import { createStore, applyMiddleware } from 'redux'
+import { createStore, applyMiddleware, compose } from 'redux'
 import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 
+import { autoRehydrate, persistStore } from 'redux-persist'
+
 let loggerMiddleware = createLogger()
 
-let store = createStore(
-    doReduce,
+let store = compose(
     applyMiddleware(
         thunkMiddleware,
-        loggerMiddleware
-))
+        loggerMiddleware),
+    autoRehydrate()
+)(createStore)(doReduce)
+
+persistStore(store)
 
 ReactDOM.render(
 <Provider store={store}>

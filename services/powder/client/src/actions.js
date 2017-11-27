@@ -112,9 +112,13 @@ export function trySignUp(login, password) {
         .then(response => response.json())
         .then(json => {
             if (json.error) {
+                dispatch(showNotifications(json.errorMessage))
                 dispatch(failedSignUp(json))
             } else {
+                dispatch(showNotifications('OK'))
                 dispatch(successSignUp(json))
+                dispatch(successLogin(json))
+                dispatch(closeDialog('auth'))
             }
         })
     }
