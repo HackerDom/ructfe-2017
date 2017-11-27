@@ -55,7 +55,7 @@ namespace PirateCoin
 						Thread.Sleep(TimeSpan.FromSeconds(1));
 					}
 				}
-			});
+			}){IsBackground = true};
 			worker.Start();
 		}
 
