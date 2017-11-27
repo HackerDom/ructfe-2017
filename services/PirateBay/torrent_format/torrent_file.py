@@ -1,13 +1,7 @@
-import os
-import re
 from base64 import b64encode, b64decode
-from random import choice, randint
-from time import time
-
-from mimesis import Food
 
 from db.model import Model, TextField, IntField
-from torrent_format.bencoder import parse_dictionary, make_dictionary, ParseError
+from torrent_format.bencoder import parse_dictionary, ParseError
 from utils import generate_uid
 
 
@@ -63,29 +57,3 @@ class PrivateTorrentFile(TorrentFile):
     def __str__(self):
         return "PrivateTorrentFileInfo({})".format(self.__dict__)
 
-food = Food('en')
-food_regex = re.compile(r'^[a-zA-Z\s]+$')
-
-
-def rand_food():
-    new_food = choice([food.drink(), food.fruit(), food.dish(), food.spices(), food.vegetable()]).replace("'", "\\'")
-    if food_regex.match(new_food):
-        return new_food
-    else:
-        return rand_food()
-
-
-def generate_torrent_dict(comment):
-    length = randint(512, 10240)
-    return make_dictionary({
-        b'announce': b'ructfe.org',
-        b'creation date': int(time()),
-        b'comment': comment.encode(),
-        b'created by': b'Pirate bay',
-        b'info': {
-            b'piece length': length,
-            b'length': length,
-            b'pieces': os.urandom(20),
-            b'name': rand_food().encode(),
-        }
-    })
