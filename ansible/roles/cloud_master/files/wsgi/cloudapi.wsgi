@@ -12,7 +12,7 @@ SCRIPTS_PATH="/cloud/backend"
 
 DEV_MODE = True
 
-DOMAIN = "cloud.alexbers.com"
+DOMAIN = "cloud.ructfe.org"
 
 RESP_HEADERS = [
     ("Content-Type", "application/json"), 
