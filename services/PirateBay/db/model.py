@@ -1,5 +1,8 @@
 from copy import deepcopy
 
+import sqlite3
+from time import sleep
+
 from config import TORRENT_FILES_TABLE_NAME
 from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery, GetCountQuery
 from utils import cached_method
@@ -28,6 +31,19 @@ class IntField:
     @property
     def mysql_format(self):
         return "INT NOT NULL"
+
+
+class InsertionError(Exception):
+    pass
+
+
+def execute_insert_query(cursor, insert_query, deep=0):
+    if deep == 20:
+        raise InsertionError
+    try:
+        cursor.execute(insert_query)
+    except sqlite3.DatabaseError:
+        execute_insert_query(cursor, insert_query, deep + 1)
 
 
 class Model:
@@ -75,8 +91,9 @@ class Model:
             tbl_name=table_name,
             fields=fields,
         ).query
-        with db_client.connection.cursor() as cursor:
-            cursor.execute(create_table_if_not_exists_query)
+        cursor = db_client.connection.cursor()
+        cursor.execute(create_table_if_not_exists_query)
+        cursor.close()
         db_client.connection.commit()
 
     @classmethod
@@ -93,8 +110,9 @@ class Model:
             field_names=field_names_param,
             values=field_values_param,
         ).query
-        with db_client.connection.cursor() as cursor:
-            cursor.execute(insert_query)
+        cursor = db_client.connection.cursor()
+        execute_insert_query(cursor, insert_query)
+        cursor.close()
         db_client.connection.commit()
 
     def save(self):
@@ -105,9 +123,11 @@ class Model:
         get_count_query = GetCountQuery(
             cls.table_name(),
         ).query
-        with db_client.connection.cursor() as cursor:
-            cursor.execute(get_count_query)
-            return int(cursor.fetchone()[0])
+        cursor = db_client.connection.cursor()
+        cursor.execute(get_count_query)
+        result = int(cursor.fetchone()[0])
+        cursor.close()
+        return result
 
     @classmethod
     def all(cls, lower_bound, count):
@@ -117,10 +137,11 @@ class Model:
             lower_bound=lower_bound,
             count=count,
         ).query
-        with db_client.connection.cursor() as cursor:
-            cursor.execute(get_all_query)
-            object_tuples = cursor.fetchall()
-            return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
+        cursor = db_client.connection.cursor()
+        cursor.execute(get_all_query)
+        object_tuples = cursor.fetchall()
+        cursor.close()
+        return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
 
     @staticmethod
     def format_field_filter(field_name, field_value):
@@ -144,11 +165,11 @@ class Model:
             lower_bound=lower_bound,
             count=count,
         ).query
-        print(filter_query)
-        with db_client.connection.cursor() as cursor:
-            cursor.execute(filter_query)
-            object_tuples = cursor.fetchall()
-            return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
+        cursor = db_client.connection.cursor()
+        cursor.execute(filter_query)
+        object_tuples = cursor.fetchall()
+        cursor.close()
+        return [cls.make_from_field_values(object_tuple) for object_tuple in object_tuples]
 
     @classmethod
     def initialize(cls):
