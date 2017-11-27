@@ -125,9 +125,9 @@ def get_rate_limit_remaining(team, task_name):
 
 def create_task(team, task_name, script_name, args, timeout=600):
     if not re.fullmatch(r"[a-z_]+", task_name):
-        return "400 Failed to create a task", {"result": "bad task name"}
+        return "422 Failed to create a task", {"result": "bad task name"}
     if not re.fullmatch(r"[a-z_]+\.?[a-z]*", script_name):
-        return "400 Failed to create a task", {"result": "bad script name"}
+        return "422 Failed to create a task", {"result": "bad script name"}
     
     task_lock_file = open("%s/team%d/lock" % (DB_PATH, team), "a+", 1)
     task_lock_file.seek(0)
@@ -197,7 +197,7 @@ def create_task(team, task_name, script_name, args, timeout=600):
     status = os.waitpid(pid1, 0)[1]
     # print("waitpid", status, file=sys.stderr)
     if status != 0:
-        return "400 Failed to Create Task", {"result": "prepare general fault"}
+        return "500 Failed to Create Task", {"result": "prepare general fault"}
         
     return "202 Accepted", {"result": "ok", "task": task_name}
 
@@ -258,7 +258,7 @@ def cmd_disconnect_vm_from_game_network(team, args):
 def cmd_take_snapshot(team, args):
     name = str(args[0])
     if not re.fullmatch(r"[0-9a-zA-Z_]+", name):
-        return "400 Failed to take snapshot", {"result": "bad snapshot name"}    
+        return "422 Failed to take snapshot", {"result": "bad snapshot name"}    
     return create_task(team, "take_snapshot", "take_snapshot.py", [str(team), name])
 
 def cmd_list_snapshots(team, args):
@@ -267,13 +267,13 @@ def cmd_list_snapshots(team, args):
 def cmd_restore_vm_from_snapshot(team, args):
     name = str(args[0])
     if not re.fullmatch(r"[0-9a-zA-Z_]+", name):
-        return "400 Failed to take snapshot", {"result": "bad snapshot name"}    
+        return "422 Failed to take snapshot", {"result": "bad snapshot name"}    
     return create_task(team, "restore_vm_from_snapshot", "restore_vm_from_snapshot.py", [str(team), name])
 
 def cmd_remove_snapshot(team, args):
     name = str(args[0])
     if not re.fullmatch(r"[0-9a-zA-Z_]+", name):
-        return "400 Failed to remove snapshot", {"result": "bad snapshot name"}    
+        return "422 Failed to remove snapshot", {"result": "bad snapshot name"}    
     return create_task(team, "remove_snapshot", "remove_snapshot.py", [str(team), name])
 
 def cmd_reboot_vm(team, args):
@@ -342,7 +342,7 @@ def cmd_poll(team, args):
     task_name = args[0]
 
     if not re.fullmatch(r"[a-z_]+", task_name):
-        return "400 Bad request", {"result": "bad task name"}
+        return "422 Bad request", {"result": "bad task name"}
 
     is_running = False
     with open("%s/team%d/lock" % (DB_PATH, team), "a+", 1) as task_lock_file:
@@ -356,7 +356,7 @@ def cmd_poll(team, args):
 
     result = parse_task_file(team, task_name)
     if not result:
-        return "400 Bad request", {"result": "bad task name"}
+        return "422 Bad request", {"result": "bad task name"}
 
     start_time, end_time, msg, progress, exit_code = result
     ans = {"result": "ok", "task": task_name}
@@ -446,7 +446,7 @@ def application(environ, start_response):
     }
 
     if cmd not in CMDS:
-        start_response("400 Bad Request", RESP_HEADERS)
+        start_response("422 Bad Request", RESP_HEADERS)
         return [json.dumps({"result": "error", "msg": "bad command, type 'help' for help"}).encode()]
 
     handler, min_args_num, check_vm_created = CMDS[cmd]
@@ -455,11 +455,11 @@ def application(environ, start_response):
         net_deploy_state = open("%s/team%d/net_deploy_state" % (DB_PATH, team)).read().strip()
         image_deploy_state = open("%s/team%d/image_deploy_state" % (DB_PATH, team)).read().strip()
         if net_deploy_state != "READY" or image_deploy_state != "RUNNING":
-            start_response("400 Not yet", RESP_HEADERS)
+            start_response("422 Not yet", RESP_HEADERS)
             return [json.dumps({"result": "not yet", "msg": "ERROR: create vm first"}).encode()]
 
     if len(args) < min_args_num:
-        start_response("400 Bad Request", RESP_HEADERS)
+        start_response("422 Bad Request", RESP_HEADERS)
         return [json.dumps({"result": "error", "msg": "insufficient arguments, type 'help' for help"}).encode()]
 
     status, ans = handler(team, args)
