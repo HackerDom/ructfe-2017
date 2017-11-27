@@ -1,14 +1,16 @@
-FROM ubuntu:14.04
+FROM alpine:3.6
 
 LABEL maintainer="werelaxe"
 
 
-RUN apt-get update && apt-get install curl -y
-RUN export DEBIAN_FRONTEND=noninteractive
-RUN apt-get -q -y install mysql-server
+RUN apk add --no-cache python3 && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    pip3 install --upgrade pip setuptools && \
+    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
+    if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
+    rm -r /root/.cache
 
-RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
-RUN python3 get-pip.py
 
 RUN mkdir app
 COPY . /app
@@ -16,4 +18,5 @@ WORKDIR /app
 
 RUN pip3 install -r requirements.txt
 
-ENTRYPOINT service mysql start && mysqladmin -u root password kepler && python3 startserver.py
+ENTRYPOINT python3 startserver.py
+
