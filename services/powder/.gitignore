@@ -1,5 +1,6 @@
 bindata.go
 powder
+powder.db
 
 # dependencies
 client/node_modules
