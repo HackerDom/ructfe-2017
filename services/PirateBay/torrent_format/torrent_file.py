@@ -1,13 +1,7 @@
-import os
-import re
 from base64 import b64encode, b64decode
-from random import choice, randint
-from time import time
-
-from mimesis import Food
 
 from db.model import Model, TextField, IntField
-from torrent_format.bencoder import parse_dictionary, make_dictionary, ParseError
+from torrent_format.bencoder import parse_dictionary, ParseError
 from utils import generate_uid
 
 
