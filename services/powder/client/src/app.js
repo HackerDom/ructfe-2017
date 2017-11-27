@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { HashRouter } from 'react-router-dom';
 
 import { Header } from './header'
 import { Page } from './page'
@@ -9,7 +10,9 @@ export class App extends Component {
         return (
                 <div>
                     <Header/>
-                    <Page/>
+                    <HashRouter>
+                        <Page/>
+                    </HashRouter>
                     <Notifications/>
                 </div>
         );
