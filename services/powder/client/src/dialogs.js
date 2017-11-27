@@ -6,7 +6,7 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 
 import { connect } from 'react-redux'
-import { closeDialog, changeTextField } from './actions'
+import { closeDialog, changeTextField, tryLogin } from './actions'
 
 export class AuthDialog extends Component {
     render() {
@@ -25,7 +25,11 @@ export class AuthDialog extends Component {
                         onChange={this.props.onChangeTextField('loginPassword')}
                     />
                     <br/>
-                    <FlatButton label="Login" fullWidth={true}/>
+                    <FlatButton
+                        label="Login"
+                        fullWidth={true}
+                        onClick={this.props.onLoginButtonClick}
+                    />
                 </Tab>
                 <Tab label="Sign up">
                     <TextField
@@ -40,7 +44,10 @@ export class AuthDialog extends Component {
                         onChange={this.props.onChangeTextField('signupPassword')}
                     />
                     <br/>
-                    <FlatButton label="Sign up" fullWidth={true}/>
+                    <FlatButton
+                        label="Sign up"
+                        fullWidth={true}
+                    />
                 </Tab>
             </Tabs>
         ]
@@ -63,6 +70,7 @@ AuthDialog = connect(
         onChangeTextField: (name) => {
             return (e) => {dispatch(changeTextField('auth', name, e.target.value))}
         },
+        onLoginButtonClick: () => {dispatch(tryLogin())},
     }
 })(AuthDialog)
 
