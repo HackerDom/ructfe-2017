@@ -1,40 +1,67 @@
 import json
-import socket
-from urllib.request import Request, urlopen
-from urllib.error import URLError
-from user_agents import get_useragent
-from answer_codes import CheckerAnswers
-from web3 import IPCProvider, Web3
-from web3.contract import ConciseContract
+
 from datetime import datetime
 
+from web3 import IPCProvider, Web3
+from web3.contract import ConciseContract
+from web3.exceptions import BadFunctionCallOutput
 
-REQUEST_STRING = "http://{}/latest_wallet_smart_contract"
-TIMEOUT = 7
-GETH_IPC_PATH = "/Users/ximik/ether_test_net/node2/geth.ipc"
-ACCOUNT_ID = ""  # todo generate it
-ACCOUNT_PASSWORD = "qwerty"
+from answer_codes import CheckerAnswers
+from config import GETH_IPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD
 
 
-def create_request_object(team_addr):
-    return Request(team_addr, headers={
-        'User-Agent': get_useragent(),
-        'Content-type': 'application/json'
-    })
+TRANSACTION_COOLDOWN = 60
 
 
 def get_check_contract(team_addr, flag_id, flag):
-    contract_addr, contract_creation_time = flag_id.split(":")
+    contract_addr, wei_in_transaction, contract_creation_time \
+        = flag_id.split(":")
 
-    # await first 60 seconds due to contract creation
-    if int(contract_creation_time) + 60 >= int(datetime.now().timestamp()):
+    if int(contract_creation_time) + TRANSACTION_COOLDOWN >= \
+            int(datetime.now().timestamp()):
         return CheckerAnswers.OK()
 
-    # mb check BM if flag was given to attacker?
+    try:
+        with open("contract_abi.json") as abi:
+            contract_abi = json.load(abi)
+    except OSError as e:
+        return CheckerAnswers.CHECKER_ERROR("", str(e))
 
     w3 = Web3(IPCProvider(GETH_IPC_PATH))
-    contract_real_balance = w3.eth.checkBalance(contract_addr)
+    w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
 
-    # get contract state by checking public field/method
+    contract_instance = w3.eth.contract(
+        contract_abi,
+        contract_addr,
+        ContractFactoryClass=ConciseContract)
+
+    w3 = Web3(IPCProvider(GETH_IPC_PATH))
+    contract_ethereum_balance = w3.eth.getBalance(contract_addr)
+    try:
+        bank_balance = int(contract_instance.totalBankBalance())
+        own_balance = int(contract_instance.getUserBalance(ACCOUNT_ID))
+    except BadFunctionCallOutput:
+        return CheckerAnswers.MUMBLE(
+            "Couldn't call expected contract methods!",
+            "error calling on bankBalance() or getUserBalance()")
+    except ValueError:
+        return CheckerAnswers.MUMBLE(
+            "Unexpected methods answers!",
+            "can't parse int on calling bankBalance() or getUserBalance()")
+
+    if bank_balance > contract_ethereum_balance:
+        return CheckerAnswers.CORRUPT(
+            "Unsynchronized balances in contract!",
+            "bank balance > contract balance")
+
+    if own_balance < bank_balance or own_balance < contract_ethereum_balance:
+        return CheckerAnswers.CORRUPT(
+            "Unsynchronized balances in contract!",
+            "checker balance < contract balance")
+
+    if own_balance != int(wei_in_transaction):
+        return CheckerAnswers.CORRUPT(
+            "Unexpected amount of tokens on wallet!",
+            "wallet != sent_wei")
 
     return CheckerAnswers.OK()

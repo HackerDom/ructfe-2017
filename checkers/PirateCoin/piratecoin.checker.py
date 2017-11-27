@@ -64,7 +64,7 @@ def not_found(*args):
 
 if __name__ == '__main__':
     try:
-        COMMANDS.get(sys.argv[1], not_found)(*sys.argv[2:])
+        COMMANDS.get(sys.argv[1].lower(), not_found)(*sys.argv[2:])
     except URLError as e:
         close(DOWN, "Bad command address", private="Checksystem fail {}"
               .format(traceback.format_exc()))

@@ -1,30 +1,32 @@
 import json
 import socket
+
+from datetime import datetime
+from random import randint
 from urllib.request import Request, urlopen
 from urllib.error import URLError
-from user_agents import get_useragent
-from answer_codes import CheckerAnswers
+
 from web3 import IPCProvider, Web3
 from web3.contract import ConciseContract
-from datetime import datetime
+
+from user_agents import get_useragent
+from answer_codes import CheckerAnswers
+from config import \
+    GETH_IPC_PATH, ACCOUNT_PASSWORD, SERVICE_FIRST_CONTRACT_ADDR_URL
 
 
-REQUEST_STRING = "http://{}/latest_wallet_smart_contract"
 TIMEOUT = 7
-GETH_IPC_PATH = "/Users/ximik/ether_test_net/node2/geth.ipc"
-ACCOUNT_ID = ""  # todo generate it
-ACCOUNT_PASSWORD = "qwerty"
 
 
 def create_request_object(team_addr):
     return Request(team_addr, headers={
         'User-Agent': get_useragent(),
-        'Content-type': 'application/json'
+        #'Content-type': 'application/json'
     })
 
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    wei_per_transaction = 10 ** 18  # (1 ether)
+    wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
     gas_per_transaction = 400000
 
     try:
@@ -34,13 +36,13 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         return CheckerAnswers.CHECKER_ERROR("", str(e))
 
     try:
-        json_object = urlopen(
-            create_request_object(REQUEST_STRING.format(team_addr)),
+        contract_addr = urlopen(
+            create_request_object(
+                SERVICE_FIRST_CONTRACT_ADDR_URL.format(team_addr)),
             timeout=TIMEOUT) \
             .read() \
             .decode()
-
-        contract_addr = json.loads(json_object)["contract"]
+        contract_addr = contract_addr
     except KeyError as e:
         return CheckerAnswers.MUMBLE(
             "Incorrect json-api schema response", str(e)
@@ -63,7 +65,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         ContractFactoryClass=ConciseContract
     )
 
-    transaction_id = contract_instance.sendMoney(
+    transaction_id = contract_instance.addToBalance(
         transact={
             "from": w3.eth.coinbase,
             "gas": gas_per_transaction,
@@ -72,5 +74,6 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
 
     # todo put flag in the black market: contract_addr => flag
 
-    return CheckerAnswers.OK(flag_id="{}:{}".format(
-        contract_addr, int(datetime.now().timestamp())))
+    # flag_id = contract:wei:transaction_timestamp
+    return CheckerAnswers.OK(flag_id="{}:{}:{}".format(
+        contract_addr, wei_per_transaction, int(datetime.now().timestamp())))

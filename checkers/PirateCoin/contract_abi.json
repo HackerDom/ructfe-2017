@@ -1,1 +1,64 @@
-[{"outputs": [{"type": "string", "name": ""}], "payable": false, "constant": true, "type": "function", "name": "lastMessage", "inputs": [], "stateMutability": "view"}, {"outputs": [{"type": "address", "name": ""}], "payable": false, "constant": true, "type": "function", "name": "owner", "inputs": [], "stateMutability": "view"}, {"outputs": [{"type": "uint256", "name": ""}], "payable": false, "constant": true, "type": "function", "name": "myBalance", "inputs": [], "stateMutability": "view"}, {"outputs": [], "payable": false, "constant": false, "type": "function", "name": "addPublicMessage", "inputs": [{"type": "string", "name": "message"}], "stateMutability": "nonpayable"}, {"outputs": [], "payable": true, "constant": false, "type": "function", "name": "sendMoney", "inputs": [], "stateMutability": "payable"}, {"payable": false, "inputs": [], "stateMutability": "nonpayable", "type": "constructor"}, {"payable": true, "stateMutability": "payable", "type": "fallback"}]
+[
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "totalBankBalance",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserBalance",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "withdrawBalance",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "addToBalance",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "fallback"
+  }
+]
