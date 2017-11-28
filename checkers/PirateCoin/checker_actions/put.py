@@ -7,13 +7,13 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError
 from urllib.parse import urlencode
 
-from web3 import IPCProvider, Web3
+from web3 import RPCProvider, Web3
 from web3.contract import ConciseContract
 
 from user_agents import get_useragent
 from answer_codes import CheckerAnswers
 from config import \
-    GETH_IPC_PATH, ACCOUNT_PASSWORD, \
+    GETH_RPC_PATH, ACCOUNT_PASSWORD, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
 ### TESTING ###
@@ -72,7 +72,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     except (URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")"""
 
-    w3 = Web3(IPCProvider(GETH_IPC_PATH))
+    w3 = Web3(RPCProvider(GETH_RPC_PATH))
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
 
     contract_instance = w3.eth.contract(
@@ -91,3 +91,8 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     # flag_id = contract:wei:transaction_timestamp
     return CheckerAnswers.OK(flag_id="{}:{}:{}".format(
         contract_addr, wei_per_transaction, int(datetime.now().timestamp())))
+
+
+if __name__ == '__main__':
+    w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
+    print(w3.eth.coinbase)
