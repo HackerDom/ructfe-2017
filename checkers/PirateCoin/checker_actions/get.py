@@ -50,7 +50,7 @@ def get_check_contract(team_addr, flag_id, flag):
     except OSError as e:
         return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
 
-    w3 = Web3(RPCProvider(GETH_RPC_PATH))
+    w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
 
     contract_instance = w3.eth.contract(
@@ -58,7 +58,6 @@ def get_check_contract(team_addr, flag_id, flag):
         contract_addr,
         ContractFactoryClass=ConciseContract)
 
-    w3 = Web3(RPCProvider(GETH_RPC_PATH))
     contract_ethereum_balance = w3.eth.getBalance(contract_addr)
     try:
         bank_balance = int(contract_instance.totalBankBalance())
