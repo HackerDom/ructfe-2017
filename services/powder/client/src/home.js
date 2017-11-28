@@ -8,14 +8,28 @@ import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 export class Home extends Component {
 
     render() {
-        let style = {
-            width: '60%',
-            'marginTop': 50,
-            'marginLeft': 'auto',
-            'marginRight': 'auto',
+        const isMobile = window.innerWidth <= 500;
+        let style = null
+        if (!isMobile) {
+            style = {
+                marginTop: 50,
+                marginLeft: 50,
+                height: 'auto',
+                width: 'auto',
+                maxWidth: '40%',
+            }
+        } else {
+            style = {
+                marginTop: 50,
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                height: 'auto',
+                width: 'auto',
+                maxWidth: '90%',
+            }
         }
         return <Paper style={style}>
-                <Card>
+            <Card>
                 <CardHeader
                     title="Some Body"
                     subtitle="nickname"

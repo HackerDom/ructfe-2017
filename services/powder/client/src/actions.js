@@ -15,6 +15,10 @@ export const FAILED_SIGNUP = 'FAILED_SIGNUP'
 export const SHOW_NOTIFICATIONS = 'SHOW_NOTIFICATIONS'
 export const HIDE_NOTIFICATIONS = 'HIDE_NOTIFICATIONS'
 
+export const START_SAVING_PROFILE = 'START_SAVING_PROFILE'
+export const SUCCESS_SAVING_PROFILE = 'SUCCESS_SAVING_PROFILE'
+export const FAILED_SAVING_PROFILE = 'FAILED_SAVING_PROFILE'
+
 export const LOGOUT = 'LOGOUT'
 
 export function openDialog(name) {
@@ -74,13 +78,19 @@ export function failedSignUp(response) {
 }
 
 
-export function tryLogin(login, password) {
-    return function (dispatch) {
+export function tryLogin() {
+    return function (dispatch, getState) {
         dispatch(startLogin())
+
+        let state = getState()
+        let login = state.changes.auth.loginLogin
+        let password = state.changes.auth.loginPassword
+        let token = state.user.data.token
 
         let form = new FormData()
         form.append('login', login)
         form.append('password', password)
+        form.append('token', token)
 
         return fetch("/api/v1/auth/login", {
             method: "POST",
@@ -108,7 +118,7 @@ export function changeProfilePicture(picture) {
 }
 
 export function changeProfilePictureAsync(files) {
-    return function (dispatch) {
+    return dispatch => {
         let file = files[0];
         let reader = new FileReader();
 
@@ -116,17 +126,23 @@ export function changeProfilePictureAsync(files) {
             dispatch(changeProfilePicture(reader.result));
         }
 
-        reader.readAsDataUrl(file);
+        return reader.readAsDataURL(file);
     }
 }
 
-export function trySignUp(login, password) {
-    return function (dispatch) {
+export function trySignUp() {
+    return function (dispatch, getState) {
         dispatch(startSignUp())
+
+        let state = getState()
+        let login = state.changes.auth.loginLogin
+        let password = state.changes.auth.loginPassword
+        let token = state.user.data.token
 
         let form = new FormData()
         form.append('login', login)
         form.append('password', password)
+        form.append('token', token)
 
         return fetch("/api/v1/auth/signup", {
             method: "POST",
@@ -163,5 +179,52 @@ export function hideNotifications() {
 export function logout() {
     return {
         type: LOGOUT
+    }
+}
+
+export function startSavingProfile() {
+    return {
+        type: START_SAVING_PROFILE
+    }
+}
+
+export function failedSavingProfile() {
+    return {
+        type: FAILED_SAVING_PROFILE
+    }
+}
+
+export function successSavingProfile() {
+    return {
+        type: SUCCESS_SAVING_PROFILE
+    }
+}
+
+
+export function saveProfile() {
+    return function (dispatch, getState) {
+        let state = getState();
+        dispatch(startSavingProfile());
+
+        let form = new FormData();
+        form.append('fullname', state.changes.profile.fullname);
+        form.append('picture', state.changes.profile.picture);
+        form.append('token', state.user.data.token)
+
+        return fetch("/api/v1/user/profile", {
+            method: "POST",
+            body: form
+        })
+        .then(response => response.json())
+        .then(json => {
+            if (json.error) {
+                dispatch(showNotifications(json.errorMessage))
+                dispatch(failedSavingProfile(json))
+            } else {
+                dispatch(showNotifications('Profile saved succesfully'))
+                dispatch(successSavingProfile(json))
+            }
+        })
+
     }
 }

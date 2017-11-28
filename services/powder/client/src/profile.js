@@ -5,23 +5,41 @@ import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
 
 import { connect } from 'react-redux'
-import { changeTextField, changeProfilePictureAsync } from './actions'
+import { saveProfile, changeTextField, changeProfilePictureAsync } from './actions'
 
 export class Profile extends Component {
     render() {
-        let style = {
-            width: '60%',
-            'marginTop': 50,
-            'marginLeft': 'auto',
-            'marginRight': 'auto',
-            'padding': 30,
-            'paddingBottom': 10
-
-        }
         let picStyle = {
-            width: 256,
+            maxWidth: '60%',
+            maxHeight: '40vh',
+            width: 'auto',
+            height: 'auto',
             cursor: 'pointer',
         }
+        const isMobile = window.innerWidth <= 500;
+        let style = null
+        if (!isMobile) {
+            style = {
+                width: '60%',
+                'marginTop': 50,
+                'marginLeft': 'auto',
+                'marginRight': 'auto',
+                'padding': 30,
+                'paddingBottom': 10
+            }
+        } else {
+            style = {
+                width: '90%',
+                'marginTop': 50,
+                'marginLeft': 'auto',
+                'marginRight': 'auto',
+                'padding': 30,
+                'paddingBottom': 10
+
+            }
+
+        }
+
        return <Paper style={style}>
             <img
                 style={picStyle}
@@ -47,11 +65,11 @@ export class Profile extends Component {
                 value={this.props.profile.fullname}
                 onChange={this.props.onChangeTextField('fullname')}
             />
-                    <FlatButton
-                        label="Save"
-                        fullWidth={true}
-                    />
-
+            <FlatButton
+                label="Save"
+                fullWidth={true}
+                onClick={this.props.onSaveProfileClick}
+            />
         </Paper>
     }
 }
@@ -68,7 +86,8 @@ Profile = connect(
             return (e) => {dispatch(changeTextField('profile', name, e.target.value))}
         },
         onChangeProfilePicture: (e) => {
-            changeProfilePictureAsync(e.target.files)
-        }
+            dispatch(changeProfilePictureAsync(e.target.files))
+        },
+        onSaveProfileClick: () => {dispatch(saveProfile())}
     }
 })(Profile)

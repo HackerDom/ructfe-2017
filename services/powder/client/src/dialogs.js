@@ -28,7 +28,7 @@ export class AuthDialog extends Component {
                     <FlatButton
                         label="Login"
                         fullWidth={true}
-                        onClick={this.props.onLoginButtonClick(this.props.login.login, this.props.login.password)}
+                        onClick={this.props.onLoginButtonClick}
                     />
                 </Tab>
                 <Tab label="Sign up">
@@ -47,7 +47,7 @@ export class AuthDialog extends Component {
                     <FlatButton
                         label="Sign up"
                         fullWidth={true}
-                        onClick={this.props.onSignUpButtonClick(this.props.signup.login, this.props.signup.password)}
+                        onClick={this.props.onSignUpButtonClick}
                     />
                 </Tab>
             </Tabs>
@@ -65,14 +65,6 @@ AuthDialog = connect(
 (state) => {
     return {
         open: state.dialogs.auth,
-        login: {
-            login: state.changes.auth.loginLogin,
-            password: state.changes.auth.loginPassword
-        },
-        signup: {
-            login: state.changes.auth.signupLogin,
-            password: state.changes.auth.signupPassword
-        }
     }
 },
 (dispatch) => {
@@ -81,12 +73,8 @@ AuthDialog = connect(
         onChangeTextField: (name) => {
             return (e) => {dispatch(changeTextField('auth', name, e.target.value))}
         },
-        onLoginButtonClick: (login, password) => {
-            return () => {dispatch(tryLogin(login, password))}
-        },
-        onSignUpButtonClick: (login, password) => {
-            return () => {dispatch(trySignUp(login, password))}
-        },
+        onLoginButtonClick: () => {dispatch(tryLogin())},
+        onSignUpButtonClick: () => {dispatch(trySignUp())},
     }
 })(AuthDialog)
 
