@@ -70,18 +70,19 @@ class Model:
 
     @classmethod
     def validate(cls, fields, check_required=True):
-        real_fields = [field.split('__')[0] for field in fields]
-        for field_name in real_fields:
+        real_fields = dict((field[0].split('__')[0], field[1]) for field in fields.items())
+        real_field_names = list(real_fields.keys())
+        for field_name in real_field_names:
             if field_name not in cls.get_fields():
                 raise ValidationError("Undeclared field: {}".format(field_name))
             field_type = cls.get_fields()[field_name]
             if hasattr(field_type, 'validate'):
-                field_type.validate(field_name, fields[field_name])
+                field_type.validate(field_name, real_fields[field_name])
 
         if not check_required:
             return
         for field_name, _ in cls.get_fields().items():
-            if field_name not in real_fields:
+            if field_name not in real_field_names:
                 raise ValidationError("Field {} is required".format(field_name))
 
     @classmethod
