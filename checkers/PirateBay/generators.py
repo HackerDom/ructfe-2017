@@ -1,7 +1,7 @@
 import os
 from time import time
 from random import randint, choice
-from string import ascii_uppercase, ascii_lowercase, ascii_letters, digits
+from string import ascii_letters, digits
 
 from bencoder import make_dictionary
 
@@ -33,7 +33,7 @@ def generate_torrent_dict(name, comment, login):
 
 
 def generate_login():
-    return choice(NAMES)
+    return choice(NAMES) + "_" + "".join(choice(digits) for _ in range(20))
 
 
 def generate_password():
@@ -50,3 +50,4 @@ def generate_user_agent():
 
 def generate_headers():
     return {'User-Agent': generate_user_agent()}
+

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import re
+import traceback
 from sys import argv, stderr
 from traceback import print_stack
 import mimesis
@@ -27,6 +28,7 @@ def auth(hostname, login, password):
         auth_url,
         headers=generate_headers()
     )
+    print(r.request.headers, file=sys.stderr)
     return dict(r.request._cookies)
 
 
@@ -45,6 +47,7 @@ def not_found(*args):
 
 
 def put(hostname, flag_id, flag, vuln):
+    print(hostname, flag_id, flag, vuln, file=sys.stderr)
     login = generate_login()
     password = generate_password()
     name = generate_name()
@@ -71,7 +74,6 @@ def put(hostname, flag_id, flag, vuln):
     except ConnectionError:
         exit_code = DOWN
     except HTTPError as error:
-        print(error)
         exit_code = MUMBLE
     finally:
         if os.path.exists("buffer"):
@@ -112,8 +114,9 @@ def main():
     try:
         COMMANDS.get(argv[1], not_found)(*argv[2:])
     except Exception:
-        print_stack(file=sys.stderr)
+        traceback.print_exc()
         exit(CHECKER_ERROR)
 
 if __name__ == '__main__':
     main()
+
