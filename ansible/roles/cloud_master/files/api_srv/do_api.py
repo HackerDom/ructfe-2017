@@ -211,7 +211,7 @@ def get_domain_ids_by_hostname(host_name, domain, print_warning_on_fail=False):
 
     if not ids:
         if print_warning_on_fail:
-            log_stderr("failed to get domain ids by hostname")
+            log("failed to get domain ids by hostname", host_name)
 
     return ids
 

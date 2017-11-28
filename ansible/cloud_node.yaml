@@ -3,3 +3,4 @@
     - common
     - cloud_node
     - monitoring_client
+    - logging_client

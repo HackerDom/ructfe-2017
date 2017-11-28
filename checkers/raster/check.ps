@@ -1,0 +1,24 @@
+seti r20.x 0
+seti r21.x 5
+seti r22.x 3
+
+set r8.xy 6.0 4.0
+seti r8.z 6
+mul r10.xy i1.xy r8.xy   /* r10 = uv.xy * v2( 6.0, 4.0 ) */
+cvtfi r10.xy r10.xy      /* to int */
+
+cmpgti r10.x r20.x
+jmp_false 8
+cmplti r10.x r21.x
+jmp_false 6
+cmpgti r10.y r20.x
+jmp_false 4
+cmplti r10.y r22.x
+jmp_false 2
+
+jmp_true 3
+
+seti o0.xyzw 255 0 0 255
+ret
+
+/* apend checker shader here */

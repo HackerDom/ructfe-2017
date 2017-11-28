@@ -15,9 +15,9 @@ from cloud_common import (get_cloud_ip, log_progress, take_cloud_ip,
                           SSH_YA_OPTS, DOMAIN)
 
 TEAM = int(sys.argv[1])
-VM_NAME = "router-team%d" % TEAM
+VM_NAME = "team%d" % TEAM
 
-DO_IMAGE = 29261612
+DO_IMAGE = 29644588
 DO_SSH_KEYS = [435386, 15240256]
 
 
@@ -130,6 +130,15 @@ def main():
         if not ret:
             log_stderr("start internal tun")
             return 1
+
+        # UNCOMMENT BEFORE THE GAME
+        # dest = "10.%d.%d.2" % (60 + TEAM//256, TEAM%256)
+        # cmd = ["iptables -t nat -A PREROUTING -d %s -p tcp " % ip +
+        #        "--dport 22 -j DNAT --to-destination %s:22" % dest]
+        # ret = call_unitl_zero_exit(["ssh"] + SSH_DO_OPTS + [ip] + cmd)
+        # if not ret:
+        #    log_stderr("unable to nat port 22")
+        #    return 1
 
         net_state = "DO_DEPLOYED"
         open("db/team%d/net_deploy_state" % TEAM, "w").write(net_state)

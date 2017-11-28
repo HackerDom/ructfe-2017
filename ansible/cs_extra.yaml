@@ -1,0 +1,5 @@
+- hosts: cs-extra
+  roles:
+    - common
+    - vbox
+    - monitoring_client

@@ -5,8 +5,10 @@ limit far plane - DONE
 limit max ships num in frame - DONE
 fix presion - DONE
 new ship model
-draw flag
-checker get: image analyze
-checker check: check all instructions
+draw flag - DONE
+checker get: image analyze - DONE
+checker check: check all instructions - DONE
+checker: check all paths
 draw sea and sky
 exploit
+bug: submit draw_test.ps, not bin

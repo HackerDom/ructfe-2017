@@ -9,7 +9,7 @@ import time
 import os
 import shutil
 
-DOMAIN = "cloud.alexbers.com"
+DOMAIN = "cloud.ructfe.org"
 
 # change me before the game
 ROUTER_HOST = "router2.ructfe.clients.haas.yandex.net"
@@ -25,6 +25,7 @@ SSH_OPTS = [
 ]
 
 SSH_DO_OPTS = SSH_OPTS + [
+    "-o", "Port=2222",
     "-o", "User=root",
     "-o", "IdentityFile=ructf2017_do_deploy"
 ]

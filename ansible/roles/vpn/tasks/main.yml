@@ -7,15 +7,15 @@
     - fping
     - python3-requests
 
-#- name: copy prod vpn configs
-#  synchronize: 
-#    src: openvpn_prod/
-#    dest: /etc/openvpn/
-#    rsync_opts:
-#      - "--chmod=0600"
-#      - "--chown=root:root"
-#  notify: restart openvpn
-#  when: variant == "prod"
+- name: copy prod vpn configs
+  synchronize: 
+    src: openvpn_prod/
+    dest: /etc/openvpn/
+    rsync_opts:
+      - "--chmod=0600"
+      - "--chown=root:root"
+  notify: restart openvpn
+  when: variant == "prod"
 
 - name: copy dev vpn configs
   synchronize: 
@@ -58,6 +58,24 @@
 - name: copy nginx config
   copy: src=nginx/default dest=/etc/nginx/sites-available/default
   notify: restart nginx
+
+- name: copy nginx files for https (dev)
+  copy: src=nginx/{{item}}_dev.pem dest=/etc/nginx/{{item}}.pem
+  notify: restart nginx
+  with_items:
+    - cert
+    - key
+    - dhparams
+  when: variant == "dev"
+
+- name: copy nginx files for https (prod)
+  copy: src=nginx/{{item}}_prod.pem dest=/etc/nginx/{{item}}.pem
+  notify: restart nginx
+  with_items:
+    - cert
+    - key
+    - dhparams
+  when: variant == "prod"
 
 - name: copy nginx htpasswd
   copy: src=nginx/htpasswd dest=/etc/nginx/htpasswd

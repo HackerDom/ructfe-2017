@@ -12,4 +12,9 @@ disasm:
 all: debug compiler disasm
 
 release:
-	g++ -O2 -std=c++11 main.cpp png.cpp gpu.cpp httpserver.cpp ship.cpp -lmicrohttpd -l3ds -luuid -o raster
+	g++ -O2 -g -std=c++11 main.cpp png.cpp gpu.cpp httpserver.cpp ship.cpp -fstack-protector-all -lmicrohttpd -l3ds -luuid -o raster
+
+start:
+	/home/raster/raster
+
+serve: release start

