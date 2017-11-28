@@ -179,10 +179,12 @@ class RequestHandler:
     @cherrypy.expose
     def signout(self):
         reset_cookie()
+        self.error = ""
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose
     def index(self):
+        self.error = ""
         user = get_authorized_user()
         authed = "" if user is None else user.login
         return self.get_template('main.html').render(authed=authed)
@@ -193,6 +195,7 @@ class RequestHandler:
 
     @cherrypy.expose
     def storage(self, search_filter="", page_number=0):
+        self.error = ""
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect("/index")
@@ -216,6 +219,7 @@ class RequestHandler:
 
     @cherrypy.expose
     def private_storage(self, search_filter="", page_number="0"):
+        self.error = ""
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect('/index')
@@ -309,7 +313,6 @@ class RequestHandler:
 
 
 def start_web_server():
-    with DBClient() as db_client:
-        db_client.connection.commit()
+    with DBClient():
         request_handler = RequestHandler()
         cherrypy.quickstart(request_handler, '/', config='webserver/webserver.config')
