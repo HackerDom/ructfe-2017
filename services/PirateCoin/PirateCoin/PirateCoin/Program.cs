@@ -23,16 +23,10 @@ namespace PirateCoin
 			XmlConfigurator.Configure();
 			try
 			{
-				var gethRpcUrl = Settings.GethRpcUrl;
-				var coinBaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
-
-				var senderAccount = new ManagedAccount(coinBaseAddress, Settings.CoinbasePass);
-				var web3 = new Web3(senderAccount, gethRpcUrl);
-
 				var abiFilepath = "contracts/contract.abi.json";
 				var contractByteCodePath = "contracts/contract.bytecode.hex";
 
-				var contractsUpdater = new ContractsUpdater(web3, coinBaseAddress, abiFilepath, contractByteCodePath);
+				var contractsUpdater = new ContractsUpdater(abiFilepath, contractByteCodePath);
 				contractsUpdater.Start();
 
 				var httpServer = new HttpServer(port);

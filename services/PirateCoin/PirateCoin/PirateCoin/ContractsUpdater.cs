@@ -6,25 +6,46 @@ using log4net;
 using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
+using Nethereum.Web3.Accounts.Managed;
 
 namespace PirateCoin
 {
 	class ContractsUpdater
 	{
-		public ContractsUpdater(Web3 web3, string accountAddress, string abiFilepath, string contractByteCodePath)
+		public ContractsUpdater(string abiFilepath, string contractByteCodePath)
 		{
-			this.web3 = web3;
 			this.abiFilepath = abiFilepath;
-			this.accountAddress = accountAddress;
 			this.contractByteCodePath = contractByteCodePath;
 		}
 
-		public Contract MostRecentContract { get; set; }
+		private void ConnectToGethNode()
+		{
+			while(true)
+			{
+				try
+				{
+					var coinBaseAddress = new Web3(Settings.GethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
+					accountAddress = coinBaseAddress;
+
+					var senderAccount = new ManagedAccount(accountAddress, Settings.CoinbasePass);
+					web3 = new Web3(senderAccount, Settings.GethRpcUrl);
+					break;
+				}
+				catch(Exception e)
+				{
+					log.Info("Failed to connect to geth node with specified coinbase password. Sleeping and retrying", e);
+					Thread.Sleep(5000);
+				}
+			}
+		}
 
 		public void Start()
 		{
 			worker = new Thread(() =>
 			{
+				ConnectToGethNode();
+				log.Info($"Successfully connected to geth node {Settings.GethRpcUrl} via RPC");
+
 				var lastContractDeployStartTime = DateTime.MinValue;
 				while(true)
 				{
@@ -58,6 +79,8 @@ namespace PirateCoin
 			}){IsBackground = true};
 			worker.Start();
 		}
+
+		public Contract MostRecentContract { get; private set; }
 
 		private readonly HexBigInteger contractDeployGas = new HexBigInteger(Settings.ContactCreationGas);
 		private readonly TimeSpan contractDeployPeriod = TimeSpan.FromSeconds(Settings.ContractDeployPeriod);
