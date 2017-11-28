@@ -1,14 +1,15 @@
 import React, { Component } from 'react';
 
-import { CardHeader, CardMedia, Card, CardActions } from 'material-ui/Card';
+import { CardHeader, CardMedia, Card } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
+import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 
 export class Home extends Component {
 
     render() {
         let style = {
-            width: '40%',
+            width: '60%',
             'marginTop': 50,
             'marginLeft': 'auto',
             'marginRight': 'auto',
@@ -25,10 +26,14 @@ export class Home extends Component {
                         alt=""
                     />
                 </CardMedia>
-                <CardActions>
-                    <FlatButton label="Like!"/>
-                    <FlatButton label="Next"/>
-                </CardActions>
+                    <Toolbar>
+                        <ToolbarGroup>
+                            <FlatButton label="Like!"/>
+                        </ToolbarGroup>
+                        <ToolbarGroup>
+                            <FlatButton label="Next"/>
+                        </ToolbarGroup>
+                    </Toolbar>
             </Card>
         </Paper>
     }

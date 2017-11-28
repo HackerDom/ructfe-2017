@@ -50,6 +50,7 @@ func (api *API) Login(c echo.Context) error {
 
     result := map[string]interface{}{
         "token": login,
+        "nickname": login,
     }
 
     return api.OK(c, result)
@@ -69,6 +70,7 @@ func (api *API) SignUp(c echo.Context) error {
 
     result := map[string]interface{}{
         "token": login,
+        "nickname": login,
     }
 
     return api.OK(c, result)

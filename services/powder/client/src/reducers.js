@@ -15,6 +15,8 @@ const initialState = {
     user: {
         authorized: false,
         data: {
+            token: '',
+            nickname: ''
         }
     },
     dialogs: {
@@ -26,6 +28,9 @@ const initialState = {
             loginPassword: '',
             signupLogin: '',
             signupPassword: '',
+        },
+        profile: {
+            fullname: ''
         }
     },
     notifications: {
@@ -55,12 +60,18 @@ function user(state = initialState.user, action) {
         case SUCCESS_LOGIN:
             return update(state, {
                 authorized: {$set: true},
-                data: {token: {$set: action.response.token}}
+                data: {
+                    token: {$set: action.response.token},
+                    nickname: {$set: action.response.nickname}
+                },
             })
         case LOGOUT:
             return update(state, {
                 authorized: {$set: false},
-                data: {token: {$set: ''}}
+                data: {
+                    token: {$set: ''},
+                    nickname: {$set: ''},
+                },
             })
         default:
             return state
