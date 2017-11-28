@@ -25,6 +25,7 @@ export class Header extends Component {
                     <MenuItem
                         containerElement={<Link to='/profile'/>}
                         primaryText="Profile"
+                        onClick={() => {alert(1)}}
                     />
                     <MenuItem
                         primaryText="Sign out"

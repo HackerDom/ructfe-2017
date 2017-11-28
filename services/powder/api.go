@@ -38,7 +38,9 @@ func (api *API) Bind(group *echo.Group) {
     group.POST("/v1/auth/signup", api.SignUp)
 
     group.POST("/v1/user/profile", api.SaveProfile)
-    group.POST("/v1/user/users", api.GetUsers)
+    group.GET("/v1/user/profile", api.GetProfile)
+
+    group.GET("/v1/users", api.GetUsers)
 }
 
 func (api *API) Login(c echo.Context) error {
@@ -93,7 +95,7 @@ func (api *API) SignUp(c echo.Context) error {
 }
 
 func (api *API) SaveProfile(c echo.Context) error {
-    token := c.FormValue("token")
+    token := c.Request().Header.Get("token")
     login, err := api.crypto.LoginFromToken(token)
 
     if err != nil {
@@ -111,6 +113,21 @@ func (api *API) SaveProfile(c echo.Context) error {
     }
 
     result := map[string]interface{}{}
+    return api.OK(c, result)
+}
+
+func (api *API) GetProfile(c echo.Context) error {
+    token := c.Request().Header.Get("token")
+    login, err := api.crypto.LoginFromToken(token)
+
+    if err != nil {
+        return api.Error(c, "You should login first")
+    }
+
+    result := map[string]interface{}{
+        "nickname": login,
+    }
+
     return api.OK(c, result)
 }
 

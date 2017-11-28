@@ -90,11 +90,11 @@ export function tryLogin() {
         let form = new FormData()
         form.append('login', login)
         form.append('password', password)
-        form.append('token', token)
 
         return fetch("/api/v1/auth/login", {
             method: "POST",
-            body: form
+            body: form,
+            headers: new Headers({token: token})
         })
         .then(response => response.json())
         .then(json => {
@@ -142,11 +142,11 @@ export function trySignUp() {
         let form = new FormData()
         form.append('login', login)
         form.append('password', password)
-        form.append('token', token)
 
         return fetch("/api/v1/auth/signup", {
             method: "POST",
-            body: form
+            body: form,
+            headers: new Headers({token: token})
         })
         .then(response => response.json())
         .then(json => {
@@ -209,11 +209,13 @@ export function saveProfile() {
         let form = new FormData();
         form.append('fullname', state.changes.profile.fullname);
         form.append('picture', state.changes.profile.picture);
-        form.append('token', state.user.data.token)
+
+        let token = state.user.data.token
 
         return fetch("/api/v1/user/profile", {
             method: "POST",
-            body: form
+            body: form,
+            headers: new Headers({token: token})
         })
         .then(response => response.json())
         .then(json => {
