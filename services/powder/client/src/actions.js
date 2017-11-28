@@ -2,6 +2,7 @@ export const OPEN_DIALOG = 'OPEN_DIALOG'
 export const CLOSE_DIALOG = 'CLOSE_DIALOG'
 
 export const CHANGE_TEXT_FIELD = 'CHANGE_TEXT_FIELD'
+export const CHANGE_PROFILE_PICTURE = 'CHANGE_PROFILE_PICTURE'
 
 export const START_LOGIN = 'START_LOGIN'
 export const SUCCESS_LOGIN = 'SUCCESS_LOGIN'
@@ -96,6 +97,26 @@ export function tryLogin(login, password) {
                 dispatch(closeDialog('auth'))
             }
         })
+    }
+}
+
+export function changeProfilePicture(picture) {
+    return {
+        type: CHANGE_PROFILE_PICTURE,
+        value: picture
+    }
+}
+
+export function changeProfilePictureAsync(files) {
+    return function (dispatch) {
+        let file = files[0];
+        let reader = new FileReader();
+
+        reader.onloadend = () => {
+            dispatch(changeProfilePicture(reader.result));
+        }
+
+        reader.readAsDataUrl(file);
     }
 }
 

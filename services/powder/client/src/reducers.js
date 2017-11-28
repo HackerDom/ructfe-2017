@@ -8,7 +8,8 @@ import {
     SHOW_NOTIFICATIONS,
     HIDE_NOTIFICATIONS,
     SUCCESS_LOGIN,
-    LOGOUT
+    LOGOUT,
+    CHANGE_PROFILE_PICTURE
 } from './actions'
 
 const initialState = {
@@ -30,7 +31,8 @@ const initialState = {
             signupPassword: '',
         },
         profile: {
-            fullname: ''
+            fullname: '',
+            picture: ''
         }
     },
     notifications: {
@@ -83,6 +85,10 @@ function changes(state = initialState.changes, action) {
         case CHANGE_TEXT_FIELD:
             return update(state, {
                 [action.group]: {[action.name]: {$set: action.value}}
+            })
+        case CHANGE_PROFILE_PICTURE:
+            return update(state, {
+                profile: {picture: {$set: action.value}}
             })
         default:
             return state
