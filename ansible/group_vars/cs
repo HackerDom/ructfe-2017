@@ -24,7 +24,7 @@ cs_hypnotoad_listen: 127.0.0.1:8080
 cs_hypnotoad_workers: 30
 cs_hypnotoad_accepts: 10000
 cs_nginx_upstream_keepalive: 32
-cs_nginx_listen: 127.0.0.1:80
+cs_nginx_listen: 10.10.10.3:80
 
 cs_base_url: https://monitor.ructfe.org/
 cs_admin_auth: root:beFeengu3Eef
