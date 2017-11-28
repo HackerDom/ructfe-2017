@@ -177,11 +177,11 @@ def draw( addr, pos_json ):
 		headers = { 'User-Agent' : UserAgents.get() }
 		r = requests.get( url, headers=headers )
 		if r.status_code == 502:
-			close(DOWN, "Service is down", "Nginx 502", bin_file)
+			close(DOWN, "Service is down", "Nginx 502")
 		if r.status_code != 200:
-			close( MUMBLE, "Invalid HTTP response", "Invalid status code: %s %d" % ( url, r.status_code ), bin_file )	
+			close( MUMBLE, "Invalid HTTP response", "Invalid status code: %s %d" % ( url, r.status_code ) )	
 	except Exception as e:
-		close(DOWN, "HTTP Error", "HTTP error: %s" % e, bin_file)
+		close(DOWN, "HTTP Error", "HTTP error: %s" % e)
 
 	try:
 		stream = io.BytesIO( r.content )
