@@ -12,11 +12,10 @@ RUN apk add --no-cache python3 && \
     rm -r /root/.cache
 
 
-RUN mkdir app
-COPY . /app
+COPY requirements.txt /app/requirements.txt
 WORKDIR /app
-
 RUN pip3 install -r requirements.txt
+COPY . /app
 
-ENTRYPOINT python3 startserver.py
+CMD ["python3", "startserver.py"]
 
