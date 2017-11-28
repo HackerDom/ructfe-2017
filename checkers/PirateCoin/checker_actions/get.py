@@ -48,7 +48,7 @@ def get_check_contract(team_addr, flag_id, flag):
         with open("contract_abi.json") as abi:
             contract_abi = json.load(abi)
     except OSError as e:
-        return CheckerAnswers.CHECKER_ERROR("", str(e))
+        return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
 
     w3 = Web3(RPCProvider(GETH_RPC_PATH))
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)

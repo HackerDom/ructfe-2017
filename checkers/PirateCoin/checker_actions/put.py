@@ -39,7 +39,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         with open("contract_abi.json") as abi:
             contract_abi = json.load(abi)
     except OSError as e:
-        return CheckerAnswers.CHECKER_ERROR("", str(e))
+        return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
 
     try:
         contract_addr = urlopen(
@@ -91,8 +91,3 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     # flag_id = contract:wei:transaction_timestamp
     return CheckerAnswers.OK(flag_id="{}:{}:{}".format(
         contract_addr, wei_per_transaction, int(datetime.now().timestamp())))
-
-
-if __name__ == '__main__':
-    w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
-    print(w3.eth.coinbase)
