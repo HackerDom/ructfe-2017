@@ -64,7 +64,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
             urlencode(
                 {
                     "flag": flag,
-                    "contAddr": contract_addr,
+                    "contractAddr": contract_addr,
                     "sum": int(wei_per_transaction)
                 })), timeout=TIMEOUT
                            ).read().decode()
