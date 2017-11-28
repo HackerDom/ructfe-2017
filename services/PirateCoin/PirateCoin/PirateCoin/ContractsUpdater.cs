@@ -12,10 +12,15 @@ namespace PirateCoin
 {
 	class ContractsUpdater
 	{
-		public ContractsUpdater(string abiFilepath, string contractByteCodePath)
+		public ContractsUpdater(string abiFilepath, string contractByteCodePath, string gethRpcUrl, string coinbasePass, int contactCreationGas, int contractDeployPeriod)
 		{
 			this.abiFilepath = abiFilepath;
 			this.contractByteCodePath = contractByteCodePath;
+
+			this.coinbasePass = coinbasePass;
+			this.gethRpcUrl = gethRpcUrl;
+			this.contactCreationGas = new HexBigInteger(contactCreationGas);
+			this.contractDeployPeriod = TimeSpan.FromSeconds(contractDeployPeriod);
 		}
 
 		private void ConnectToGethNode()
@@ -24,16 +29,15 @@ namespace PirateCoin
 			{
 				try
 				{
-					var coinBaseAddress = new Web3(Settings.GethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
-					accountAddress = coinBaseAddress;
+					CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
 
-					var senderAccount = new ManagedAccount(accountAddress, Settings.CoinbasePass);
-					web3 = new Web3(senderAccount, Settings.GethRpcUrl);
+					var senderAccount = new ManagedAccount(CoinbaseAddress, coinbasePass);
+					web3 = new Web3(senderAccount, gethRpcUrl);
 					break;
 				}
 				catch(Exception e)
 				{
-					log.Info("Failed to connect to geth node with specified coinbase password. Sleeping and retrying", e);
+					log.Info("Failed to connect to Geth node with specified coinbase password. Sleeping and retrying", e);
 					Thread.Sleep(5000);
 				}
 			}
@@ -44,7 +48,7 @@ namespace PirateCoin
 			worker = new Thread(() =>
 			{
 				ConnectToGethNode();
-				log.Info($"Successfully connected to geth node {Settings.GethRpcUrl} via RPC");
+				log.Info($"Successfully connected to geth node {gethRpcUrl} via RPC");
 
 				var lastContractDeployStartTime = DateTime.MinValue;
 				while(true)
@@ -64,7 +68,7 @@ namespace PirateCoin
 						log.Info("Deploying new contract to blockchain");
 						lastContractDeployStartTime = DateTime.UtcNow;
 						var sw = Stopwatch.StartNew();
-						var receipt = web3.Eth.DeployContract.SendRequestAndWaitForReceiptAsync(abi, byteCode, accountAddress, contractDeployGas).Result;
+						var receipt = web3.Eth.DeployContract.SendRequestAndWaitForReceiptAsync(abi, byteCode, CoinbaseAddress, contactCreationGas).Result;
 						sw.Stop();
 						
 						var contract = MostRecentContract = web3.Eth.GetContract(abi, receipt.ContractAddress);
@@ -82,8 +86,10 @@ namespace PirateCoin
 
 		public Contract MostRecentContract { get; private set; }
 
-		private readonly HexBigInteger contractDeployGas = new HexBigInteger(Settings.ContactCreationGas);
-		private readonly TimeSpan contractDeployPeriod = TimeSpan.FromSeconds(Settings.ContractDeployPeriod);
+		private readonly string coinbasePass;
+		private readonly string gethRpcUrl;
+		private readonly HexBigInteger contactCreationGas;
+		private readonly TimeSpan contractDeployPeriod;
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(ContractsUpdater));
 
@@ -92,6 +98,6 @@ namespace PirateCoin
 		private Web3 web3;
 		private string contractByteCodePath;
 		private string abiFilepath;
-		private string accountAddress;
+		public string CoinbaseAddress { get; private set; }
 	}
 }

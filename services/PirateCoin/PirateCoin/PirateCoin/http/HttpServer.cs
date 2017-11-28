@@ -7,7 +7,7 @@ using log4net;
 
 namespace PirateCoin.http
 {
-	internal class HttpServer
+	public class HttpServer
 	{
 		public HttpServer(int port)
 		{
