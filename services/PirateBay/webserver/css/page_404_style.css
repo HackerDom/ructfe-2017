@@ -1,0 +1,30 @@
+@import url(http://fonts.googleapis.com/css?family=UnifrakturMaguntia);
+
+.pirate-font {
+    margin: 0 auto;
+    width: 100%;
+    font-size: 6em;
+    font-family: "UnifrakturMaguntia";
+    color: white;
+}
+
+body {
+    background-color: black;
+}
+
+div {
+    width: 100%;
+    text-align: center;
+}
+
+img {
+    width: 744px;
+    margin: 0 auto;
+}
+
+p {
+    color: white;
+    font-size: 100px;
+    margin: 0;
+    font-family: "PirateFont", serif;
+}
