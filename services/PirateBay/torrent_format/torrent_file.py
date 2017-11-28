@@ -12,8 +12,8 @@ class InvalidTorrentFileError(Exception):
 class TorrentFile(Model):
     announce = TextField(256)
     length = IntField()
-    comment = TextField(256)
-    name = TextField(256)
+    comment = TextField(50)
+    name = TextField(70)
     uid = TextField(32)
     upload_by = TextField(50)
     content = TextField(long=True)
@@ -36,7 +36,7 @@ class TorrentFile(Model):
                     length += file[b'length']
                 self.length = length
         except (ParseError, KeyError):
-            raise InvalidTorrentFileError
+            raise InvalidTorrentFileError("Incorrect fields")
 
     def get_data(self):
         return b64decode(self.content)
@@ -56,4 +56,3 @@ class PrivateTorrentFile(TorrentFile):
 
     def __str__(self):
         return "PrivateTorrentFileInfo({})".format(self.__dict__)
-

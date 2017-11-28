@@ -3,7 +3,10 @@ function init() {
     document.querySelector('#upload_file').addEventListener('change', handleFileSelect, false);
 }
 function handleFileSelect(e) {
-    document.getElementById("mess").innerHTML = e.target.files[0].name;
+    var new_name = e.target.files[0].name;
+    if (new_name.length > 45)
+        new_name = new_name.substring(0, 45) + "...";
+    document.getElementById("mess").innerHTML = new_name;
 }
 $(document).ready(function(){
     $('form input').change(function () {

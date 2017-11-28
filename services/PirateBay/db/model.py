@@ -1,7 +1,4 @@
-from copy import deepcopy
-
 import sqlite3
-from time import sleep
 
 from config import TORRENT_FILES_TABLE_NAME
 from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery, GetCountQuery
@@ -25,6 +22,10 @@ class TextField:
             return "VARCHAR({}) NOT NULL".format(self.max_length)
         else:
             return "TEXT NOT NULL"
+
+    def validate(self, field_name, value):
+        if (len(value) > self.max_length) and (not self.long):
+            raise ValidationError('too long field "{}"'.format(field_name))
 
 
 class IntField:
@@ -73,6 +74,10 @@ class Model:
         for field_name in real_fields:
             if field_name not in cls.get_fields():
                 raise ValidationError("Undeclared field: {}".format(field_name))
+            field_type = cls.get_fields()[field_name]
+            if hasattr(field_type, 'validate'):
+                field_type.validate(field_name, fields[field_name])
+
         if not check_required:
             return
         for field_name, _ in cls.get_fields().items():

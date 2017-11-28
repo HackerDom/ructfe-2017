@@ -5,7 +5,7 @@ import cherrypy
 from jinja2 import Template
 
 from db.client import DBClient
-from db.model import Model, TextField
+from db.model import Model, TextField, ValidationError
 from torrent_format.torrent_file import TorrentFile, PrivateTorrentFile, InvalidTorrentFileError
 from utils import generate_uid, get_base_of_hash
 
@@ -258,8 +258,8 @@ class RequestHandler:
             TorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
             self.error = ""
             raise cherrypy.HTTPRedirect('/storage')
-        except InvalidTorrentFileError:
-            self.error = 'File "{}" is invalid .torrent file.'.format(upload_file.filename)
+        except (InvalidTorrentFileError, ValidationError) as error:
+            self.error = 'File "{}" is invalid .torrent file: {}'.format(upload_file.filename, error)
             raise cherrypy.HTTPRedirect("/upload_file")
 
     @cherrypy.expose
@@ -307,8 +307,8 @@ class RequestHandler:
             PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
             self.error = ""
             raise cherrypy.HTTPRedirect('/storage')
-        except InvalidTorrentFileError:
-            self.error = 'File "{}" is invalid .torrent file.'.format(upload_file.filename)
+        except (InvalidTorrentFileError, ValidationError) as error:
+            self.error = 'File "{}" is invalid .torrent file: {}'.format(upload_file.filename, error)
             raise cherrypy.HTTPRedirect("/upload_file")
 
 
