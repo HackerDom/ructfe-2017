@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 import AppBar from 'material-ui/AppBar';
 import FlatButton from 'material-ui/FlatButton';
@@ -21,7 +22,10 @@ export class Header extends Component {
                     anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                     targetOrigin={{horizontal: 'right', vertical: 'top'}}
                 >
-                    <MenuItem primaryText="Profile"/>
+                    <MenuItem
+                        containerElement={<Link to='/profile'/>}
+                        primaryText="Profile"
+                    />
                     <MenuItem
                         primaryText="Sign out"
                         onClick={this.props.onLogoutButtonClick}
@@ -34,9 +38,18 @@ export class Header extends Component {
                 onClick={this.props.onLoginButtonClick}
             />
         }
-
+        let style = {
+            cursor: 'pointer',
+            color: 'inherit',
+            textDecoration: 'inherit'
+        }
         return <AppBar
-                    title='Powder'
+                    title={<Link
+                        style={style}
+                        to="/">
+                            <span style={style}>Powder</span>
+                        </Link>
+                    }
                     iconElementRight={iconRight}
                     showMenuIconButton={false}
                />

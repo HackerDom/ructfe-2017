@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { HashRouter } from 'react-router-dom';
+
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import { Provider } from 'react-redux'
@@ -28,7 +30,9 @@ persistStore(store)
 ReactDOM.render(
 <Provider store={store}>
     <MuiThemeProvider>
-        <App/>
+        <HashRouter>
+            <App/>
+        </HashRouter>
     </MuiThemeProvider>
 </Provider>,
 document.getElementById('root'));

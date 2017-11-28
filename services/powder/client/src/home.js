@@ -9,9 +9,9 @@ export class Home extends Component {
     render() {
         let style = {
             width: '40%',
-            'margin-top': 50,
-            'margin-left': 'auto',
-            'margin-right': 'auto',
+            'marginTop': 50,
+            'marginLeft': 'auto',
+            'marginRight': 'auto',
         }
         return <Paper style={style}>
                 <Card>
