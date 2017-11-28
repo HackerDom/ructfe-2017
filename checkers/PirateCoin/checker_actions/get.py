@@ -26,7 +26,10 @@ def get_check_contract(team_addr, flag_id, flag):
     try:
         response = urlopen(BLACK_MARKET_ADDR + "/checkFlag?{}".format(
             urlencode(
-                {"flag": flag})), timeout=TIMEOUT).read().decode()
+                {
+                    "flag": flag,
+                    "contractAddr": contract_addr
+                })), timeout=TIMEOUT).read().decode()
         if response == "stolen":
             return CheckerAnswers.CORRUPT(
                 "Unsynchronized balances in contract!",
