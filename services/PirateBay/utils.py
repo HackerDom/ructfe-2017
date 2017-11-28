@@ -25,16 +25,15 @@ def cached_method(func):
     def mem_func(*args, **kwargs):
         args_string = pickle.dumps((args, sorted(kwargs.items())))
         if args_string not in memory:
-            memory[hash] = func(*args, **kwargs)
-        return memory[hash]
+            memory[args_string] = func(*args, **kwargs)
+        return memory[args_string]
     return mem_func
 
 
 def get_sha512(data: bytes):
-    hasher = sha512()
-    hasher.update(data)
-    return hasher.digest()
+    return sha512(data).digest()
 
 
 def get_base_of_hash(data: str):
     return b64encode(get_sha512(data.encode())).decode()
+
