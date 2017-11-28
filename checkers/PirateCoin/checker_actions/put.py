@@ -59,6 +59,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         return CheckerAnswers.DOWN(
             "Can't reach service address!", str(e))
 
+    """
     try:
         response = urlopen(BLACK_MARKET_ADDR + "/putFlag?{}".format(
             urlencode(
@@ -69,7 +70,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                 })), timeout=TIMEOUT
                            ).read().decode()
     except (URLError, socket.timeout):
-        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
+        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")"""
 
     w3 = Web3(IPCProvider(GETH_IPC_PATH))
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)

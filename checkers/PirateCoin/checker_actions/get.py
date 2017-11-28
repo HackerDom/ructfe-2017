@@ -23,6 +23,7 @@ def get_check_contract(team_addr, flag_id, flag):
     contract_addr, wei_in_transaction, contract_creation_time \
         = flag_id.split(":")
 
+    """
     try:
         response = urlopen(BLACK_MARKET_ADDR + "/checkFlag?{}".format(
             urlencode(
@@ -37,6 +38,7 @@ def get_check_contract(team_addr, flag_id, flag):
             )
     except (URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
+    """
 
     if int(contract_creation_time) + TRANSACTION_COOLDOWN >= \
             int(datetime.now().timestamp()):
