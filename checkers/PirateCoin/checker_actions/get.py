@@ -1,21 +1,39 @@
 import json
 
 from datetime import datetime
+from urllib.request import urlopen
+from urllib.parse import urlencode
+from urllib.error import URLError
+from socket import socket
 
 from web3 import IPCProvider, Web3
 from web3.contract import ConciseContract
 from web3.exceptions import BadFunctionCallOutput
 
 from answer_codes import CheckerAnswers
-from config import GETH_IPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD
+from config import \
+    GETH_IPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD, BLACK_MARKET_ADDR
 
 
+TIMEOUT = 8
 TRANSACTION_COOLDOWN = 60
 
 
 def get_check_contract(team_addr, flag_id, flag):
     contract_addr, wei_in_transaction, contract_creation_time \
         = flag_id.split(":")
+
+    try:
+        response = urlopen(BLACK_MARKET_ADDR + "/checkFlag?{}".format(
+            urlencode(
+                {"flag": flag})), timeout=TIMEOUT).read().decode()
+        if response == "stolen":
+            return CheckerAnswers.CORRUPT(
+                "Unsynchronized balances in contract!",
+                "flag has been already given to another team!"
+            )
+    except (URLError, socket.timeout):
+        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
 
     if int(contract_creation_time) + TRANSACTION_COOLDOWN >= \
             int(datetime.now().timestamp()):
