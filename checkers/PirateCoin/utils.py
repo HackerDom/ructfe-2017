@@ -13,3 +13,7 @@ def run_raw_command(command_text):
 
 class CommandRunningException(Exception):
     pass
+
+
+def parse_team_addr(team_addr):  # todo testing: service.team_name.ructfe
+    return ".".join(team_addr.split(".")[1:]) + ":14473"
