@@ -18,7 +18,7 @@ class UserError(Exception):
 
 
 class User(Model):
-    login = TextField(256)
+    login = TextField(50)
     password_hash = TextField(256)
     uid = TextField(32)
 
@@ -247,6 +247,9 @@ class RequestHandler:
 
     @cherrypy.expose
     def upload(self, upload_file):
+        user = get_authorized_user()
+        if user is None:
+            raise cherrypy.HTTPError(403)
         raw_torrent_info_file = bytearray()
         while True:
             data = upload_file.file.read(8192)
@@ -296,6 +299,9 @@ class RequestHandler:
 
     @cherrypy.expose
     def upload_private(self, upload_file):
+        user = get_authorized_user()
+        if user is None:
+            raise cherrypy.HTTPError(403)
         raw_torrent_info_file = bytearray()
         while True:
             data = upload_file.file.read(8192)
