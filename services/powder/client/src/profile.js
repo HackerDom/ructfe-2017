@@ -8,6 +8,26 @@ import { connect } from 'react-redux'
 import { changeTextField } from './actions'
 
 export class Profile extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {imageUrl: 'http://static1.businessinsider.com/image/5228c23beab8ea9c4f8b456b/7- ways-companies-deter-women-in-tech-jobs.jpg'}
+    }
+
+    imageChange = (e) => {
+        e.preventDefault()
+
+        let reader = new FileReader();
+        let file = e.target.files[0]
+
+        reader.onloadend = () => {
+            this.setState({
+                imageUrl: reader.result
+            })
+        }
+        
+        reader.readAsDataURL(file)
+    }
+
     render() {
         let style = {
             width: '60%',
@@ -18,7 +38,23 @@ export class Profile extends Component {
             'paddingBottom': 10
 
         }
-        return <Paper style={style}>
+        let picStyle = {
+            width: 256,
+            cursor: 'pointer',
+        }
+       return <Paper style={style}>
+            <img
+                style={picStyle}
+                src={this.state.imageUrl}
+                alt=""
+                onClick={() => {this.imageInput.click()}}
+            />
+            <input
+                ref={input => this.imageInput = input}
+                type="file"
+                style={{display: 'none'}}
+                onChange={this.imageChange}
+            />
             <TextField
                 fullWidth={true}
                 floatingLabelText="Nickname"
