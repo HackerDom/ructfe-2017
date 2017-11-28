@@ -26,7 +26,7 @@ def close(code, public="", private="", flag_id=""):
     exit(code)
 
 
-def on_check(command_ip):  # todo implement it
+def on_check(command_ip):  # todo implement it via external service
     check_result = \
         {"code": 1, "public": "smthing", "private": "smth", "flag_id": "id"}
     close(**check_result)
@@ -38,8 +38,8 @@ def on_put(command_ip, flag_id, flag, vuln=None):
     close(**put_result)
 
 
-def on_get(command_ip, flag_id, flag, vuln=None): #todo implement it
-    get_result = {}#get.get(command_ip, flag_id, flag, vuln)
+def on_get(command_ip, flag_id, flag, vuln=None):
+    get_result = get.get_check_contract(command_ip, flag_id, flag)
     close(**get_result)
 
 
@@ -64,7 +64,7 @@ def not_found(*args):
 
 if __name__ == '__main__':
     try:
-        COMMANDS.get(sys.argv[1], not_found)(*sys.argv[2:])
+        COMMANDS.get(sys.argv[1].lower(), not_found)(*sys.argv[2:])
     except URLError as e:
         close(DOWN, "Bad command address", private="Checksystem fail {}"
               .format(traceback.format_exc()))
