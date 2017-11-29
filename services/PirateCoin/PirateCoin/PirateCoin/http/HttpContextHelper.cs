@@ -5,7 +5,7 @@ using PirateCoin.Utils;
 
 namespace PirateCoin.http
 {
-	internal static class HttpContextHelper
+	public static class HttpContextHelper
 	{
 		static HttpContextHelper()
 		{

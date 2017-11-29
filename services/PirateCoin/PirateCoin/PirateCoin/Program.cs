@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
-using Nethereum.Web3;
-using Nethereum.Web3.Accounts.Managed;
-using Nethereum.Hex.HexTypes;
 using PirateCoin.http;
 
 namespace PirateCoin
@@ -23,19 +15,22 @@ namespace PirateCoin
 			XmlConfigurator.Configure();
 			try
 			{
-				var abiFilepath = "contracts/contract.abi.json";
-				var contractByteCodePath = "contracts/contract.bytecode.hex";
-
-				var contractsUpdater = new ContractsUpdater(abiFilepath, contractByteCodePath);
+				var contractsUpdater = new ContractsUpdater(abiFilepath, contractByteCodePath, Settings.GethRpcUrl, Settings.CoinbasePass, Settings.ContactCreationGas, Settings.ContractDeployPeriod);
 				contractsUpdater.Start();
 
 				var httpServer = new HttpServer(port);
 				httpServer
-					.AddHandler(HttpMethod.Get.ToString(), latestContractHttpPath,
-						delegate(HttpListenerContext context)
+					.AddHandler(HttpMethod.Get.ToString(), latestContractHttpPath, context => context.WriteStringAsync(contractsUpdater.MostRecentContract?.Address))
+					.AddHandler(HttpMethod.Get.ToString(), coinbaseHttpPath, async context =>
+					{
+						var coinbaseAddress = contractsUpdater.CoinbaseAddress;
+						if(coinbaseAddress == null)
 						{
-							return context.WriteStringAsync(contractsUpdater.MostRecentContract?.Address);
-						})
+							context.Close((int)HttpStatusCode.NotFound);
+							return;
+						}
+						await context.WriteStringAsync(contractsUpdater.CoinbaseAddress);
+					})
 					.AcceptLoopAsync(CancellationToken.None)
 					.Wait();
 			}
@@ -46,7 +41,10 @@ namespace PirateCoin
 		}
 
 		const string latestContractHttpPath = "/latestContract";
+		const string coinbaseHttpPath = "/coinbase";
 
+		const string abiFilepath = "contracts/contract.abi.json";
+		const string contractByteCodePath = "contracts/contract.bytecode.hex";
 		private const int port = 14473;
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(Program));

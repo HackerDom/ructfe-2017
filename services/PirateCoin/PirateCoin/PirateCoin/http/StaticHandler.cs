@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using PirateCoin.http;
 using PirateCoin.Utils;
 
 namespace PirateCoin.http
