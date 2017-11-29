@@ -26,7 +26,7 @@ class TorrentFile(Model):
             meta_dict, _ = parse_dictionary(data)
             self.announce = meta_dict[b'announce'].decode()
             self.name = meta_dict[b'info'][b'name'].decode()
-            self.comment = meta_dict[b'comment'].decode()
+            self.comment = meta_dict.get(b'comment', b'').decode()
             self.length = meta_dict[b'info'].get(b'length')
             self.uid = generate_uid()
             self.upload_by = upload_by
