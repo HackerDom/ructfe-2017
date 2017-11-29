@@ -20,7 +20,7 @@ namespace TreasureMap
 			{
 				var settings = SimpleSettings.Create("settings");
 
-				CryptoConfig.AddAlgorithm(typeof(HashImplememtation), HashImplememtation.Name);
+				CryptoConfig.AddAlgorithm(typeof(RHHE), RHHE.Name);
 
 				var sleepPeriod = int.Parse(settings.GetValue("sleep"));
 				var ttl = int.Parse(settings.GetValue("ttl"));

@@ -5,22 +5,22 @@ using TreasureMap.Db;
 
 namespace TreasureMap.Crypto
 {
-	public class HmacCalculator : HMAC
+	public class HMAC_RHHE : HMAC
 	{
 		private static readonly Encoding Encoding = Encoding.UTF8;
 
 		public static byte[] GetNewSecret()
 		{
 			var rand = new RNGCryptoServiceProvider();
-			var res = new byte[HashImplememtation.InputBlockLength];
+			var res = new byte[RHHE.InputBlockLength];
 			rand.GetNonZeroBytes(res);
 			return res;
 		}
 
-		public static HmacCalculator CreateNew()
-			=> new HmacCalculator
+		public static HMAC_RHHE CreateNew()
+			=> new HMAC_RHHE
 			{
-				HashName = HashImplememtation.Name,
+				HashName = RHHE.Name,
 				Key = SecretHolder.Secret
 			};
 

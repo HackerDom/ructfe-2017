@@ -4,9 +4,9 @@ using System.Security.Cryptography;
 
 namespace TreasureMap.Crypto
 {
-	public class HashImplememtation : HashAlgorithm
+	public class RHHE : HashAlgorithm
 	{
-		public const string Name = "hash";
+		public const string Name = "RHHE";
 
 		private readonly uint[] state;
 		private readonly byte[] buffer;
@@ -19,7 +19,7 @@ namespace TreasureMap.Crypto
 		public override int InputBlockSize => InputBlockLength;
 		public override int OutputBlockSize => HashSize / 8;
 
-		public HashImplememtation()
+		public RHHE()
 		{
 			HashSizeValue = 160;
 

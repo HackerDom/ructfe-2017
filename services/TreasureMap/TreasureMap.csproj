@@ -58,8 +58,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Crypto\HashImplememtation.cs" />
-    <Compile Include="Crypto\HmacCalculator.cs" />
+    <Compile Include="Crypto\RHHE.cs" />
+    <Compile Include="Crypto\HMAC_RHHE.cs" />
     <Compile Include="Db\CredentialsHolder.cs" />
     <Compile Include="Db\Helpers\DataLoader.cs" />
     <Compile Include="Db\Helpers\PeriodicSaver.cs" />

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.IO;
+﻿using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
-using log4net;
 using TreasureMap.Crypto;
 using TreasureMap.Db.Helpers;
 using TreasureMap.Db.Models;
@@ -33,7 +29,7 @@ namespace TreasureMap.Db
 
 		public static string GetPassHashed(string login, string pass)
 		{
-			using (var hmac = HmacCalculator.CreateNew())
+			using (var hmac = HMAC_RHHE.CreateNew())
 			{
 				return hmac.ComputeHash(login + "|" + pass);
 			}

@@ -13,7 +13,7 @@ namespace TreasureMap.Db
 			path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
 			if (!File.Exists(path))
 			{
-				Secret = HmacCalculator.GetNewSecret();
+				Secret = HMAC_RHHE.GetNewSecret();
 				File.WriteAllBytes(path, Secret);
 			}
 			else

@@ -33,7 +33,7 @@ namespace TreasureMap.Handlers.Helpers
 
 		private static string GetSign(string data)
 		{
-			using (var hmac = HmacCalculator.CreateNew())
+			using (var hmac = HMAC_RHHE.CreateNew())
 			{
 				return hmac.ComputeHash(data);
 			}
