@@ -48,16 +48,14 @@ func (api *API) Bind(group *echo.Group) {
 func (api *API) Login(c echo.Context) error {
     login := c.FormValue("login")
 
-    hash := api.storage.GetUserProperty(login, "hash")
-    if hash == nil {
+    user := api.storage.GetUser(login)
+    if user == nil {
         return api.Error(c,
                         fmt.Sprintf("Can't find user %s", login))
     }
 
-    salt := api.storage.GetUserProperty(login, "salt")
-    password := api.crypto.PasswordHash(salt, c.FormValue("password"))
-
-    if !bytes.Equal(hash, password) {
+    password := api.crypto.PasswordHash(user.Salt, c.FormValue("password"))
+    if !bytes.Equal(user.Hash, password) {
         return api.Error(c, "Wrong password")
     }
 
@@ -74,17 +72,23 @@ func (api *API) Login(c echo.Context) error {
 func (api *API) SignUp(c echo.Context) error {
     login := c.FormValue("login")
 
-    hash := api.storage.GetUserProperty(login, "hash")
-    if hash != nil {
+    user := api.storage.GetUser(login)
+    if user != nil {
         return api.Error(c,
                         fmt.Sprintf("User %s already exists", login))
     }
 
     salt := api.crypto.CreateSalt()
-    password := api.crypto.PasswordHash(salt, c.FormValue("password"))
+    hash := api.crypto.PasswordHash(salt, c.FormValue("password"))
 
-    api.storage.SetUserProperty(login, "hash", password)
-    api.storage.SetUserProperty(login, "salt", salt)
+    user = &User{
+        Username: login,
+        Salt: salt,
+        Hash: hash,
+        Properties: make(map[string]string),
+    }
+
+    api.storage.SaveUser(user)
 
     token := api.crypto.MakeToken(login)
 
@@ -110,9 +114,11 @@ func (api *API) SaveProfile(c echo.Context) error {
         return api.Error(c, "Internal server error")
     }
 
+    user := api.storage.GetUser(login)
     for key := range params {
-        api.storage.SetUserProperty(login, key, []byte(params.Get(key)))
+        user.Properties[key] = params.Get(key)
     }
+    api.storage.SaveUser(user)
 
     result := map[string]interface{}{}
     return api.OK(c, result)
@@ -130,8 +136,10 @@ func (api *API) GetProfile(c echo.Context) error {
         "nickname": login,
     }
 
+    user := api.storage.GetUser(login)
+
     for _, key := range []string{"fullname", "picture"} {
-        result[key] = string(api.storage.GetUserProperty(login, key))
+        result[key] = user.Properties[key]
     }
 
     return api.OK(c, result)
@@ -140,10 +148,10 @@ func (api *API) GetProfile(c echo.Context) error {
 func (api *API) GetUsers(c echo.Context) error {
     users := make([]map[string]string, 0)
 
-    api.storage.IterateUsers(func (login string, profile map[string]string) {
-        profile["login"] = login
+    api.storage.IterateUsers(func (user *User) {
+        user.Properties["login"] = user.Username
 
-        users = append(users, profile)
+        users = append(users, user.Properties)
     })
 
     result := map[string]interface{}{

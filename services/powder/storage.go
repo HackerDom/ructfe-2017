@@ -1,87 +1,64 @@
 package main
 
 import (
-    "time"
-    "github.com/boltdb/bolt"
+    "github.com/asdine/storm"
 )
 type Storage struct {
-    db *bolt.DB
+    db *storm.DB
+}
+
+type User struct {
+    Username string `storm:"id"`
+    Properties map[string]string
+    Hash []byte
+    Salt []byte
 }
 
 func NewStorage() *Storage {
-    db, err := bolt.Open("powder.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
+    db, err := storm.Open("powder.db")
 
     if err != nil {
         panic(err)
     }
 
-    db.Update(func (tx *bolt.Tx) error {
-        _, err := tx.CreateBucketIfNotExists([]byte("users"))
-        if err != nil {
-            panic(err)
-        }
-        return nil
-    })
-
     return &Storage{db: db}
 }
 
-func (storage *Storage) GetUserProperty(username string, propertyName string) []byte {
-    var propertyValue []byte
-    storage.db.View(func(tx *bolt.Tx) error {
-        usersBucket := tx.Bucket([]byte("users"))
-        userBucket := usersBucket.Bucket([]byte(username))
+func (storage *Storage) GetUser(username string) *User {
+    var user User
+    err := storage.db.One("Username", username, &user)
 
-        if userBucket == nil {
-            return nil
-        }
-
-        propertyValue = userBucket.Get([]byte(propertyName))
-
+    if err != nil {
         return nil
-    })
+    }
 
-    return propertyValue
+    return &user
 }
 
-func (storage *Storage) SetUserProperty(username string,
-                                        propertyName string,
-                                        propertyValue []byte) {
-    storage.db.Update(func(tx *bolt.Tx) error {
-        usersBucket := tx.Bucket([]byte("users"))
-        userBucket, err := usersBucket.CreateBucketIfNotExists([]byte(username))
-
+func (storage *Storage) SaveUser(user *User) {
+    ok := storage.GetUser(user.Username)
+    if ok != nil {
+        err := storage.db.Update(user)
         if err != nil {
             panic(err)
         }
-
-        err = userBucket.Put([]byte(propertyName), propertyValue)
+    } else {
+        err := storage.db.Save(user)
         if err != nil {
             panic(err)
         }
-
-        return nil
-    })
+    }
 }
 
-func (storage *Storage) IterateUsers(fn func(login string, profile map[string]string)) {
-    storage.db.View(func(tx *bolt.Tx) error {
-        usersBucket := tx.Bucket([]byte("users"))
-        usersBucket.ForEach(func(key []byte, _ []byte) error {
-            properties := make(map[string]string)
-            b := usersBucket.Bucket(key)
+func (storage *Storage) IterateUsers(fn func(user *User)) {
+    var users []User
+    err := storage.db.All(&users, storm.Limit(10))
 
-            for _, propertyName := range []string{"picture", "fullname"} {
-                propertyValue := b.Get([]byte(propertyName))
-                if propertyValue != nil {
-                    properties[propertyName] = string(propertyValue)
-                }
-            }
+    if err != nil {
+        panic(err)
+    }
 
-            fn(string(key), properties)
-
-            return nil
-        })
-        return nil
-    })
+    for _, u := range users {
+        fn(&u)
+    }
 }

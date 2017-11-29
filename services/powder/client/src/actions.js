@@ -272,6 +272,10 @@ export function loadProfile() {
         dispatch(startLoadingProfile());
         let token = state.user.data.token
 
+        if (!token) {
+            return null
+        }
+
         return fetch("/api/v1/user/profile", {
             method: "GET",
             headers: new Headers({token: token})
