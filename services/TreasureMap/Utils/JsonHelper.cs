@@ -6,7 +6,6 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using log4net;
 
 namespace TreasureMap.Utils
 {

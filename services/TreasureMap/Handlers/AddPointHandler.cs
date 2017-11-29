@@ -15,7 +15,7 @@ namespace TreasureMap.Handlers
 		public static readonly BaseHandler Instance = new AddPointHandler();
 
 		public override IEnumerable<HttpMethod> Methods => new[] {HttpMethod.Post};
-		public override string Path => "/api/addpoint";
+		public override string Path => "/api/add";
 
 		private const int CoordinateLength = 20;
 		private const int MessageLength = 512;
