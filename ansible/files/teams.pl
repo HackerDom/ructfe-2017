@@ -27,7 +27,7 @@ for (@$teams) {
   if ($team_id > 100) {
     print "bot => [";
     my $bot = [];
-    for (1 .. 7) {
+    for (1 .. 6) {
       my $sla     = sprintf '%.1f', rand;
       my $attack  = sprintf '%.1f', rand;
       my $defense = sprintf '%.1f', rand;
