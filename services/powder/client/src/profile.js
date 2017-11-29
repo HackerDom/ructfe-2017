@@ -43,6 +43,7 @@ export class Profile extends Component {
        return <Paper style={style}>
             <img
                 style={picStyle}
+                key={this.props.profile.picture}
                 src={this.props.profile.picture}
                 alt="Profile"
                 onClick={() => {this.imageInput.click()}}

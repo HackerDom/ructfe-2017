@@ -63,3 +63,25 @@ func (storage *Storage) SetUserProperty(username string,
         return nil
     })
 }
+
+func (storage *Storage) IterateUsers(fn func(login string, profile map[string]string)) {
+    storage.db.View(func(tx *bolt.Tx) error {
+        usersBucket := tx.Bucket([]byte("users"))
+        usersBucket.ForEach(func(key []byte, _ []byte) error {
+            properties := make(map[string]string)
+            b := usersBucket.Bucket(key)
+
+            for _, propertyName := range []string{"picture", "fullname"} {
+                propertyValue := b.Get([]byte(propertyName))
+                if propertyValue != nil {
+                    properties[propertyName] = string(propertyValue)
+                }
+            }
+
+            fn(string(key), properties)
+
+            return nil
+        })
+        return nil
+    })
+}

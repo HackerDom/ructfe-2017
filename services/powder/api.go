@@ -136,6 +136,16 @@ func (api *API) GetProfile(c echo.Context) error {
 }
 
 func (api *API) GetUsers(c echo.Context) error {
-    result := map[string]interface{}{}
+    var users []map[string]string
+
+    api.storage.IterateUsers(func (login string, profile map[string]string) {
+        profile["login"] = login
+        users = append(users, profile)
+    })
+
+    result := map[string]interface{}{
+        "users": users,
+    }
+
     return api.OK(c, result)
 }
