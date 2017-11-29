@@ -267,7 +267,7 @@ void Draw( const PipelineState& pState ) {
     __m128 vpScale  = _mm_set_ps( 1.0f, 1.0f, -0.5f * pState.rt->height, 0.5f * pState.rt->width );
     __m128 vpOffset = _mm_set_ps( 0.0f, 0.0f,  0.5f * pState.rt->height, 0.5f * pState.rt->width );
 
-    __m128_union* GPR = ( __m128_union* )memalign( 16, 256 * sizeof( __m128 ) );
+    __m128_union GPR[ 256 ];
     // 4 varyings for each vertex of triangle
     __m128_union varyings[ VARYINGS_PER_VERTEX * 3 ];
 
@@ -405,8 +405,6 @@ void Draw( const PipelineState& pState ) {
             }
         }
     }
-
-    free( GPR );
 }
 
 
