@@ -23,6 +23,8 @@ export const START_LOADING_PROFILE = 'START_LOADING_PROFILE'
 export const SUCCESS_LOADING_PROFILE = 'SUCCESS_LOADING_PROFILE'
 export const FAILED_LOADING_PROFILE = 'FAILED_LOADING_PROFILE'
 
+export const APPLICATION_START = 'APPLICATION_START'
+
 export const LOGOUT = 'LOGOUT'
 
 export function openDialog(name) {
@@ -276,5 +278,11 @@ export function loadProfile() {
             }
         })
 
+    }
+}
+
+export function applicationStart() {
+    return {
+        type: APPLICATION_START
     }
 }

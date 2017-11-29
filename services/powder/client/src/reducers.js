@@ -11,7 +11,8 @@ import {
     LOGOUT,
     CHANGE_PROFILE_PICTURE,
     SUCCESS_LOADING_PROFILE,
-    FAILED_LOADING_PROFILE
+    FAILED_LOADING_PROFILE,
+    APPLICATION_START
 } from './actions'
 
 const initialState = {
@@ -107,7 +108,19 @@ function changes(state = initialState.changes, action) {
                     picture: {$set: ''},
                 },
             })
-
+        case APPLICATION_START:
+            return update(state, {
+                profile: {
+                    fullname: {$set: ''},
+                    picture: {$set: ''},
+                },
+                auth: {
+                    loginLogin: {$set: ''},
+                    loginPassword: {$set: ''},
+                    signupLogin: {$set: ''},
+                    signupPassword: {$set: ''},
+                }
+            })
         default:
             return state
     }

@@ -9,6 +9,7 @@ import { Provider } from 'react-redux'
 import './index.css';
 import { App } from './app'
 import { doReduce } from './reducers'
+import { applicationStart, loadProfile } from './actions'
 
 import { createStore, applyMiddleware, compose } from 'redux'
 import { createLogger } from 'redux-logger'
@@ -25,7 +26,11 @@ let store = compose(
     autoRehydrate()
 )(createStore)(doReduce)
 
-persistStore(store)
+persistStore(store, {}, () => {
+    store.dispatch(applicationStart())
+    store.dispatch(loadProfile())
+})
+
 
 ReactDOM.render(
 <Provider store={store}>
