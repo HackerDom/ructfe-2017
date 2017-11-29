@@ -7,15 +7,15 @@
     - fping
     - python3-requests
 
-#- name: copy prod vpn configs
-#  synchronize: 
-#    src: openvpn_prod/
-#    dest: /etc/openvpn/
-#    rsync_opts:
-#      - "--chmod=0600"
-#      - "--chown=root:root"
-#  notify: restart openvpn
-#  when: variant == "prod"
+- name: copy prod vpn configs
+  synchronize: 
+    src: openvpn_prod/
+    dest: /etc/openvpn/
+    rsync_opts:
+      - "--chmod=0600"
+      - "--chown=root:root"
+  notify: restart openvpn
+  when: variant == "prod"
 
 - name: copy dev vpn configs
   synchronize: 
@@ -33,6 +33,12 @@
     - teamcheck
     - networkclosed
     - antidos
+
+- name: create cloud user
+  user: name=cloud shell=/bin/bash
+
+- name: add keys to cloud user
+  authorized_key: user=cloud key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfEgKMaso3fgA/3NtqKMXNk2hgMEpPsVRnhAPvzZOGJPmQZpQ+Hvjdj29F+RZImYxx4//2oSY/SlH8Oe4aD2KfZXxlBdg63phh41HYWK3XXv8EeecMT2iIG5msTUgazt3qJ5e0xrluvXkDmkh9Yzi5rPEgxtz1BgY0jIgSDO0pAZ6VEpYQyYxHERGGMVUXW2l882WXagXR5O5npKTJSkrE9HFsxq67ELRnBt2eWiPF0nR+W8VXVqF6ZLTAWi0yHJkmXqeOTffp8TegIaL936bCTKlrAob2RiWj1qE5/ybA9xg2jvrglyN5OZCSL4QZoqh7FrDMOFr+f+M1UWio9hCX bay@baysnotebook"
 
 - name: copy teamcheck files
   copy: src=teamcheck/{{item}} dest=/home/teamcheck/ owner=teamcheck group=teamcheck
@@ -59,6 +65,24 @@
   copy: src=nginx/default dest=/etc/nginx/sites-available/default
   notify: restart nginx
 
+- name: copy nginx files for https (dev)
+  copy: src=nginx/{{item}}_dev.pem dest=/etc/nginx/{{item}}.pem
+  notify: restart nginx
+  with_items:
+    - cert
+    - key
+    - dhparams
+  when: variant == "dev"
+
+- name: copy nginx files for https (prod)
+  copy: src=nginx/{{item}}_prod.pem dest=/etc/nginx/{{item}}.pem
+  notify: restart nginx
+  with_items:
+    - cert
+    - key
+    - dhparams
+  when: variant == "prod"
+
 - name: copy nginx htpasswd
   copy: src=nginx/htpasswd dest=/etc/nginx/htpasswd
   notify: restart nginx
@@ -70,6 +94,16 @@
     - openclosenetwork
     - snat
     - trafdump
+    - cloud
+
+- name: copy sudo_cloud
+  copy: src=cloud/sudo_cloud dest=/etc/sudoers.d/ mode=0640
+
+- name: copy sudo_cloud scripts
+  copy: src=cloud/{{item}} dest=/root/cloud/{{item}} mode=0755
+  with_items:
+    - switch_team_to_cloud.sh
+    - switch_team_to_not_cloud.sh
 
 - name: create teamcheck web symlinks
   file: src=/home/teamcheck/{{item}} dest=/var/www/html/{{item}} state=link force=yes

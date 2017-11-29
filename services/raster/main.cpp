@@ -11,81 +11,7 @@
 #include <time.h>
 #include <tuple>
 
-void DrawTest()
-{
-    Image image( 256, 256 );
-    Shader vs( "shaders/simple.vs.bin" );
-    Shader ps( "shaders/draw_test.ps.bin" );
-
-    VertexBuffer vb( 4, 2 );
-    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  0.0f,  1.0f );
-
-    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
-
-    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 1.0f, 1.0f,  0.0f,  0.0f );
-
-    vb.vertices[ 3 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 3 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
-
-    IndexBuffer ib( 6 );
-    ib.indices[ 0 ] = 0;
-    ib.indices[ 1 ] = 1;
-    ib.indices[ 2 ] = 2;
-    ib.indices[ 3 ] = 0;
-    ib.indices[ 4 ] = 2;
-    ib.indices[ 5 ] = 3;
-
-    PipelineState pState;
-    pState.vb = &vb;
-    pState.ib = &ib;
-    pState.vs = &vs;
-    pState.ps = &ps;
-    pState.rt = &image;
-    Draw( pState );
-    save_png( "test.png", image );
-}
-
-void TextureTest()
-{
-    Image image( 256, 256 );
-    Image texture;
-    read_png( "texture.png", texture );
-    Shader vs( "shaders/simple.vs.bin" );
-    Shader ps( "shaders/texture_test.ps.bin" );
-
-    VertexBuffer vb( 6, 2 );
-    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
-
-    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
-
-    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
-
-    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
-    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
-
-    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
-    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
-
-    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
-
-    PipelineState pState;
-    pState.vb = &vb;
-    pState.ib = nullptr;
-    pState.vs = &vs;
-    pState.textures[ 0 ] = &texture;
-    pState.ps = &ps;
-    pState.rt = &image;
-    Draw( pState );
-    save_png( "texture_test.png", image );
-}
-
+//
 void BuildViewMatrix( Lib3dsMatrix viewMatrix, Lib3dsVector eye, Lib3dsVector at, Lib3dsVector up ) {
     Lib3dsVector zAxis;
     lib3ds_vector_sub( zAxis, at, eye );
@@ -117,19 +43,8 @@ void BuildViewMatrix( Lib3dsMatrix viewMatrix, Lib3dsVector eye, Lib3dsVector at
     viewMatrix[ 3 ][ 3 ] = 1.0f;
 }
 
-void BuildOrthoProjMatrix( Lib3dsMatrix projMatrix, f32 width, f32 height, f32 near, f32 far ) {
-    for( u32 i = 0; i < 4; i++ )
-        for( u32 j = 0; j < 4; j++ )
-            projMatrix[ i ][ j ] = 0.0f;
 
-    projMatrix[ 0 ][ 0 ] = 2.0f / width;
-    projMatrix[ 1 ][ 1 ] = 2.0f / height;
-    projMatrix[ 2 ][ 2 ] = 1.0f / ( far - near );
-    projMatrix[ 3 ][ 2 ] = near / ( near - far );
-    projMatrix[ 3 ][ 3 ] = 1.0f;
-}
-
-
+//
 void BuildProjMatrix( Lib3dsMatrix projMatrix, float fovY, float aspect, float near, float far ) {
     for( u32 i = 0; i < 4; i++ )
         for( u32 j = 0; j < 4; j++ )
@@ -235,91 +150,6 @@ std::tuple< VertexBuffer*, IndexBuffer* > CreateFlagVb()
     ib->indices[ 11 ] = 7;
 
     return std::make_tuple( vb, ib );
-}
-
-
-//
-void DrawShip()
-{
-    VertexBuffer* vb = LoadShip();
-
-    /*VertexBuffer vb( 6, 2 );
-    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
-
-    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
-
-    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
-
-    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
-    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
-
-    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
-    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
-
-    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
-
-    Image texture;
-    read_png( "texture.png", texture );*/
-
-    Lib3dsMatrix view, proj, viewProj;
-    Lib3dsVector camPos, camAt, camUp;
-    camPos[ 0 ] = 1.0f;
-    camPos[ 1 ] = 1.0f;
-    camPos[ 2 ] = -2.0f;
-    camAt[ 0 ] = 0.0f;
-    camAt[ 1 ] = 0.0f;
-    camAt[ 2 ] = 0.0f;
-    camUp[ 0 ] = 0.0f;
-    camUp[ 1 ] = 1.0f;
-    camUp[ 2 ] = 0.0f;
-    BuildViewMatrix( view, camPos, camAt, camUp );
-    BuildProjMatrix( proj, 90.0f / 180.0f * LIB3DS_PI, 1.0f, 0.1f, 100.0f );
-    //BuildOrthoProjMatrix( proj, 4.0, 4.0, 0.1f, 100.0f );
-    lib3ds_matrix_copy( viewProj, proj );
-    lib3ds_matrix_mult( viewProj, view );
-    lib3ds_matrix_transpose( viewProj );
-
-    Image image( 512, 512 );
-    Image depthRt( 512, 512 );
-    Shader vs( "shaders/ship.vs.bin" );
-    Shader ps( "shaders/ship.ps.bin" );
-
-    PipelineState pState;
-    memcpy( pState.constants, viewProj, 4 * 4 * sizeof( float ) );
-    memcpy( &pState.constants[ 4 ], camPos, 4 * sizeof( float ) );
-    pState.vb = vb;
-    pState.ib = nullptr;
-    pState.vs = &vs;
-    //pState.textures[ 0 ] = &texture;
-    pState.ps = &ps;
-    pState.rt = &image;
-    pState.depthRt = &depthRt;
-    ClearDepthRenderTarget( pState.depthRt, 1.0f );
-    Draw( pState );
-    save_png( "ship.png", image );
-
-    /*Lib3dsNode* nodes = file->nodes;
-    std::list< Lib3dsNode* > stack;
-    while( nodes ) {
-        //
-        if( node->type == LIB3DS_OBJECT_NODE ) {
-
-        }
-
-        // DFS
-        if( nodes->childs ) {
-            stack.push_back( nodes );
-            nodes = nodes->childs;
-        } else if( nodes->next ) {
-            nodes = nodes->next;
-        } else if( !stack.empty() ){
-            nodes = stack.pop_back()->next;
-        }
-    }*/
 }
 
 
@@ -594,23 +424,6 @@ HttpResponse RequestHandler::HandlePost( HttpRequest request, HttpPostProcessor 
 
 
 //
-void GpuTests()
-{
-    DrawTest();
-    TextureTest();
-
-    timespec tp;
-    double startTime, endTime;
-    clock_gettime( CLOCK_REALTIME, &tp );
-    startTime = tp.tv_sec + tp.tv_nsec / 1000000000.0;
-    DrawShip();
-    clock_gettime( CLOCK_REALTIME, &tp );
-    endTime = tp.tv_sec + tp.tv_nsec / 1000000000.0;
-    printf( ":: Time: %f\n", endTime - startTime );
-}
-
-
-//
 void Service()
 {
     VertexBuffer* shipVb = LoadShip();
@@ -636,7 +449,6 @@ void Service()
 
 int main()
 {
-    //GpuTests();
     Service();
     return 0;
 }
