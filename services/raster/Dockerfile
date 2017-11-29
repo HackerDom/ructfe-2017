@@ -1,4 +1,4 @@
-FROM gcc:latest
+FROM gcc:7.2.0
 RUN apt-get update && \
     apt-get install -y \
         lib3ds-dev \

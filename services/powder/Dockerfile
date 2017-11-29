@@ -1,4 +1,4 @@
-FROM golang
+FROM golang:1.9.2-stretch
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update

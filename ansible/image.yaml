@@ -3,6 +3,7 @@
   roles:
     - { role: service, service_name: raster }
     - { role: service, service_name: PirateBay }
+    - { role: service, service_name: powder }
 
   post_tasks:
     - name: Clean apt-get

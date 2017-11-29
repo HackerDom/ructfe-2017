@@ -1,0 +1,9 @@
+version: '3'
+services:
+  powder:
+    build: .
+    ports:
+      - "8082:8080"
+    volumes:
+      - .:/home/powder
+    restart: on-failure
