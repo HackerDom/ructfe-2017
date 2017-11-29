@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,7 +73,7 @@ namespace TreasureMap.Utils
 		public static void ToJson<T>(this T obj, Stream stream, bool runtime = true)
 		{
 			using(var writer = JsonReaderWriterFactory.CreateJsonWriter(stream, Encoding.UTF8, false))
-				new DataContractJsonSerializer(runtime ? obj.TryGetRuntimeType() : typeof(T)).WriteObject(writer, obj);
+				new DataContractJsonSerializer(runtime ? obj.TryGetRuntimeType() : typeof(T), Settings).WriteObject(writer, obj);
 		}
 
 		public static Type TryGetRuntimeType<T>(this T obj)
@@ -79,6 +81,6 @@ namespace TreasureMap.Utils
 			return Equals(obj, null) ? typeof(T) : obj.GetType();
 		}
 
-		private static readonly ILog log = LogManager.GetLogger(typeof(JsonHelper));
+		private static readonly DataContractJsonSerializerSettings Settings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true, SerializeReadOnlyTypes = true, DateTimeFormat = new DateTimeFormat("s", CultureInfo.InvariantCulture) };
 	}
 }
