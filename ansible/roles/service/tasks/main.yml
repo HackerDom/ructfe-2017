@@ -1,0 +1,24 @@
+---
+- name: Create service user
+  user:
+    name: "{{ service_name }}"
+    groups: docker
+    append: yes
+
+- name: Copy service sources
+  synchronize:
+    src: "{{ playbook_dir }}/../services/{{ service_path | default(service_name) }}"
+    dest: "/home/{{ service_name }}/"
+
+- name: Check permissions
+  file:
+    name: "/home/{{ service_name }}/"
+    recurse: yes
+    owner: "{{ service_name }}"
+    group: "{{ service_name }}"
+
+- name: Copy unit
+  template: src=unit.j2 dest=/lib/systemd/system/{{ service_name }}.service
+
+- name: Enable service
+  systemd: name={{ service_name }} daemon_reload=yes enabled=yes

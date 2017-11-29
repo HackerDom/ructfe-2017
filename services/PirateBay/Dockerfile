@@ -1,7 +1,4 @@
-FROM alpine:3.6
-
-LABEL maintainer="werelaxe"
-
+FROM alpine
 
 RUN apk add --no-cache python3 && \
     python3 -m ensurepip && \
@@ -11,11 +8,7 @@ RUN apk add --no-cache python3 && \
     if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
     rm -r /root/.cache
 
-
-COPY requirements.txt /app/requirements.txt
-WORKDIR /app
-RUN pip3 install -r requirements.txt
-COPY . /app
+COPY requirements.txt /home/PirateBay/
+WORKDIR /home/PirateBay
 
 CMD ["python3", "startserver.py"]
-
