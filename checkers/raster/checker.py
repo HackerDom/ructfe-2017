@@ -187,7 +187,7 @@ def draw( addr, pos_json ):
 		stream = io.BytesIO( r.content )
 		img = Image.open( stream )
 
-		if img.size[ 0 ] != 64 or img.size[ 0 ] != 64:
+		if img.size[ 0 ] != 128 or img.size[ 0 ] != 128:
 			close(CORRUPT, "Service corrupted", "Invalid image size %ux%u" % ( img.size[ 0 ], img.size[ 1 ] ) )			
 		
 		left = -1
@@ -195,8 +195,8 @@ def draw( addr, pos_json ):
 		pixels = img.load()
 		RED = ( 255, 0, 0, 255 )
 
-		for y in range( 1, 63 ):
-			for x in range( 1, 63 ):
+		for y in range( 1, 127 ):
+			for x in range( 1, 127 ):
 				if pixels[ x, y ] != RED and pixels[ x + 1, y ] == RED and left == -1:
 					#print( "left", x, y, pixels[ x, y ], pixels[ x + 1, y ] )
 					left = x
@@ -206,8 +206,8 @@ def draw( addr, pos_json ):
 
 		top = -1
 		bottom = -1
-		for x in range( 1, 63 ):
-			for y in range( 1, 63 ):
+		for x in range( 1, 127 ):
+			for y in range( 1, 127 ):
 				if pixels[ x, y ] != RED and pixels[ x, y + 1 ] == RED and top == -1:
 					#print( "top", x, y, pixels[ x, y ], pixels[ x, y + 1 ] )
 					top = y

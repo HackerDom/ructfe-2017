@@ -2,7 +2,6 @@ import os
 import re
 
 import cherrypy
-import sys
 from jinja2 import Template
 
 from db.client import DBClient
@@ -267,7 +266,6 @@ class RequestHandler:
             normalized_name = upload_file.filename
             if len(normalized_name) > 25:
                 normalized_name = normalized_name[:26]
-            print(normalized_name)
             self.error = 'File "{}" is invalid .torrent file: {}'.format(normalized_name, error)
             raise cherrypy.HTTPRedirect("/upload_file")
 
