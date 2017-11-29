@@ -151,8 +151,6 @@ class RequestHandler:
 
     @cherrypy.expose
     def signin(self, login, password):
-        print("SIGN IN")
-        print(login)
         try:
             set_cookie(login, password)
             self.error = ""
