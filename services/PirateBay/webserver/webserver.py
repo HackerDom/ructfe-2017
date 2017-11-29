@@ -264,7 +264,11 @@ class RequestHandler:
             self.error = ""
             raise cherrypy.HTTPRedirect('/storage')
         except (InvalidTorrentFileError, ValidationError) as error:
-            self.error = 'File "{}" is invalid .torrent file: {}'.format(upload_file.filename, error)
+            normalized_name = upload_file.filename
+            if len(normalized_name) > 25:
+                normalized_name = normalized_name[:26]
+            print(normalized_name)
+            self.error = 'File "{}" is invalid .torrent file: {}'.format(normalized_name, error)
             raise cherrypy.HTTPRedirect("/upload_file")
 
     @cherrypy.expose
@@ -324,4 +328,3 @@ def start_web_server():
     with DBClient():
         request_handler = RequestHandler()
         cherrypy.quickstart(request_handler, '/', config='webserver/webserver.config')
-
