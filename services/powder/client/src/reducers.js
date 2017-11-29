@@ -11,6 +11,7 @@ import {
     LOGOUT,
     CHANGE_PROFILE_PICTURE,
     SUCCESS_LOADING_PROFILE,
+    SUCCESS_LOADING_USERS,
     FAILED_LOADING_PROFILE,
     APPLICATION_START
 } from './actions'
@@ -23,6 +24,8 @@ const initialState = {
             nickname: ''
         }
     },
+    users: [
+    ],
     dialogs: {
         auth: false
     },
@@ -142,9 +145,19 @@ function notifications(state = initialState.notifications, action) {
     }
 }
 
+function users(state = initialState.users, action) {
+    switch (action.type) {
+        case SUCCESS_LOADING_USERS:
+            return update(state, {$set: action.response.users})
+        default:
+            return state
+    }
+}
+
 export const doReduce = combineReducers({
     dialogs,
     user,
     changes,
-    notifications
+    notifications,
+    users
 })

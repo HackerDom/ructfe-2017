@@ -140,6 +140,7 @@ func (api *API) GetUsers(c echo.Context) error {
 
     api.storage.IterateUsers(func (login string, profile map[string]string) {
         profile["login"] = login
+
         users = append(users, profile)
     })
 

@@ -25,6 +25,10 @@ export const FAILED_LOADING_PROFILE = 'FAILED_LOADING_PROFILE'
 
 export const APPLICATION_START = 'APPLICATION_START'
 
+export const START_LOADING_USERS = 'START_LOADING_USERS'
+export const SUCCESS_LOADING_USERS = 'SUCCESS_LOADING_USERS'
+export const FAILED_LOADING_USERS = 'FAILED_LOADING_USERS'
+
 export const LOGOUT = 'LOGOUT'
 
 export function openDialog(name) {
@@ -286,3 +290,41 @@ export function applicationStart() {
         type: APPLICATION_START
     }
 }
+
+export function loadUsers() {
+    return function(dispatch) {
+        dispatch(startLoadingUsers());
+        return fetch("/api/v1/users", {
+            method: "GET",
+        })
+        .then(response => response.json())
+        .then(json => {
+            if (json.error) {
+                dispatch(showNotifications(json.errorMessage))
+                dispatch(failedLoadingUsers(json))
+            } else {
+                dispatch(successLoadingUsers(json))
+            }
+        })
+    }
+}
+
+export function startLoadingUsers() {
+    return {
+        type: START_LOADING_USERS
+    }
+}
+
+export function failedLoadingUsers() {
+    return {
+        type: FAILED_LOADING_USERS
+    }
+}
+
+export function successLoadingUsers(response) {
+    return {
+        type: SUCCESS_LOADING_USERS,
+        response: response
+    }
+}
+
