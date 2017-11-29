@@ -3,8 +3,6 @@ import os
 import re
 import traceback
 from sys import argv, stderr
-from traceback import print_stack
-import mimesis
 import requests
 import sys
 from requests.exceptions import ConnectionError, HTTPError
@@ -18,6 +16,10 @@ AUTH_URL_TEMPLATE = "http://{hostname}/signin?login={login}&password={password}"
 PRIVATE_STORAGE_URL_TEMPLATE = "http://{hostname}/private_storage"
 
 
+def print_to_stderr(*args):
+    print(*args, file=sys.stderr)
+
+
 def auth(hostname, login, password):
     auth_url = AUTH_URL_TEMPLATE.format(
         hostname=hostname,
@@ -28,7 +30,6 @@ def auth(hostname, login, password):
         auth_url,
         headers=generate_headers()
     )
-    print(r.request.headers, file=sys.stderr)
     return dict(r.request._cookies)
 
 
@@ -47,7 +48,6 @@ def not_found(*args):
 
 
 def put(hostname, flag_id, flag, vuln):
-    print(hostname, flag_id, flag, vuln, file=sys.stderr)
     login = generate_login()
     password = generate_password()
     name = generate_name()
@@ -71,9 +71,11 @@ def put(hostname, flag_id, flag, vuln):
                 headers=generate_headers(),
             )
             upload_request.raise_for_status()
-    except ConnectionError:
+    except ConnectionError as error:
+        print_to_stderr("Connection error: hostname: {}, error: {}".format(hostname, error))
         exit_code = DOWN
     except HTTPError as error:
+        print_to_stderr("HTTP Error: hostname: {}, error: {}".format(hostname, error))
         exit_code = MUMBLE
     finally:
         if os.path.exists("buffer"):
@@ -100,9 +102,11 @@ def get(hostname, flag_id, flag, _):
             exit(CORRUPT)
         if matching.group(1) != flag:
             exit(CORRUPT)
-    except (ConnectionError, ConnectionRefusedError):
+    except (ConnectionError, ConnectionRefusedError) as error:
+        print_to_stderr("Connection error: hostname: {}, error: {}".format(hostname, error))
         exit(DOWN)
-    except (HTTPError, UnicodeDecodeError):
+    except (HTTPError, UnicodeDecodeError) as error:
+        print_to_stderr("HTTP or decoding error: hostname: {}, error: {}".format(hostname, error))
         exit(MUMBLE)
     exit(OK)
 
@@ -119,4 +123,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
