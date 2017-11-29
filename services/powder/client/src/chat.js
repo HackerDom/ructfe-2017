@@ -18,7 +18,7 @@ export class Chat extends Component {
                 >
                     <div style={{height: '70vh', display: 'block', textAlign: 'left', marginLeft: 20, paddingTop: 20}}>
                         {(this.props.conversations[this.props.history.location.pathname] || []).map((text) => (
-                            <div>text</div>                                                           
+                            <div>{text}</div>                                                           
                         ))}
                     </div>
                     <form onSubmit={this.props.onChatSubmit(this.props.history.location.pathname)}>
@@ -26,6 +26,7 @@ export class Chat extends Component {
                         style={{width: '90%'}}
                         floatingLabelText="Message"
                         fullWidth={true}
+                        value={this.props.chat[this.props.history.location.pathname]}
                         onChange={this.props.onChangeTextField(this.props.history.location.pathname)}
                     />
                     </form>
@@ -34,7 +35,10 @@ export class Chat extends Component {
 }
 Chat = connect(
 (state) => {
-    return {conversations: state.conversations}
+    return {
+        conversations: state.conversations,
+        chat: state.changes.chat
+    }
 },
 (dispatch) => {
     return {

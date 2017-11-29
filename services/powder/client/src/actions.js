@@ -338,12 +338,13 @@ export function startSendingChat() {
     }
 }
 
-export function successSendingChat(response, nickname, message) {
+export function successSendingChat(response, nickname, message, name) {
     return {
         type: SUCCESS_SENDING_CHAT,
         response: response,
         nickname: nickname,
-        message: message
+        message: message,
+        name: name         
     }
 }
 
@@ -375,7 +376,7 @@ export function submitChat(name) {
                 dispatch(showNotifications(json.errorMessage))
                 dispatch(failedSendingChat(json))
             } else {
-                dispatch(successSendingChat(json, name, state.user.nickname))
+                dispatch(successSendingChat(json, state.user.data.nickname, state.changes.chat[name], name))
             }
         })
     }

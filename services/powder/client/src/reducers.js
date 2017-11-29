@@ -129,6 +129,12 @@ function changes(state = initialState.changes, action) {
                     signupPassword: {$set: ''},
                 }
             })
+        case SUCCESS_SENDING_CHAT:
+            return update(state, {
+                chat: {
+                    [action.name]: {$set: ''}
+                }
+            })
         default:
             return state
     }
@@ -163,7 +169,9 @@ function conversations(state = initialState.conversations, action) {
     switch (action.type) {
         case SUCCESS_SENDING_CHAT:
             return update(state, {
-                [action.name]: {$push: action.nickname + " > " +action.message }
+                [action.name]: {$apply: messages => {
+                    return update(messages || [], {$push: [action.nickname + " > " + action.message]})
+                }}
             })
         default:
             return state
