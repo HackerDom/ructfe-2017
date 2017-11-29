@@ -21,7 +21,6 @@ PATH_TO_GETH_IPC = "/root/node/geth.ipc"
 PATH_TO_GETH_DIR = "/root/node/"
 PATH_TO_GENESIS_BLOCK = "/root/genesis-block.json"
 PATH_TO_GETH_LOGS = "/root/geth.log"
-JS_SCRIPTS_PATH = "/root/geth_scripts"
 
 geth_run_command = "geth " \
                    "--datadir {}" \
@@ -54,7 +53,7 @@ while not os.path.exists(PATH_TO_GETH_IPC):
 print("geth.ipc found!")
 
 
-geth_wrapper = GethController(PATH_TO_GETH_IPC, JS_SCRIPTS_PATH)
+geth_wrapper = GethController(PATH_TO_GETH_IPC)
 if not geth_wrapper.get_accounts():
     password = "qwer"
     account = geth_wrapper.create_account(password)
@@ -63,6 +62,8 @@ if not geth_wrapper.get_accounts():
             dump({"account": account.strip("\""), "password": password}, file)
     except OSError as e:
         print("Couldn't write account info! ({})".format(e))
+print("Account created")
+
 
 geth_wrapper.start_miner(1)
 print("Miner started")

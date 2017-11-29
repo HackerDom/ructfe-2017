@@ -3,9 +3,8 @@ from json import loads
 
 
 class GethController:
-    def __init__(self, ipc_path, scripts_path):
+    def __init__(self, ipc_path):
         self.__ipc_addr = ipc_path
-        self.__scripts_path = scripts_path
 
     def __run_geth_js_script(self, text_line):
         return run_raw_command(
