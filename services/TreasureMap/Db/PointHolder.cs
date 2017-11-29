@@ -22,7 +22,7 @@ namespace TreasureMap.Db
 			DataLoader.Load<Point>(path, point =>
 			{
 				if (point.Dt >= deadline)
-					DataBase.TryAdd(point.Id, point);
+					AddIntenal(point);
 			});
 
 			new PeriodicSaver<Point>(path, sleep, () =>
@@ -40,14 +40,19 @@ namespace TreasureMap.Db
 			point.Id = Interlocked.Increment(ref currentId).ToString();
 			point.Dt = DateTime.UtcNow;
 
+			AddIntenal(point);
+
+			return point.Id;
+		}
+
+		private static void AddIntenal(Point point)
+		{
 			DataBase.TryAdd(point.Id, point);
 
 			if (point.IsPublic)
 				Publics.Add(point.Id);
 
 			PerUser.AddOrUpdateLocked(point.User, point.Id);
-
-			return point.Id;
 		}
 
 		public static IEnumerable<Point> GetPublics()
