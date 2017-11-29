@@ -138,7 +138,7 @@ func (api *API) GetProfile(c echo.Context) error {
 }
 
 func (api *API) GetUsers(c echo.Context) error {
-    var users []map[string]string
+    users := make([]map[string]string, 0)
 
     api.storage.IterateUsers(func (login string, profile map[string]string) {
         profile["login"] = login
