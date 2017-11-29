@@ -2,6 +2,7 @@
 - hosts: image
   roles:
     - { role: service, service_name: raster }
+    - { role: service, service_name: PirateBay }
 
   post_tasks:
     - name: Clean apt-get

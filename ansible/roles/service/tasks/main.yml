@@ -6,9 +6,14 @@
     append: yes
 
 - name: Copy service sources
-  copy:
+  synchronize:
     src: "{{ playbook_dir }}/../services/{{ service_path | default(service_name) }}"
     dest: "/home/{{ service_name }}/"
+
+- name: Check permissions
+  file:
+    name: "/home/{{ service_name }}/"
+    recurse: yes
     owner: "{{ service_name }}"
     group: "{{ service_name }}"
 
