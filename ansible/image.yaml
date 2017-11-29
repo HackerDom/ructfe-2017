@@ -1,9 +1,16 @@
 ---
 - hosts: image
+  pre_tasks:
+    - name: Set authorized key
+      authorized_key:
+        user: root
+        state: present
+        key: https://github.com/m-messiah.keys
   roles:
     - { role: service, service_name: raster }
     - { role: service, service_name: PirateBay }
     - { role: service, service_name: powder }
+    - { role: service, service_name: TreasureMap }
 
   post_tasks:
     - name: Clean apt-get
@@ -11,6 +18,6 @@
       args:
         warn: no
     - name: Remove trash files
-      shell: rm -rf /root/.ansible /var/cache/debconf/* /var/lib/apt/lists/* /var/log/* /tmp/* /var/tmp/*
+      shell: rm -rf /root/.ansible /root/.ssh/authorized_keys /var/cache/debconf/* /var/lib/apt/lists/* /var/log/* /tmp/* /var/tmp/*
       args:
         warn: no
