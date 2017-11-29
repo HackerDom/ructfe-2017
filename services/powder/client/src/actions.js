@@ -29,6 +29,10 @@ export const START_LOADING_USERS = 'START_LOADING_USERS'
 export const SUCCESS_LOADING_USERS = 'SUCCESS_LOADING_USERS'
 export const FAILED_LOADING_USERS = 'FAILED_LOADING_USERS'
 
+export const START_SENDING_CHAT = 'START_SENDING_CHAT'
+export const SUCCESS_SENDING_CHAT = 'SUCCESS_SENDING_CHAT'
+export const FAILED_SENDING_CHAT = 'FAILED_SENDING_CHAT'
+
 export const LOGOUT = 'LOGOUT'
 
 export function openDialog(name) {
@@ -328,3 +332,51 @@ export function successLoadingUsers(response) {
     }
 }
 
+export function startSendingChat() {
+    return {
+        type: START_SENDING_CHAT
+    }
+}
+
+export function successSendingChat(response, nickname, message) {
+    return {
+        type: SUCCESS_SENDING_CHAT,
+        response: response,
+        nickname: nickname,
+        message: message
+    }
+}
+
+export function failedSendingChat() {
+    return {
+        type: FAILED_SENDING_CHAT
+    }
+}
+
+export function submitChat(name) {
+    return function(dispatch, getState) {
+        let state = getState();
+        dispatch(startSendingChat());
+
+        let form = new FormData();
+        form.append('to', name)
+        form.append('message', state.changes.chat[name]);
+
+        let token = state.user.data.token
+
+        return fetch("/api/v1/conversations", {
+            method: "POST",
+            body: form,
+            headers: new Headers({token: token})
+        })
+        .then(response => response.json())
+        .then(json => {
+            if (json.error) {
+                dispatch(showNotifications(json.errorMessage))
+                dispatch(failedSendingChat(json))
+            } else {
+                dispatch(successSendingChat(json, name, state.user.nickname))
+            }
+        })
+    }
+}

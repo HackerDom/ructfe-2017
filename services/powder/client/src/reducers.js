@@ -13,10 +13,13 @@ import {
     SUCCESS_LOADING_PROFILE,
     SUCCESS_LOADING_USERS,
     FAILED_LOADING_PROFILE,
-    APPLICATION_START
+    APPLICATION_START,
+    SUCCESS_SENDING_CHAT
 } from './actions'
 
 const initialState = {
+    conversations: {
+    },
     user: {
         authorized: false,
         data: {
@@ -39,6 +42,8 @@ const initialState = {
         profile: {
             fullname: '',
             picture: ''
+        },
+        chat: {
         }
     },
     notifications: {
@@ -154,10 +159,22 @@ function users(state = initialState.users, action) {
     }
 }
 
+function conversations(state = initialState.conversations, action) {
+    switch (action.type) {
+        case SUCCESS_SENDING_CHAT:
+            return update(state, {
+                [action.name]: {$push: action.nickname + " > " +action.message }
+            })
+        default:
+            return state
+    }
+}
+
 export const doReduce = combineReducers({
     dialogs,
     user,
     changes,
     notifications,
-    users
+    users,
+    conversations
 })

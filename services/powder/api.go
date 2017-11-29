@@ -41,6 +41,8 @@ func (api *API) Bind(group *echo.Group) {
     group.GET("/v1/user/profile", api.GetProfile)
 
     group.GET("/v1/users", api.GetUsers)
+
+    group.POST("/v1/conversations", api.UpdateConversation)
 }
 
 func (api *API) Login(c echo.Context) error {
@@ -146,6 +148,21 @@ func (api *API) GetUsers(c echo.Context) error {
 
     result := map[string]interface{}{
         "users": users,
+    }
+
+    return api.OK(c, result)
+}
+
+func (api *API) UpdateConversation(c echo.Context) error {
+    token := c.Request().Header.Get("token")
+    login, err := api.crypto.LoginFromToken(token)
+
+    if err != nil {
+        return api.Error(c, "You should login first")
+    }
+
+    result := map[string]interface{}{
+        "nickname": login,
     }
 
     return api.OK(c, result)

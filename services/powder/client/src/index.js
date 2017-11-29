@@ -30,6 +30,7 @@ persistStore(store, {}, () => {
     store.dispatch(applicationStart())
     store.dispatch(loadProfile())
     store.dispatch(loadUsers())
+    setInterval(() => store.dispatch(loadUsers()), 5000)
 })
 
 

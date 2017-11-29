@@ -1,11 +1,6 @@
 import React, { Component } from 'react';
 
-import { CardHeader, CardMedia, Card } from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
-import Paper from 'material-ui/Paper';
 import {GridList, GridTile} from 'material-ui/GridList';
-import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
-import Subheader from 'material-ui/Subheader';
 import IconButton from 'material-ui/IconButton';
 import FavoriteBorder from 'material-ui/svg-icons/action/favorite-border'
 
@@ -39,7 +34,13 @@ export class Home extends Component {
                             key={i}
                             title={user.fullname || user.login}
                             subtitle={user.login}
-                            actionIcon={<IconButton><FavoriteBorder color="white" /></IconButton>}
+                            actionIcon={<IconButton
+                                            onClick={() => {
+                                                this.props.history.push('/chat/' + user.login)
+                                            }}
+                                        >
+                                            <FavoriteBorder color="white" />
+                                        </IconButton>}
                         >
                             <img
                                 src={user.picture || noPicture}
