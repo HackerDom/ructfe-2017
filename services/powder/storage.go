@@ -1,7 +1,9 @@
 package main
 
 import (
+    "time"
     "github.com/asdine/storm"
+    "github.com/asdine/storm/q"
 )
 type Storage struct {
     db *storm.DB
@@ -12,6 +14,16 @@ type User struct {
     Properties map[string]string
     Hash []byte
     Salt []byte
+    CreatedAt time.Time `stort:"index"`
+}
+
+type Message struct {
+    Ts int `storm:"id,increment"`
+    From string `storm:"index"`
+    To string `storm:"index"`
+    Author string
+    Message string
+    SendedAt time.Time `storm:"index"`
 }
 
 func NewStorage() *Storage {
@@ -60,5 +72,24 @@ func (storage *Storage) IterateUsers(fn func(user *User)) {
 
     for _, u := range users {
         fn(&u)
+    }
+}
+
+func (storage *Storage) SaveMessage(message *Message) {
+    message.SendedAt = time.Now()
+    err := storage.db.Save(message)
+
+    if err != nil {
+        panic(err)
+    }
+}
+
+func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Message)) {
+    var messages []Message
+    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Limit(10)
+    query.Find(&messages)
+
+    for _, m := range messages {
+        fn(&m)
     }
 }

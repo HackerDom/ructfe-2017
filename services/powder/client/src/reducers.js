@@ -14,7 +14,8 @@ import {
     SUCCESS_LOADING_USERS,
     FAILED_LOADING_PROFILE,
     APPLICATION_START,
-    SUCCESS_SENDING_CHAT
+    SUCCESS_SENDING_CHAT,
+    SUCCESS_LOADING_CHAT,
 } from './actions'
 
 const initialState = {
@@ -172,6 +173,10 @@ function conversations(state = initialState.conversations, action) {
                 [action.name]: {$apply: messages => {
                     return update(messages || [], {$push: [action.nickname + " > " + action.message]})
                 }}
+            })
+        case SUCCESS_LOADING_CHAT:
+            return update(state, {
+                [action.response.name]: {$set: action.response.messages}
             })
         default:
             return state

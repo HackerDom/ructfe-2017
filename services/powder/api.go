@@ -43,6 +43,7 @@ func (api *API) Bind(group *echo.Group) {
     group.GET("/v1/users", api.GetUsers)
 
     group.POST("/v1/conversations", api.UpdateConversation)
+    group.GET("/v1/conversations", api.GetConversation)
 }
 
 func (api *API) Login(c echo.Context) error {
@@ -169,8 +170,45 @@ func (api *API) UpdateConversation(c echo.Context) error {
         return api.Error(c, "You should login first")
     }
 
+    message := Message{
+        From: login,
+        To: c.FormValue("to"),
+        Author: login,
+        Message: c.FormValue("message"),
+    }
+    api.storage.SaveMessage(&message)
+
+    message = Message{
+        From: c.FormValue("to"),
+        To: login,
+        Author: login,
+        Message: c.FormValue("message"),
+    }
+    api.storage.SaveMessage(&message)
+
+    result := map[string]interface{}{}
+
+    return api.OK(c, result)
+}
+
+func (api *API) GetConversation(c echo.Context) error {
+    token := c.Request().Header.Get("token")
+    login, err := api.crypto.LoginFromToken(token)
+
+    if err != nil {
+        return api.Error(c, "You should login first")
+    }
+
+    messages := make([]string, 0)
+    to := c.FormValue("to")
+
+    api.storage.IterateMessages(login, to, func (message *Message) {
+        messages = append(messages, fmt.Sprintf("%s > %s", message.Author, message.Message))
+    })
+
     result := map[string]interface{}{
-        "nickname": login,
+        "name": to,
+        "messages": messages,
     }
 
     return api.OK(c, result)
