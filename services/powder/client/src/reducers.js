@@ -9,7 +9,9 @@ import {
     HIDE_NOTIFICATIONS,
     SUCCESS_LOGIN,
     LOGOUT,
-    CHANGE_PROFILE_PICTURE
+    CHANGE_PROFILE_PICTURE,
+    SUCCESS_LOADING_PROFILE,
+    FAILED_LOADING_PROFILE
 } from './actions'
 
 const initialState = {
@@ -75,6 +77,7 @@ function user(state = initialState.user, action) {
                     nickname: {$set: ''},
                 },
             })
+
         default:
             return state
     }
@@ -90,6 +93,21 @@ function changes(state = initialState.changes, action) {
             return update(state, {
                 profile: {picture: {$set: action.value}}
             })
+        case SUCCESS_LOADING_PROFILE:
+            return update(state, {
+                profile: {
+                    fullname: {$set: action.response.fullname},
+                    picture: {$set: action.response.picture},
+                }
+            })
+        case FAILED_LOADING_PROFILE:
+            return update(state, {
+                profile: {
+                    fullname: {$set: ''},
+                    picture: {$set: ''},
+                },
+            })
+
         default:
             return state
     }

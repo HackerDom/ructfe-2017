@@ -128,6 +128,10 @@ func (api *API) GetProfile(c echo.Context) error {
         "nickname": login,
     }
 
+    for _, key := range []string{"fullname", "picture"} {
+        result[key] = string(api.storage.GetUserProperty(login, key))
+    }
+
     return api.OK(c, result)
 }
 

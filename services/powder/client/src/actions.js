@@ -19,6 +19,10 @@ export const START_SAVING_PROFILE = 'START_SAVING_PROFILE'
 export const SUCCESS_SAVING_PROFILE = 'SUCCESS_SAVING_PROFILE'
 export const FAILED_SAVING_PROFILE = 'FAILED_SAVING_PROFILE'
 
+export const START_LOADING_PROFILE = 'START_LOADING_PROFILE'
+export const SUCCESS_LOADING_PROFILE = 'SUCCESS_LOADING_PROFILE'
+export const FAILED_LOADING_PROFILE = 'FAILED_LOADING_PROFILE'
+
 export const LOGOUT = 'LOGOUT'
 
 export function openDialog(name) {
@@ -135,8 +139,8 @@ export function trySignUp() {
         dispatch(startSignUp())
 
         let state = getState()
-        let login = state.changes.auth.loginLogin
-        let password = state.changes.auth.loginPassword
+        let login = state.changes.auth.signupLogin
+        let password = state.changes.auth.signupPassword
         let token = state.user.data.token
 
         let form = new FormData()
@@ -225,6 +229,50 @@ export function saveProfile() {
             } else {
                 dispatch(showNotifications('Profile saved succesfully'))
                 dispatch(successSavingProfile(json))
+            }
+        })
+
+    }
+}
+
+export function startLoadingProfile() {
+    return {
+        type: START_LOADING_PROFILE
+    }
+}
+
+export function failedLoadingProfile() {
+    return {
+        type: FAILED_LOADING_PROFILE
+
+    }
+}
+
+export function successLoadingProfile(response) {
+    return {
+        type: SUCCESS_LOADING_PROFILE,
+        response: response
+    }
+}
+
+
+export function loadProfile() {
+    return function (dispatch, getState) {
+        let state = getState();
+        dispatch(startLoadingProfile());
+        let token = state.user.data.token
+
+        return fetch("/api/v1/user/profile", {
+            method: "GET",
+            headers: new Headers({token: token})
+        })
+        .then(response => response.json())
+        .then(json => {
+            if (json.error) {
+                dispatch(showNotifications(json.errorMessage))
+                dispatch(failedLoadingProfile(json))
+            } else {
+                dispatch(successLoadingProfile(json))
             }
         })
 
