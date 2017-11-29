@@ -1,0 +1,10 @@
+---
+- hosts: image
+  roles:
+    - { role: service, service_name: raster }
+
+  post_tasks:
+    - name: Clean apt-get
+      command: apt-get clean -y
+    - name: Remove trash files
+      shell: rm -rf /root/.ansible /var/cache/debconf/* /var/lib/apt/lists/* /var/log/* /tmp/* /var/tmp/* 
