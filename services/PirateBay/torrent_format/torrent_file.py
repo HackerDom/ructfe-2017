@@ -10,10 +10,10 @@ class InvalidTorrentFileError(Exception):
 
 
 class TorrentFile(Model):
-    announce = TextField(256)
+    announce = TextField(40)
     length = IntField()
     comment = TextField(50)
-    name = TextField(70)
+    name = TextField(50)
     uid = TextField(32)
     upload_by = TextField(50)
     content = TextField(long=True)

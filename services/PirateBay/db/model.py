@@ -122,6 +122,7 @@ class Model:
         db_client.connection.commit()
 
     def save(self):
+        self.turncate_fields_by_limits()
         type(self).create(**self.__dict__)
 
     @classmethod
@@ -180,3 +181,10 @@ class Model:
     @classmethod
     def initialize(cls):
         cls.create_table_if_not_exists()
+
+    def turncate_fields_by_limits(self):
+        for field_name, field_value in self.__dict__.items():
+            if type(type(self).get_fields()[field_name]) is TextField:
+                model_field = type(self).get_fields()[field_name]
+                if (not model_field.long) and (len(field_value) > model_field.max_length):
+                    setattr(self, field_name, field_value[:model_field.max_length - 3] + "...")
