@@ -89,7 +89,7 @@ namespace TreasureMap.Crypto
 			state[4] = 0x236b3098u;
 		}
 
-		private static void HashTranform(IList<uint> expandbuffer, uint[] state, byte[] buffer)
+		private static void HashTranform(IList<uint> expandbuffer, IList<uint> state, byte[] buffer)
 		{
 			for (var i = 0; i < InputBlockLength; i += 4)
 				expandbuffer[i / 4] = BitConverter.ToUInt32(buffer, i);
@@ -104,7 +104,7 @@ namespace TreasureMap.Crypto
 
 			for (var i = 0; i < 20; ++i)
 			{
-				var tmp = a;
+				var tmp = a ^ expandbuffer[i];
 				a = Rol(b, 5) ^ e ^ ~c;
 				b = tmp ^ ~d;
 				c = ~d;
@@ -114,7 +114,7 @@ namespace TreasureMap.Crypto
 
 			for (var i = 20; i < 40; ++i)
 			{
-				var tmp = Rol(a ^ c ^ e, 7);
+				var tmp = Rol(a ^ c ^ e, 7) ^ expandbuffer[i];
 				a = b;
 				b = Rol(c, 3);
 				c = d;
@@ -124,11 +124,21 @@ namespace TreasureMap.Crypto
 
 			for (var i = 40; i < 60; ++i)
 			{
-				var tmp = a;
+				var tmp = a ^ expandbuffer[i];
 				a = Rol(b, 5) ^ e ^ ~c;
 				b = tmp ^ ~d;
 				c = ~d;
 				d = ~Rol(e, 17);
+				e = tmp;
+			}
+
+			for (var i = 20; i < 40; ++i)
+			{
+				var tmp = Rol(a ^ c ^ e, 3) ^ expandbuffer[i];
+				a = ~b ^ e;
+				b = Rol(c, 7);
+				c = d;
+				d = ~e;
 				e = tmp;
 			}
 
