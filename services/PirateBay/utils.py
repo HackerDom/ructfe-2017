@@ -1,7 +1,5 @@
 from hashlib import sha512
 from base64 import b64encode
-from random import choice
-from string import hexdigits
 import pickle
 from time import time
 
