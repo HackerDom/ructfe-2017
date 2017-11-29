@@ -1,5 +1,6 @@
 import os
 import re
+import html
 
 import cherrypy
 from jinja2 import Template
@@ -42,6 +43,8 @@ class Cookie:
 
     @staticmethod
     def is_valid(cookie_uid, cookie_secret):
+        if not cookie_uid.isdigit():
+            return False
         user = User.get_user_by_id(cookie_uid)
         if user is None:
             return False
@@ -100,6 +103,10 @@ def authenticate(login, password):
 LINES_FOR_QUERY = 20
 
 
+def get_client_hash():
+    return hash((cherrypy.request.remote.ip, cherrypy.request.headers.get("User-Agent", "")))
+
+
 def error_page_404(status, message, traceback, version):
     return "404 Error!"
 
@@ -143,49 +150,67 @@ def reset_cookie():
 class RequestHandler:
     def __init__(self):
         self.templates_dict = load_templates()
-        self.error = ""
+        self.errors = {}
+
+    def set_error(self, error):
+        self.errors[get_client_hash()] = error
+
+    def reset_error(self):
+        client_hash = get_client_hash()
+        if client_hash in self.errors:
+            del self.errors[client_hash]
+
+    @property
+    def error(self):
+        return self.errors.get(get_client_hash(), "")
 
     def get_template(self, template_name):
         return self.templates_dict[template_name]
 
     @cherrypy.expose
     def signin(self, login, password):
+        login = html.escape(login)
         try:
             set_cookie(login, password)
-            self.error = ""
+            self.reset_error()
             raise cherrypy.HTTPRedirect('/')
         except UserError as user_error:
-            self.error = str(user_error)
+            self.set_error(str(user_error))
             raise cherrypy.HTTPRedirect('/signin_page')
 
     @cherrypy.expose
     def signup(self, login, password):
+        login = html.escape(login)
         try:
             register(login, password)
             set_cookie(login, password)
-            self.error = ""
+            self.reset_error()
             raise cherrypy.HTTPRedirect('/')
         except UserError as user_error:
-            self.error = user_error
+            self.set_error(user_error)
             raise cherrypy.HTTPRedirect('/signup_page')
 
     @cherrypy.expose
     def signup_page(self):
-        return self.get_template('signup.html').render(error_message=self.error)
+        rendered_template = self.get_template('signup.html').render(error_message=self.error)
+        self.reset_error()
+        return rendered_template
 
     @cherrypy.expose
     def signin_page(self):
-        return self.get_template('signin.html').render(error_message=self.error)
+        rendered_template = self.get_template('signin.html').render(error_message=self.error)
+        self.reset_error()
+        return rendered_template
 
     @cherrypy.expose
     def signout(self):
         reset_cookie()
-        self.error = ""
+        self.reset_error()
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose
     def index(self):
-        self.error = ""
+        self.reset_error()
         user = get_authorized_user()
         authed = "" if user is None else user.login
         return self.get_template('main.html').render(authed=authed)
@@ -196,7 +221,7 @@ class RequestHandler:
 
     @cherrypy.expose
     def storage(self, search_filter="", page_number=0):
-        self.error = ""
+        self.reset_error()
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect("/index")
@@ -220,7 +245,7 @@ class RequestHandler:
 
     @cherrypy.expose
     def private_storage(self, search_filter="", page_number="0"):
-        self.error = ""
+        self.reset_error()
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect('/index')
@@ -260,13 +285,13 @@ class RequestHandler:
         user_login = get_authorized_user().login
         try:
             TorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
-            self.error = ""
+            self.reset_error()
             raise cherrypy.HTTPRedirect('/storage')
         except (InvalidTorrentFileError, ValidationError) as error:
             normalized_name = upload_file.filename
             if len(normalized_name) > 25:
                 normalized_name = normalized_name[:26]
-            self.error = 'File "{}" is invalid .torrent file: {}'.format(normalized_name, error)
+            self.set_error('File "{}" is invalid .torrent file: {}'.format(normalized_name, error))
             raise cherrypy.HTTPRedirect("/upload_file")
 
     @cherrypy.expose
@@ -274,7 +299,9 @@ class RequestHandler:
         user = get_authorized_user()
         if user is None:
             raise cherrypy.HTTPRedirect('/')
-        return self.get_template('upload_file.html').render(authed=user.login, error_message=self.error)
+        rendered_template = self.get_template('upload_file.html').render(authed=user.login, error_message=self.error)
+        self.reset_error()
+        return rendered_template
 
     @cherrypy.expose
     def download(self, file_id):
@@ -315,10 +342,10 @@ class RequestHandler:
         user_login = get_authorized_user().login
         try:
             PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
-            self.error = ""
+            self.reset_error()
             raise cherrypy.HTTPRedirect('/storage')
         except (InvalidTorrentFileError, ValidationError) as error:
-            self.error = 'File "{}" is invalid .torrent file: {}'.format(upload_file.filename, error)
+            self.set_error('File "{}" is invalid .torrent file: {}'.format(upload_file.filename, error))
             raise cherrypy.HTTPRedirect("/upload_file")
 
 
