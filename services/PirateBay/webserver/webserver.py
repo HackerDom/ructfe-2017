@@ -2,6 +2,7 @@ import os
 import re
 
 import cherrypy
+import sys
 from jinja2 import Template
 
 from db.client import DBClient
@@ -87,9 +88,10 @@ def register(login, password):
 
 
 def authenticate(login, password):
+    validate_login(login)
     users = User.filter(login=login)
     if not users:
-        raise UserError("User {} doesn't exists.".format(login))
+        raise UserError("User {} doesn't exist.".format(login))
     user = users[0]
     if user.password_hash != get_base_of_hash(password):
         raise UserError("Wrong password.")
@@ -149,6 +151,8 @@ class RequestHandler:
 
     @cherrypy.expose
     def signin(self, login, password):
+        print("SIGN IN")
+        print(login)
         try:
             set_cookie(login, password)
             self.error = ""
@@ -202,7 +206,7 @@ class RequestHandler:
         else:
             authed = user.login
         if not search_filter:
-            max_page = int(TorrentFile.get_count() / LINES_FOR_QUERY)
+            max_page = TorrentFile.get_count() // LINES_FOR_QUERY
             if (int(page_number) < 0) or (int(page_number) > max_page):
                 raise cherrypy.HTTPError(404)
         else:
@@ -230,7 +234,7 @@ class RequestHandler:
                 upload_by=user.login
             )
         else:
-            max_page = int(len(PrivateTorrentFile.filter(upload_by=user.login)) / LINES_FOR_QUERY)
+            max_page = len(PrivateTorrentFile.filter(upload_by=user.login)) // LINES_FOR_QUERY
             files = PrivateTorrentFile.filter(
                 lower_bound=int(page_number) * LINES_FOR_QUERY,
                 count=LINES_FOR_QUERY,
@@ -322,3 +326,4 @@ def start_web_server():
     with DBClient():
         request_handler = RequestHandler()
         cherrypy.quickstart(request_handler, '/', config='webserver/webserver.config')
+
