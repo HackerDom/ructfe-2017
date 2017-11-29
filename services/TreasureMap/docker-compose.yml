@@ -1,0 +1,9 @@
+version: '3'
+services:
+  treasuremap:
+    build: .
+    volumes:
+      - .:/home/TreasureMap
+    ports:
+      - "7483:7483"
+    restart: on-failure
