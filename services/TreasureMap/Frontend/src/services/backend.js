@@ -1,31 +1,39 @@
+import { stringify } from "querystring";
 import { normalize, schema } from "normalizr";
 
 const point = new schema.Entity("point");
 const points = new schema.Array(point);
 
+const _fetch = async url => {
+  return fetch(url, {
+    credentials: "includes"
+  });
+};
+
 export const fetchData = async () => {
-  const data = [
-    {
-      id: "abc",
-      x: "60.594486",
-      y: "56.836739",
-      message: Date.now().toString(),
-      user: "1",
-      public: true
-    },
-    {
-      id: "dfe",
-      x: "60.594486",
-      y: "56.836739",
-      message: Date.now().toString(),
-      user: "1",
-      public: true
-    }
-  ];
-  return normalize(data, points).entities.point;
+  return Promise.all([_fetch("/api/publics"), _fetch("/api/points")])
+    .then(([publics, privates]) => {
+      let data = [...publics, ...privates];
+      return normalize(data, points).entities.point;
+    })
+    .then(() => []);
 };
 
 export const putNewPoint = async data => {
   // типа айдишник
   return Date.now().toString();
+};
+
+export const login = async (user, password) => {
+  console.log(user);
+
+  return fetch("/api/login", {
+    body: stringify({ user, password }),
+    method: "POST",
+    credentials: "includes"
+  })
+    .then(res => {
+      return !!res.ok;
+    })
+    .catch(e => false);
 };

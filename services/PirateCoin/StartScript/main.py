@@ -22,14 +22,14 @@ def get_local_ip():
 
 PATH_TO_GETH_IPC = "/root/node/geth.ipc"
 PATH_TO_GETH_DIR = "/root/node/"
-PATH_TO_GENESIS_BLOCK = "/root/genesis-block.json"
+PATH_TO_GENESIS_BLOCK = "/home/PirateCoin/genesis-block.json"
 PATH_TO_GETH_LOGS = "/root/geth.log"
 PATH_TO_ETHASH = "/root/.ethash/"
 
 geth_run_command = "geth " \
                    "--datadir {}" \
                    " --networkid 31337" \
-                   " --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi 'db,eth,net,web3,personal'"\
+                   " --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpcapi 'db,eth,net,web3,personal'"\
                    " --port 30303" \
                    " --netrestrict '10.60.0.0/14,10.80.0.0/14,10.10.0.0/16'"\
                    " --maxpeers 30"\

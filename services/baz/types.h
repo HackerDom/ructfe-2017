@@ -62,3 +62,5 @@ void strncat(char *str1, const char *str2, uint64 n);
 bool to_string(int64 value, char *buffer, int64 buffer_length);
 
 void memzero(void *data, int64 length);
+
+bool to_string_hex(uint64 value, char *buffer, int64 buffer_length);

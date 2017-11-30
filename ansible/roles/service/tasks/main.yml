@@ -7,7 +7,7 @@
 
 - name: Copy service sources
   synchronize:
-    src: "{{ playbook_dir }}/../services/{{ service_path | default(service_name) }}"
+    src: "{{ playbook_dir }}/../services/{{ service_path | default(service_name) }}/"
     dest: "/home/{{ service_name }}/"
 
 - name: Check permissions
