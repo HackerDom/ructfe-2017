@@ -138,8 +138,8 @@ def close(code, public="", private="", fileToRemove=""):
 
 ##
 def add_ship( addr, bin_file ):
-	pos_x = int( random.uniform( -1000000, 1000000 ) );
-	pos_z = int( random.uniform( -1000000, 1000000 ) );
+	pos_x = int( random.uniform( -2000000, 2000000 ) );
+	pos_z = int( random.uniform( -2000000, 2000000 ) );
 	rot_y = 0#random.uniform( 0, 3.1415926 );
 	
 	url = 'http://%s/add_ship?pos_x=%f&pos_z=%f&rot_y=%f' % ( addr, pos_x, pos_z, rot_y )
