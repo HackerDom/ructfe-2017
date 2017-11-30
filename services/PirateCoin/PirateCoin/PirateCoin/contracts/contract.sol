@@ -22,10 +22,10 @@ contract Bank{
 
   function withdrawBalance() {
     var amountToWithdraw = userBalances[msg.sender];
-        if(amountToWithdraw == 0)
+    if(amountToWithdraw == 0)
       return;
     require(msg.sender.call.value(amountToWithdraw)());
-    totalBankBalance -= amountToWithdraw;
+    totalBankBalance -= userBalances[msg.sender];
 	userBalances[msg.sender] = 0;
   }
 }
