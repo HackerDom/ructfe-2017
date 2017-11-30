@@ -390,7 +390,7 @@ func MessageToRank(messageAndNick string) int {
     if strings.HasPrefix(message, "Today") {
         return 5
     }
-    if strings.HasPrefix(message, "Today") {
+    if strings.HasPrefix(message, "Hi") {
         return 6
     }
     return 7
@@ -403,7 +403,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
     if err != nil {
         return "", err, code
     }
-    time.Sleep(5 * time.Second)
+    time.Sleep(6 * time.Second)
     messages, err, code := server.GetMessages(alice, bob.Login)
     if err != nil {
         return "", err, code
@@ -411,7 +411,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
 
     lastAnswer := MessageToRank(messages[len(messages) - 1])
 
-    for {
+    for i := 0; i < 20; i++ {
         err, code = server.SendMessage(alice, bob.Login, step)
         if err != nil {
             return "", err, code
@@ -423,6 +423,11 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
         }
 
         answer := MessageToRank(messages[len(messages) - 1])
+        fmt.Println(lastAnswer, answer)
+        if answer == 7 {
+            return "", errors.New("Strange response"), MUMBLE
+        }
+
         if answer == 0 {
             parts := strings.Split(messages[len(messages) - 1], " ")
             return parts[len(parts) - 1], nil, OK
@@ -438,7 +443,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
 
         lastAnswer = answer
     }
-
+    return "", nil, OK
 }
 
 func Check(args []string) int {
@@ -470,6 +475,10 @@ func Check(args []string) int {
     prime1, err, code := FindPrime1(server, alice, bob)
     if err != nil {
         return code
+    }
+
+    if prime1 == "" {
+        return OK
     }
 
     profile, err, code := server.GetProfile(bob)
