@@ -22,9 +22,20 @@ namespace TreasureMap.Handlers
 
 			var user = CredentialsHolder.GetUser(credentials.Login);
 			var hash = CredentialsHolder.GetPassHashed(credentials.Login, credentials.Password);
-			if (user == null || hash != user.Hash)
+			if (user == null)
 			{
-				context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				if (!CredentialsHolder.AddUser(credentials.Login, hash))
+				{
+					context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+					return;
+				}
+				context.SetLoginCookie(credentials.Login);
+				return;
+			}
+
+			if (user.Hash != hash)
+			{
+				context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
 				return;
 			}
 
