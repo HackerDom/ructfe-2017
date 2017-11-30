@@ -1,6 +1,6 @@
 
 
-GETH_RPC_PATH = "10.10.10.101"
+GETH_RPC_PATH = "127.0.0.1"
 ACCOUNT_ID = "0x3790ef2e127fd21fc844a899f8955252b9ddd433"  # todo re-generate it
 ACCOUNT_PASSWORD = "qwer"
 SERVICE_FIRST_CONTRACT_ADDR_URL = "http://{}/latestContract"

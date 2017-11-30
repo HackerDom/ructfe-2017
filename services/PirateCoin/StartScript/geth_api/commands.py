@@ -14,6 +14,9 @@ class GethController:
     def get_current_block(self):
         return self.__run_geth_js_script("eth.blockNumber")
 
+    def get_current_miner_hashrate(self):
+        return int(self.__run_geth_js_script("miner.getHashrate()"))
+
     def stop_miner(self):
         return self.__run_geth_js_script("miner.stop()")
 
