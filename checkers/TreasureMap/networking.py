@@ -117,8 +117,8 @@ class State:
 
 	async def put_point(self, x = None, y = None, message = None, is_public = None, user = None):
 		point = {
-			'x' : checker.get_value_or_rand_string(x, 13), 
-			'y' : checker.get_value_or_rand_string(y, 13), 
+			'x' : checker.get_value_or_rand_string(x, 13, checker.printable), 
+			'y' : checker.get_value_or_rand_string(y, 13, checker.printable), 
 			'message' : checker.get_value_or_rand_string(message, 50), 
 			'public' : is_public if is_public is not None else random.choice([True, False])}
 		point['id'] = await self.post('/api/add', point)

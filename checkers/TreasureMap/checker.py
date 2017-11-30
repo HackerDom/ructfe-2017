@@ -7,6 +7,8 @@ import string
 import json
 import asyncio
 
+printable = string.digits + string.ascii_letters + string.punctuation
+
 def ructf_error(status=110, message=None, error=None, exception=None):
 	if message:
 		sys.stdout.write(message)

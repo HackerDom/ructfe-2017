@@ -64,8 +64,8 @@ async def check_one(username, sender, viewer, is_public):
 
 def get_rand_point():
 	return {
-			'x' : checker.get_rand_string(13), 
-			'y' : checker.get_rand_string(13)
+			'x' : checker.get_rand_string(13, checker.printable),
+			'y' : checker.get_rand_string(13, checker.printable)
 	}
 
 def equal_points(p1, p2):
