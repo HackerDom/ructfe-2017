@@ -84,7 +84,7 @@ class State:
 	async def register(self, username=None, password=None):
 		can_retry = username is None
 		request = {'user': checker.get_value_or_rand_string(username, 8), 'password': checker.get_value_or_rand_string(password, 16)}
-		status, text = await self.post('/api/register', request, need_check_status = False)
+		status, text = await self.post('/api/login', request, need_check_status = False)
 		if status == 200:
 			return request['user'], request['password']
 		if status == 400 and can_retry:
