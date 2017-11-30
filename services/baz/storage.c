@@ -179,9 +179,9 @@ char * list_items(uint64 skip, uint64 take, char *buffer, uint64 length)
 	uint64 i;
 	for (i = skip; i < skip + take; i++)
 	{
-		if (i >= current_item)
-			break;
-		strncat(buffer, slots[i + 1].key, 32);
+		int64 idx = (current_item + MAXITEMS - i) % MAXITEMS;
+
+		strncat(buffer, slots[idx].key, 32);
 		strcat(buffer, "\n");
 	}
 
@@ -235,10 +235,10 @@ char * encode_flag(const char *recipe, char *buffer)
 
 	uint192 n = expand(0);
 
-	char buf[32];
+	char buf[64];
 	buf[0] = 0;
 	char *bptr = buf;
-	while (*recipe && bptr < buf + sizeof(buf))
+	while (*recipe && bptr < buf + sizeof(buf)) // TODO check recipe length
 	{
 		char c = *recipe;
 		if (c == ',' || !recipe[1])
@@ -259,7 +259,7 @@ char * encode_flag(const char *recipe, char *buffer)
 			if (i >= CSPIRITS)
 				return 0;
 
-			n = multiply(n, MAXRECIPE);
+			n = multiply(n, CSPIRITS);
 			n = add(n, i);
 
 			buf[0] = 0;
@@ -276,27 +276,30 @@ char * encode_flag(const char *recipe, char *buffer)
 	n = not(n);
 	n = xor(n, magic);
 	
-	buffer[32] = 0;
-	buffer[31] = '=';
-	buffer += 30;
 	uint64 length = 0;
-	while (!is_zero(n) && length < 31)
+	while (!is_zero(n) && length < sizeof(buf))
 	{
 		uint32 rem;
 		n = divmod(n, 36, &rem);
-		*buffer = rem > 9 ? 'A' + rem - 10 : '0' + rem;
-		buffer--;
+		buf[length] = rem > 9 ? 'A' + rem - 10 : '0' + rem;
 		length++;
 	}
 
 	while (length < 31)
 	{
-		*buffer = '0';
-		buffer--;
+		buf[length] = '0';
 		length++;
 	}
 
-	return buffer + 1;
+	buffer[32] = 0;
+	buffer[31] = '=';
+	uint64 i;
+	for (i = 0; i < 31; i++)
+	{
+		buffer[i] = buf[--length];
+	}
+
+	return buffer;
 }
 
 char * hash_flag(const char *flag, char *buffer)
