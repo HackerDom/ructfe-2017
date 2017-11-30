@@ -276,6 +276,8 @@ func Info(args []string) int {
 }
 
 func Check(args []string) int {
+    alice := &User{login: RandomString(5), password: RandomString(5)}
+    bob := &User{login: RandomString(5), password: RandomString(5)}
     return OK
 }
 

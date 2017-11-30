@@ -115,6 +115,10 @@ func (api *API) SaveProfile(c echo.Context) error {
     }
 
     user := api.storage.GetUser(login)
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
+
     for key := range params {
         value := params.Get(key)
         if key == "address" {
@@ -141,6 +145,10 @@ func (api *API) GetProfile(c echo.Context) error {
     }
 
     user := api.storage.GetUser(login)
+
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
 
     for key := range user.Properties {
         value := user.Properties[key]
