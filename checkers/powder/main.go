@@ -12,6 +12,7 @@ import (
     "encoding/hex"
     "os"
     "time"
+    "math/big"
 )
 
 type Server struct {
@@ -395,6 +396,51 @@ func MessageToRank(messageAndNick string) int {
     return 7
 }
 
+func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
+    step := "l"
+
+    err, code := server.SendMessage(alice, bob.Login, step)
+    if err != nil {
+        return "", err, code
+    }
+    time.Sleep(5 * time.Second)
+    messages, err, code := server.GetMessages(alice, bob.Login)
+    if err != nil {
+        return "", err, code
+    }
+
+    lastAnswer := MessageToRank(messages[len(messages) - 1])
+
+    for {
+        err, code = server.SendMessage(alice, bob.Login, step)
+        if err != nil {
+            return "", err, code
+        }
+        time.Sleep(1100 * time.Millisecond)
+        messages, err, code = server.GetMessages(alice, bob.Login)
+        if err != nil {
+            return "", err, code
+        }
+
+        answer := MessageToRank(messages[len(messages) - 1])
+        if answer == 0 {
+            parts := strings.Split(messages[len(messages) - 1], " ")
+            return parts[len(parts) - 1], nil, OK
+        }
+
+        if lastAnswer - answer < 0 {
+            if step == "l" {
+                step = "o"
+            } else {
+                step = "l"
+            }
+        }
+
+        lastAnswer = answer
+    }
+
+}
+
 func Check(args []string) int {
     if len(args) != 1 {
         return CHECKER_ERROR
@@ -421,42 +467,30 @@ func Check(args []string) int {
         return code
     }
 
-    step := "l"
-
-    err, code = server.SendMessage(alice, bob.Login, step)
-    if err != nil {
-        return code
-    }
-    time.Sleep(6 * time.Second)
-    messages, err, code := server.GetMessages(alice, bob.Login)
+    prime1, err, code := FindPrime1(server, alice, bob)
     if err != nil {
         return code
     }
 
-    lastAnswer := MessageToRank(messages[len(messages) - 1])
+    profile, err, code := server.GetProfile(bob)
+    if err != nil {
+        return code
+    }
 
-    for i := 0; i < 10; i++ {
-        err, code = server.SendMessage(alice, bob.Login, step)
-        if err != nil {
-            return code
-        }
-        time.Sleep(2 * time.Second)
-        messages, err, code = server.GetMessages(alice, bob.Login)
-        if err != nil {
-            return code
-        }
+    if prime1 != profile["prime1"] {
+        return MUMBLE
+    }
 
-        answer := MessageToRank(messages[len(messages) - 1])
-        if answer == 0 {
-            fmt.Println(messages[len(messages) - 1])
-            break
-        }
-        if lastAnswer - answer < 0 {
-            step = "o"
-        }
+    publicInt := big.NewInt(0)
+    prime1Int := big.NewInt(0)
 
-        fmt.Println(lastAnswer, answer)
-        lastAnswer = answer
+    publicInt.SetString(profile["public"], 10)
+    prime1Int.SetString(prime1, 10)
+
+    prime1Int.Mod(publicInt, prime1Int)
+
+    if prime1Int.String() != "0" {
+        return MUMBLE
     }
 
     return OK
