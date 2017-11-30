@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "time"
     "crypto/md5"
     "io"
@@ -19,9 +20,9 @@ func NewBot(user *User) *Bot {
 }
 
 func SetupAutoReply(storage *Storage) {
-    storage.IterateUsers(0, "", func (user *User) {
+    storage.IterateUsers(0, "", func (user User) {
         if user.AutoReply {
-            StartBot(user, storage)
+            StartBot(&user, storage)
         }
     })
 }

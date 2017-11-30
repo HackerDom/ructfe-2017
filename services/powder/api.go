@@ -163,7 +163,7 @@ func (api *API) GetUsers(c echo.Context) error {
         limit = parsedLimit
     }
 
-    api.storage.IterateUsers(limit, re, func (user *User) {
+    api.storage.IterateUsers(limit, re, func (user User) {
         properties := make(map[string]string)
 
         for _, key := range []string{"fullname", "picture", "public", "address"} {
@@ -221,7 +221,7 @@ func (api *API) GetConversation(c echo.Context) error {
     messages := make([]string, 0)
     to := c.FormValue("to")
 
-    api.storage.IterateMessages(login, to, func (message *Message) {
+    api.storage.IterateMessages(login, to, func (message Message) {
         messages = append(messages, fmt.Sprintf("%s > %s", message.Author, message.Message))
     })
 
