@@ -1,13 +1,15 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
-using PirateCoin;
+using Nethereum.Hex.HexTypes;
+using Nethereum.Web3;
+using System.Numerics;
 using PirateCoin.http;
 
 namespace BlackMarket
@@ -20,7 +22,7 @@ namespace BlackMarket
 			try
 			{
 				stateManager = new StateManager("state.json");
-				transactionChecker = new TransactionChecker(null, Settings.ParityRpcUrl);
+				transactionChecker = new TransactionChecker(bankContractAbiFilepath, bankAttackerContractAbiFilepath, Settings.ParityRpcUrl);
 
 				var httpServer = new HttpServer(port);
 				httpServer
@@ -72,33 +74,50 @@ namespace BlackMarket
 
 			var requestIp = context.Request.RemoteEndPoint.Address.ToString();
 			var hackerIp = flagsData.FirstOrDefault(data => data.hackerIp != null)?.hackerIp;
-			if(IsSameTeam(requestIp, hackerIp))
-			{
-				await context.WriteStringAsync(flags);
-				return;
-			}
-
 			if(hackerIp != null)
 			{
-				context.Close((int)HttpStatusCode.Gone);
+				if(IsSameTeam(requestIp, hackerIp))
+					await context.WriteStringAsync(flags);
+				else
+					context.Close((int)HttpStatusCode.Gone);
 				return;
 			}
 
-			//NOTE race condition, but it's ok. just giving concurrnt hackers their flags
-			var hackerContractAddr = await transactionChecker.FindHackerContractAddr(transaction, contractAddr, flagsData.First().sum);
-			if(hackerContractAddr !=  null)
+			var isContactBalanceHacked = await transactionChecker.CheckContractBalanceIsHacked(contractAddr);
+			if(!isContactBalanceHacked)
 			{
-				foreach(var flagData in flagsData)
-				{
-					flagData.hackerIp = requestIp;
-					stateManager.Insert(flagData);
-				}
-				await context.WriteStringAsync(flags);
+				context.Close((int)HttpStatusCode.Unauthorized);
 				return;
 			}
 
-			context.Close((int)HttpStatusCode.Unauthorized);
+			//NOTE race condition, but it's ok. just giving concurrent hackers their flags
+			var hackerContractAddr = await transactionChecker.CheckTransactionAndFindHackerContractAddr(transaction, contractAddr, flagsData.First().sum);
+			if(hackerContractAddr ==  null)
+			{
+				context.Close((int)HttpStatusCode.Unauthorized);
+				return;
+			}
+
+			var hackerContractOwnerIp = await transactionChecker.FindHackerContractOwnerIp(hackerContractAddr);
+			if(hackerContractOwnerIp == null || !IsSameTeam(requestIp, hackerContractOwnerIp))
+			{
+				context.Close((int)HttpStatusCode.Unauthorized);
+				return;
+			}
+
+
+			foreach(var flagData in flagsData)
+			{
+				flagData.hackerIp = requestIp;
+				stateManager.Insert(flagData);
+			}
+			await context.WriteStringAsync(flags);
 		}
+
+		const string bankContractAbiFilepath = "contracts/bank.abi.json";
+		const string bankAttackerContractAbiFilepath = "contracts/bankAttacker.abi.json";
+
+		
 
 		private static bool IsSameTeam(string ipA, string ipB)
 		{
