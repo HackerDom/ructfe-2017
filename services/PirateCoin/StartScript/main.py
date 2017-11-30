@@ -23,11 +23,11 @@ STATIC_BOOTNODES = [
     "enode://f7c62f793afbb6cb9667f1b8c4e0f527422b4b95713a79e17d20e1c4a5a81ff48c6564501118a9531adf5e92f011604ff224f559484172f09daa6884a84a10d3@10.10.10.101:1337"
 ]
 DYNAMIC_BOOTNODES = "http://10.10.10.101/bootnodes.json"
-PATH_TO_GETH_IPC = "/root/node/geth.ipc"
-PATH_TO_GETH_DIR = "/root/node/"
+PATH_TO_GETH_IPC = "/home/PirateCoin/node/geth.ipc"
+PATH_TO_GETH_DIR = "/home/PirateCoin/node/"
 PATH_TO_GENESIS_BLOCK = "/home/PirateCoin/genesis-block.json"
-PATH_TO_GETH_LOGS = "/root/geth.log"
-PATH_TO_ETHASH = "/root/.ethash/"
+PATH_TO_GETH_LOGS = "/home/PirateCoin/geth.log"
+PATH_TO_ETHASH = "/home/PirateCoin/.ethash/"
 
 
 try:
