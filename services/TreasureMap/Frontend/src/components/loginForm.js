@@ -35,7 +35,7 @@ export default user => {
   }
 
   if (user) {
-    document.querySelector(".userForm");
+    wrapper.innerText = "";
   } else {
     return wrapper;
   }
