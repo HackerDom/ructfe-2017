@@ -3,6 +3,7 @@ import * as actions from "./actionsNames";
 import { fetchData as fetchDataService } from "../services/backend";
 
 const dataFetched = createAction(actions.DATA_FETCHED);
+export const createPoint = createAction(actions.CREATE_POINT);
 const dataFetchedFail = createAction(actions.DATA_FETCHED + actions.FAIL);
 
 export const fetchData = () => {

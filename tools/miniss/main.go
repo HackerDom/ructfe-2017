@@ -59,12 +59,21 @@ func NewTSS(checker string, hostname string) *TSS {
 }
 
 func (ss *TSS) Exec(action *TAction) {
-    out, err := exec.Command(ss.Checker,
-                             action.Type,
-                             ss.Hostname,
-                             action.Case.Id,
-                             action.Case.Flag,
-                             action.Case.Vuln).Output()
+    var out []byte
+    var err error
+
+    if action.Type != "CHECK" {
+        out, err = exec.Command(ss.Checker,
+                                 action.Type,
+                                 ss.Hostname,
+                                 action.Case.Id,
+                                 action.Case.Flag,
+                                 action.Case.Vuln).Output()
+    } else {
+        out, err = exec.Command(ss.Checker,
+                                 action.Type,
+                                 ss.Hostname).Output();
+    }
 
     fmt.Printf("%s %s %s %s %s\n", action.Type,
                                    ss.Hostname,
@@ -119,6 +128,20 @@ func (ss *TSS) MakeRandomGet() {
     ss.MakeGet(randomAction)
 }
 
+func (ss *TSS) MakeCheck() {
+    action := &TAction{
+        Type: "CHECK",
+        Case: NewCase(),
+    }
+    action.Case.Id = ""
+    action.Case.Flag = ""
+    action.Case.Vuln = ""
+
+    ss.Exec(action)
+    ss.Stats[action.Case.StatusCode] += 1
+    ss.History = append(ss.History, action)
+}
+
 func main() {
     if len(os.Args) != 4 {
         return
@@ -133,6 +156,7 @@ func main() {
         go func() {
             for {
                 ss.MakePut()
+                ss.MakeCheck()
                 ss.MakeRandomGet()
 
                 for statusCode, count := range ss.Stats {

@@ -73,7 +73,7 @@ func (crypto *Crypto) MakeToken(login string) string {
         panic(err)
     }
 
-    rand.Seed(time.Now().Unix() / (60 * 60 * 24))
+    rand.Seed(time.Now().Unix() / 60)
 
     mac := hmac.New(sha256.New, crypto.masterKey)
     loginBytes := []byte(login)
