@@ -11,6 +11,7 @@
     - { role: service, service_name: PirateBay }
     - { role: service, service_name: powder }
     - { role: service, service_name: TreasureMap }
+    - { role: service, service_name: PirateCoin }
 
   post_tasks:
     - name: Clean apt-get
