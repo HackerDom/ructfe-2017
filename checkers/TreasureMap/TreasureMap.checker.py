@@ -8,6 +8,7 @@ import random
 import json
 import time
 import asyncio
+import string
 
 PORT = 7483
 
@@ -50,8 +51,7 @@ async def get_point_with_flag(hostname, username, password, id):
 FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
 
 async def check_one(username, sender, viewer, is_public):
-	point = await sender.put_point(is_public = True)
-	point['user'] = username
+	point = await sender.put_point(is_public=True, user=username)
 	if is_public:
 		points = await viewer.get_public_points()
 	else:
@@ -62,18 +62,67 @@ async def check_one(username, sender, viewer, is_public):
 		checker.mumble(error='can\'t find point with id "{}" in {} points'.format(point['id'], 'public' if is_public else 'private'))
 	compare(point, p, FIELDS)
 
+def get_rand_point():
+	return {
+			'x' : checker.get_rand_string(13), 
+			'y' : checker.get_rand_string(13)
+	}
+
+def equal_points(p1, p2):
+	return p1['x'] == p2['x'] and p1['y'] == p2['y']
+
+def is_between_str(l, r, p):
+	return l <= p <= r or l >= p >= r
+
+def is_between(l, r, p):
+	return l['x'] == p['x'] == r['x'] and is_between(l['y'], r['y'], p['y']) or l['y'] == p['y'] == r['y'] and is_between(l['x'], r['x'], p['x'])
+
+
+async def check_path(username, sender, another, aname):
+	responses = []
+	for i in range(random.randint(3, 7)):
+		responses.append(await sender.put_point(user=username))
+	for i in range(random.randint(3, 7)):
+		responses.append(await another.put_point(is_public=True, user=aname))
+	check_points_list(responses, FIELDS)
+
+	start = get_rand_point()
+	finish = get_rand_point()
+
+	ids = [point['id'] for point in responses]
+
+	path = await sender.get_path(start, finish, ids)
+	check_points_list(path, ['x', 'y'])
+	if len(path) == 0:
+		checker.mumble(error='path must contains at least one point')
+	if not equal_points(path[0], start):
+		checker.mumble(error='start point is bad: {} vs {}'.format(start, path[0]))
+	if not equal_points(path[-1], start):
+		checker.mumble(error='finish point is bad: {} vs {}'.format(finish, path[-1]))
+
+	for p in responses:
+		for i in range(1, len(path)):
+			if is_between(path[i - 1], path[i], p):
+				break
+		else:
+			checker.mumble(error='point {} not in path {}'.format(p, path))
+
+
 async def handler_check(hostname):
 
-	for i in range(2):
-		viewer = State(hostname, PORT)
-		state = State(hostname, PORT)
-		await viewer.register()
-		username, password = await state.register()
-		tasks = []
+	viewer = State(hostname, PORT)
+	state = State(hostname, PORT)
+	auser, apass = await viewer.register()
+	username, password = await state.register()
+	tasks = []
 
-		tasks.append(asyncio.ensure_future(check_one(username, state, viewer, True)))
-		tasks.append(asyncio.ensure_future(check_one(username, state, state, False)))
-		await asyncio.gather(*tasks)
+	await check_one(username, state, viewer, True)
+	await check_one(username, state, state, False)
+	await check_path(username, state, viewer, auser)
+#	tasks.append(asyncio.ensure_future(check_one(username, state, viewer, True)))
+#	tasks.append(asyncio.ensure_future(check_one(username, state, state, False)))
+#	tasks.append(asyncio.ensure_future(check_path(username, state, viewer, auser)))
+#	await asyncio.gather(*tasks)
 
 	checker.ok()
 
