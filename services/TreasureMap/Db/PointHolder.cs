@@ -65,6 +65,11 @@ namespace TreasureMap.Db
 			return PerUser.GetClonedList(login).EmptyIfNull().Select(id => DataBase.GetOrDefault(id)).WhereNotNull();
 		}
 
+		public static Point GetPoint(string id)
+		{
+			return DataBase.GetOrDefault(id);
+		}
+
 		private static void Gc(int ttl, int sleep)
 		{
 			while (true)

@@ -53,7 +53,7 @@ namespace TreasureMap.Handlers
 			   && point.User == null
 			   && point.Id == null;
 
-		private static bool IsCorrentCoordinate(string str)
+		public static bool IsCorrentCoordinate(string str)
 			=> str != null && str.Length >= 0 && str.Length <= CoordinateLength && str.AllSymbolsAsciiPrinted();
 
 		private static bool IsCorrectMessage(string message)
