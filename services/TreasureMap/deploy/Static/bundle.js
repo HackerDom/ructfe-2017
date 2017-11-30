@@ -3859,10 +3859,13 @@ const _fetch = async url => {
 };
 
 const fetchData = async () => {
-  return Promise.all([_fetch("/api/publics"), _fetch("/api/points")]).then(([publics, privates]) => {
+  try {
+    let [publics, privates] = await Promise.all([_fetch("/api/publics"), _fetch("/api/points")]);
     let data = [...publics, ...privates];
     return (0, _normalizr.normalize)(data, points).entities.point;
-  }).then(() => []);
+  } catch (e) {
+    return [];
+  }
 };
 
 exports.fetchData = fetchData;
@@ -3875,17 +3878,19 @@ const putNewPoint = async data => {
 exports.putNewPoint = putNewPoint;
 
 const login = async (user, password) => {
-  console.log(user);
-  return fetch("/api/login", {
-    body: (0, _querystring.stringify)({
-      user,
-      password
-    }),
-    method: "POST",
-    credentials: "includes"
-  }).then(res => {
+  try {
+    let res = fetch("/api/login", {
+      body: JSON.stringify({
+        user,
+        password
+      }),
+      method: "POST",
+      credentials: "includes"
+    });
     return !!res.ok;
-  }).catch(e => false);
+  } catch (e) {
+    return false;
+  }
 };
 
 exports.login = login;
@@ -8819,9 +8824,32 @@ exports.addPointToMap = addPointToMap;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getCoordinatesFromPoint = void 0;
+exports.getCoordinatesFromPoint = exports.decodeCoordinates = exports.encodeCoordinates = void 0;
 
-const getCoordinatesFromPoint = point => point;
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+const encodeCoordinates = coord => coord;
+
+exports.encodeCoordinates = encodeCoordinates;
+
+const decodeCoordinates = coord => coord;
+
+exports.decodeCoordinates = decodeCoordinates;
+
+const getCoordinatesFromPoint = (_ref) => {
+  let {
+    x,
+    y
+  } = _ref,
+      rest = _objectWithoutProperties(_ref, ["x", "y"]);
+
+  return _extends({
+    x: decodeCoordinates(x),
+    y: decodeCoordinates(y)
+  }, rest);
+};
 
 exports.getCoordinatesFromPoint = getCoordinatesFromPoint;
 

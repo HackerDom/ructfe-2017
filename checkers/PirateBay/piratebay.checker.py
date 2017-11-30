@@ -57,6 +57,7 @@ def put(hostname, flag_id, flag, vuln):
             hostname=hostname,
             password=password,
             login=login,
+            timeout=15,
         ), headers=generate_headers())
         cookies = auth(hostname, login, password)
         register_request.raise_for_status()
@@ -69,6 +70,7 @@ def put(hostname, flag_id, flag, vuln):
                 cookies=cookies,
                 files=files,
                 headers=generate_headers(),
+                timeout=15,
             )
             upload_request.raise_for_status()
     except ConnectionError as error:
@@ -97,10 +99,13 @@ def get(hostname, flag_id, flag, _):
         flag_pattern = re.compile("<td>{}</td>.*?<td>(.*?)</td>".format(name), re.DOTALL)
         matching = flag_pattern.search(content)
         if matching is None:
+            print_to_stderr("No matching with flag pattern, hostname: {}".format(hostname))
             exit(CORRUPT)
         if len(matching.groups()) == 0:
+            print_to_stderr("Empty matching with flag pattern, hostname: {}".format(hostname))
             exit(CORRUPT)
         if matching.group(1) != flag:
+            print_to_stderr("Mismatch with exact flag={}, hostname: {}".format(flag, hostname))
             exit(CORRUPT)
     except (ConnectionError, ConnectionRefusedError) as error:
         print_to_stderr("Connection error: hostname: {}, error: {}".format(hostname, error))
