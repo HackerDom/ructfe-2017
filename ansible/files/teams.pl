@@ -25,7 +25,7 @@ for (@$teams) {
   print "{name => '$_->{name}', network => '$net', host => '$ip', "
     . "logo => 'https://ructfe.org$_->{logo}', token => '$_->{checker_token}', country => '$_->{country}',";
 
-  if ($team_id > 255) {
+  if ($team_id > 355) {
     print "bot => [";
     my $bot = [];
     for (1 .. 6) {
