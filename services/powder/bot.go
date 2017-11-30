@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "time"
     "crypto/md5"
     "io"
@@ -53,10 +52,7 @@ func (bot *Bot) Listen(message *Message) {
         bot.goals[message.Author] = goal
     }
 
-    fmt.Println(g)
     goal.Update(g)
-
-    fmt.Printf("%v %f\n", goal, goal.HowFar())
 }
 
 func addMessage(user *User, to string, message string, messages []*Message) []*Message {
@@ -92,9 +88,14 @@ func (bot *Bot) Say(message *Message) []*Message {
         bot.goals[message.Author] = goal
     }
 
+    address, ok := user.Properties["address"]
+    if !ok {
+        address = "Moscow, Red Square, 1"
+    }
+
     messages = addMessage(user,
                           message.Author,
-                          goal.Status(user, "goal"),
+                          goal.Status(user, address),
                           messages)
 
     return messages

@@ -28,7 +28,7 @@ func (goal *Goal) HowFar() float32 {
 func (goal *Goal) Status(user *User, message string) string {
     howFar := goal.HowFar()
     if howFar < 0.001 {
-        return fmt.Sprintf("OK, I'll give what you want tonight: %s", message)
+        return fmt.Sprintf("OK, I'll give what you want tonight. Let's meet here — %s", message)
     }
     if howFar < 0.01 {
         return fmt.Sprintf("I don't know, maybe we should meet each other.")
