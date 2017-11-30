@@ -86,7 +86,7 @@ func (storage *Storage) SaveMessage(message *Message) {
 
 func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Message)) {
     var messages []Message
-    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Limit(10)
+    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(10)
     query.Find(&messages)
 
     for _, m := range messages {
