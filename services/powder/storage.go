@@ -20,7 +20,7 @@ type User struct {
 
 func NewUser(login string, password string, crypto* Crypto) *User {
     salt := crypto.CreateSalt()
-    hash := crypto.PasswordHash(salt, password)
+    hash := crypto.Hash(salt, password)
     user := &User{
         Username: login,
         Salt: salt,

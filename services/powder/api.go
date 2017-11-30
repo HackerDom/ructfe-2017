@@ -62,7 +62,7 @@ func (api *API) Login(c echo.Context) error {
                         fmt.Sprintf("Can't find user %s", login))
     }
 
-    password := api.crypto.PasswordHash(user.Salt, c.FormValue("password"))
+    password := api.crypto.Hash(user.Salt, c.FormValue("password"))
     if !bytes.Equal(user.Hash, password) {
         return api.Error(c, "Wrong password")
     }
@@ -115,7 +115,11 @@ func (api *API) SaveProfile(c echo.Context) error {
 
     user := api.storage.GetUser(login)
     for key := range params {
-        user.Properties[key] = params.Get(key)
+        value := params.Get(key)
+        if key == "address" {
+            value = api.crypto.Encrypt(user, value)
+        }
+        user.Properties[key] = value
     }
     api.storage.SaveUser(user)
 
@@ -138,7 +142,11 @@ func (api *API) GetProfile(c echo.Context) error {
     user := api.storage.GetUser(login)
 
     for key := range user.Properties {
-        result[key] = user.Properties[key]
+        value := user.Properties[key]
+        if key == "address" {
+            value = api.crypto.Decrypt(user, value)
+        }
+        result[key] = value
     }
 
     return api.OK(c, result)

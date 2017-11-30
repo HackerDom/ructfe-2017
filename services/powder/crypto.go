@@ -60,7 +60,7 @@ func (*Crypto) CreateSalt() string {
     return string(salt)
 }
 
-func (*Crypto) PasswordHash(salt string, password string) []byte {
+func (*Crypto) Hash(salt string, password string) []byte {
     h := md5.New()
     io.WriteString(h, salt)
     io.WriteString(h, password)
@@ -123,3 +123,64 @@ func (crypto *Crypto) LoginFromToken(token string) (string, error) {
 
     return string(login), nil
 }
+
+func innerEncrypt(key []byte, plaintext []byte) []byte {
+    block, err := aes.NewCipher(key)
+
+    if err != nil {
+        panic(err)
+    }
+
+    plaintextBytes := []byte(plaintext)
+    ciphertextBytes := make([]byte, aes.BlockSize + len(plaintextBytes))
+
+    iv := ciphertextBytes[:aes.BlockSize]
+
+    rand.Read(iv)
+
+    stream := cipher.NewCTR(block, iv)
+    stream.XORKeyStream(ciphertextBytes[aes.BlockSize:], plaintextBytes)
+
+    return ciphertextBytes
+}
+
+func innerDecrypt(key []byte, ciphertextBytes []byte) []byte {
+    block, err := aes.NewCipher(key)
+    if err != nil {
+        panic(err)
+    }
+
+    iv := ciphertextBytes[:aes.BlockSize]
+    plaintextBytes := make([]byte, len(ciphertextBytes) - aes.BlockSize)
+
+    stream := cipher.NewCTR(block, iv)
+    stream.XORKeyStream(plaintextBytes, ciphertextBytes[aes.BlockSize:])
+
+    return plaintextBytes
+}
+
+func (crypto *Crypto) Encrypt(user *User, data string) string {
+    prime1 := crypto.Hash("", user.Properties["prime1"])
+    prime2 := crypto.Hash("", user.Properties["prime2"])
+    prime3 := crypto.Hash("", user.Properties["prime3"])
+
+    return hex.EncodeToString(innerEncrypt(prime3,
+                              innerEncrypt(prime2,
+                              innerEncrypt(prime1, []byte(data)))))
+}
+
+func (crypto *Crypto) Decrypt(user *User, data string) string {
+    dataBytes, err := hex.DecodeString(data)
+    if err != nil {
+        panic(err)
+    }
+
+    prime1 := crypto.Hash("", user.Properties["prime1"])
+    prime2 := crypto.Hash("", user.Properties["prime2"])
+    prime3 := crypto.Hash("", user.Properties["prime3"])
+
+    return string(innerDecrypt(prime1,
+                  innerDecrypt(prime2,
+                  innerDecrypt(prime3, dataBytes))))
+}
+
