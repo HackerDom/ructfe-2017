@@ -14,6 +14,7 @@ type User struct {
     Properties map[string]string
     Salt string
     Hash []byte
+    AutoReply bool
     CreatedAt time.Time `stort:"index"`
 }
 
@@ -26,6 +27,8 @@ func NewUser(login string, password string, crypto* Crypto) *User {
         Salt: salt,
         Hash: hash,
         Properties: make(map[string]string),
+        AutoReply: false,
+        CreatedAt: time.Now(),
     }
 }
 
@@ -74,12 +77,17 @@ func (storage *Storage) SaveUser(user *User) {
     }
 }
 
-func (storage *Storage) IterateUsers(fn func(user *User)) {
+func (storage *Storage) IterateUsers(limit int, fn func(user *User)) {
     var users []User
-    err := storage.db.All(&users, storm.Limit(10))
+    var err error
+    if (limit > 0) {
+        err = storage.db.Select().OrderBy("CreatedAt").Reverse().Limit(limit).Find(&users)
+    } else {
+        err = storage.db.Select().OrderBy("CreatedAt").Reverse().Find(&users)
+    }
 
     if err != nil {
-        panic(err)
+        return
     }
 
     for _, u := range users {
@@ -98,11 +106,11 @@ func (storage *Storage) SaveMessage(message *Message) {
 
 func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Message)) {
     var messages []Message
-    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Limit(10)
+    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(10)
     query.Find(&messages)
 
-    for _, m := range messages {
-        fn(&m)
+    for i := range messages {
+        fn(&messages[len(messages) - i - 1])
     }
 }
 

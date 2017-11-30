@@ -13,9 +13,14 @@ type API struct {
 }
 
 func NewAPI() *API {
+    storage := NewStorage()
+    crypto := NewCrypto()
+
+    SetupAutoReply(storage)
+
     return &API{
-        storage: NewStorage(),
-        crypto: NewCrypto(),
+        storage: storage,
+        crypto: crypto,
     }
 }
 
@@ -142,7 +147,7 @@ func (api *API) GetProfile(c echo.Context) error {
 func (api *API) GetUsers(c echo.Context) error {
     users := make([]map[string]string, 0)
 
-    api.storage.IterateUsers(func (user *User) {
+    api.storage.IterateUsers(10, func (user *User) {
         user.Properties["login"] = user.Username
 
         users = append(users, user.Properties)
@@ -216,6 +221,9 @@ func (api *API) AutoReply(c echo.Context) error {
     }
 
     user := api.storage.GetUser(login)
+    user.AutoReply = true
+    api.storage.SaveUser(user)
+
     StartBot(user, api.storage)
 
     result := map[string]interface{}{}

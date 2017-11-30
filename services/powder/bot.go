@@ -12,6 +12,15 @@ func NewBot() *Bot {
     return &Bot{}
 }
 
+func SetupAutoReply(storage *Storage) {
+    storage.IterateUsers(0, func (user *User) {
+        fmt.Printf("%v", user)
+        if user.AutoReply {
+            StartBot(user, storage)
+        }
+    })
+}
+
 func StartBot(user *User, storage *Storage) {
     go func() {
         _ = NewBot()
