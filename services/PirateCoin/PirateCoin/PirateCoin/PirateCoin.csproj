@@ -107,15 +107,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
-    <Compile Include="Utils\CommonUtils.cs" />
-    <Compile Include="Utils\CryptUtils.cs" />
-    <Compile Include="Utils\DateTimeUtils.cs" />
-    <Compile Include="Utils\FuncUtils.cs" />
     <Compile Include="Utils\JsonHelper.cs" />
     <Compile Include="Utils\ReflectionUtils.cs" />
     <Compile Include="Utils\RuntimeHelper.cs" />
     <Compile Include="Utils\SecurityUtils.cs" />
-    <Compile Include="Utils\StreamUtils.cs" />
     <Compile Include="Utils\TaskUtils.cs" />
   </ItemGroup>
   <ItemGroup>

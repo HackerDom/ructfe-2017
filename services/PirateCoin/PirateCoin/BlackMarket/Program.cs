@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -7,9 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
-using Nethereum.Hex.HexTypes;
-using Nethereum.Web3;
-using System.Numerics;
 using PirateCoin.http;
 
 namespace BlackMarket
