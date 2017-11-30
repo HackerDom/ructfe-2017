@@ -1,0 +1,4 @@
+- hosts: dump
+  roles:
+    - common
+    - dump
