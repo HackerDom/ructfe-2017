@@ -7,11 +7,12 @@
         state: present
         key: https://github.com/m-messiah.keys
   roles:
-    - { role: service, service_name: raster }
+    - { role: service, service_name: baz, binary: yes }
     - { role: service, service_name: PirateBay }
-    - { role: service, service_name: powder }
-    - { role: service, service_name: TreasureMap }
     - { role: service, service_name: PirateCoin }
+    - { role: service, service_name: powder }
+    - { role: service, service_name: raster }
+    - { role: service, service_name: TreasureMap }
 
   post_tasks:
     - name: Clean apt-get

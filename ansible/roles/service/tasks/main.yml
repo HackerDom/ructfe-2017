@@ -7,8 +7,20 @@
 
 - name: Copy service sources
   synchronize:
-    src: "{{ playbook_dir }}/../services/{{ service_path | default(service_name) }}/"
+    src: "{{ playbook_dir }}/../services/{{ service_name }}/"
     dest: "/home/{{ service_name }}/"
+  when: "binary is not defined"
+
+- name: Copy binary service
+  when: "binary is defined"
+  copy:
+    src: "{{ playbook_dir }}/../services/{{ service_name }}/{{ item }}"
+    dest: "/home/{{ service_name }}/"
+    mode: 0755
+  with_items:
+    - baz
+    - Dockerfile
+    - docker-compose.yml
 
 - name: Check permissions
   file:
