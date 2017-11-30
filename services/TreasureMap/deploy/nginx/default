@@ -3,6 +3,7 @@ server {
 
 	location / {
 		try_files $uri @service;
+		index index.html;
 		root /home/TreasureMap/deploy/Static;
 	}
 
