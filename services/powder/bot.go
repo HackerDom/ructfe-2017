@@ -118,7 +118,7 @@ func StartBot(user *User, storage *Storage) {
             for _, message := range bot.Say(lastMessage) {
                 storage.SaveMessage(message)
             }
-            time.Sleep(time.Second)
+            time.Sleep(3 * time.Second)
         }
     }()
 }
