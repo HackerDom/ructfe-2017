@@ -15,8 +15,9 @@ loginForm();
 f();
 
 store.subscribe(() => {
-  Object.entries(store.getState().points).map(([_, point]) => {
+  const state = store.getState();
+  Object.entries(state.points).map(([_, point]) => {
     addPointToMap(point);
   });
-  loginForm();
+  loginForm(state.user);
 });

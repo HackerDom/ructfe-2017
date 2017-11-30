@@ -30,7 +30,7 @@ export const putNewPoint = async data => {
 
 export const login = async (user, password) => {
   try {
-    let res = fetch("/api/login", {
+    let res = await fetch("/api/login", {
       body: JSON.stringify({ user, password }),
       method: "POST",
       credentials: "includes"
