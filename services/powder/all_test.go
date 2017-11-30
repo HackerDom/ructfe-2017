@@ -27,3 +27,9 @@ func TestHash(t *testing.T) {
     }
 
 }
+
+func TestToken(t *testing.T) {
+    crypto := NewCrypto()
+
+
+}
