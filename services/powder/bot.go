@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "time"
     "crypto/md5"
     "io"

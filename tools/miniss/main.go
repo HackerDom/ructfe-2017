@@ -131,12 +131,14 @@ func main() {
 
     for i := 0; i < concurrency; i++ {
         go func() {
+            for {
                 ss.MakePut()
                 ss.MakeRandomGet()
 
                 for statusCode, count := range ss.Stats {
                     fmt.Printf("%d\t%d\n", statusCode, count)
                 }
+            }
         }()
     }
 

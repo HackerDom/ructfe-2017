@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "time"
     "github.com/asdine/storm"
     "github.com/asdine/storm/q"
