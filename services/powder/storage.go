@@ -85,7 +85,7 @@ func (storage *Storage) SaveUser(user *User) {
     }
 }
 
-func (storage *Storage) IterateUsers(limit int, re string, fn func(user *User)) {
+func (storage *Storage) IterateUsers(limit int, re string, fn func(user User)) {
     var users []User
     var err error
     if (limit > 0) {
@@ -99,7 +99,7 @@ func (storage *Storage) IterateUsers(limit int, re string, fn func(user *User)) 
     }
 
     for _, u := range users {
-        fn(&u)
+        fn(u)
     }
 }
 
@@ -112,13 +112,13 @@ func (storage *Storage) SaveMessage(message *Message) {
     }
 }
 
-func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Message)) {
+func (storage *Storage) IterateMessages(from string, to string, fn func(_ Message)) {
     var messages []Message
     query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(15)
     query.Find(&messages)
 
     for i := range messages {
-        fn(&messages[len(messages) - i - 1])
+        fn(messages[len(messages) - i - 1])
     }
 }
 

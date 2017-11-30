@@ -43,6 +43,10 @@ func (server *Server) GetUsersUrl(limit int, re string) string {
     return fmt.Sprintf("%s/api/v1/users?limit=%d&re=%s", server.Host, limit, re)
 }
 
+func (server *Server) AutoReplyUrl() string {
+    return fmt.Sprintf("%s/api/v1/autoreply", server.Host)
+}
+
 func (server *Server) SignUp(user *User) (*User, error, int) {
     response, err := http.PostForm(server.SignUpUrl(), url.Values{
         "login": {user.Login},
@@ -221,6 +225,43 @@ func (server *Server) GetUsers(limit int, re string) ([]map[string]string, error
 
 }
 
+func (server *Server) AutoReply(user *User) (error, int) {
+    if user.Token == "" {
+        return errors.New("user.Token must be filled"), CHECKER_ERROR
+    }
+
+    request, err := http.NewRequest("POST", server.AutoReplyUrl(), nil)
+    if err != nil {
+        return err, DOWN
+    }
+
+    request.Header.Add("token", user.Token)
+
+    client := &http.Client{}
+    response, err := client.Do(request)
+
+    if err != nil {
+        return err, MUMBLE
+    }
+
+    defer response.Body.Close()
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return err, MUMBLE
+    }
+
+    var data map[string]interface{}
+    if err := json.Unmarshal(body, &data); err != nil {
+        return err, MUMBLE
+    }
+
+    if data["error"].(bool) {
+        return errors.New(data["errorMessage"].(string)), MUMBLE
+    }
+
+    return nil, OK
+}
+
 const (
     OK = 101
     CORRUPT = 102
@@ -235,11 +276,13 @@ func Info(args []string) int {
 }
 
 func Check(args []string) int {
+    alice := &User{login: RandomString(5), password: RandomString(5)}
+    bob := &User{login: RandomString(5), password: RandomString(5)}
     return OK
 }
 
-func GeneratePassword() string {
-    bytes := make([]byte, 32)
+func RandomString(n int) string {
+    bytes := make([]byte, n)
     rand.Read(bytes)
     return hex.EncodeToString(bytes)
 }
@@ -250,7 +293,7 @@ func Put(args []string) int {
     }
 
     hostname, id, flag := args[0], args[1], args[2]
-    password := GeneratePassword()
+    password := RandomString(32)
 
     server := &Server{Host: fmt.Sprintf("http://%s", hostname)}
     user := &User{Login: id, Password: password}
@@ -262,6 +305,12 @@ func Put(args []string) int {
 
     updates := map[string]string{"address": flag}
     err, code = server.SaveProfile(user, updates)
+
+    if err != nil {
+        return code
+    }
+
+    err, code = server.AutoReply(user)
 
     if err != nil {
         return code
@@ -307,6 +356,7 @@ func Get(args []string) int {
     return OK
 }
 
+
 func main() {
     if len(os.Args) < 2 {
         os.Exit(CHECKER_ERROR)
@@ -325,21 +375,4 @@ func main() {
     }
 
     os.Exit(handler(os.Args[2:]))
-
-    /*
-     user := &User{Login: "ld86", Password: "ld86"}
-    server := &Server{Host: "http://127.0.0.1:8080"}
-    users, _ := server.GetUsers(10, "")
-    fmt.Println(users[0]["login"])
-    */
-
-    /*
-    user, _ = server.SignUp(user)
-    profile, _ := server.GetProfile(user)
-    fmt.Println(profile["fullname"])
-    updates := map[string]string{"fullname": "Bogdan Melnik"}
-    server.SaveProfile(user, updates)
-    profile, _ = server.GetProfile(user)
-    fmt.Println(profile["fullname"])
-    */
 }
