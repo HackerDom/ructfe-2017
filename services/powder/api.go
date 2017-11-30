@@ -137,7 +137,7 @@ func (api *API) GetProfile(c echo.Context) error {
 
     user := api.storage.GetUser(login)
 
-    for _, key := range []string{"fullname", "picture"} {
+    for _, key := range []string{"fullname", "picture", "public"} {
         result[key] = user.Properties[key]
     }
 
@@ -148,9 +148,14 @@ func (api *API) GetUsers(c echo.Context) error {
     users := make([]map[string]string, 0)
 
     api.storage.IterateUsers(10, func (user *User) {
-        user.Properties["login"] = user.Username
+        properties := make(map[string]string)
 
-        users = append(users, user.Properties)
+        for _, key := range []string{"fullname", "picture", "public"} {
+            properties[key] = user.Properties[key]
+        }
+        properties["login"] = user.Username
+
+        users = append(users, properties)
     })
 
     result := map[string]interface{}{
@@ -221,6 +226,11 @@ func (api *API) AutoReply(c echo.Context) error {
     }
 
     user := api.storage.GetUser(login)
+
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
+
     user.AutoReply = true
     api.storage.SaveUser(user)
 

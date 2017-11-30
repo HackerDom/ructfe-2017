@@ -21,8 +21,7 @@ type User struct {
 func NewUser(login string, password string, crypto* Crypto) *User {
     salt := crypto.CreateSalt()
     hash := crypto.PasswordHash(salt, password)
-
-    return &User{
+    user := &User{
         Username: login,
         Salt: salt,
         Hash: hash,
@@ -30,6 +29,14 @@ func NewUser(login string, password string, crypto* Crypto) *User {
         AutoReply: false,
         CreatedAt: time.Now(),
     }
+
+    prime1, prime2, prime3, public := crypto.NewKeys()
+    user.Properties["prime1"] = prime1
+    user.Properties["prime2"] = prime2
+    user.Properties["prime3"] = prime3
+    user.Properties["public"] = public
+
+    return user
 }
 
 type Message struct {
@@ -106,7 +113,7 @@ func (storage *Storage) SaveMessage(message *Message) {
 
 func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Message)) {
     var messages []Message
-    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(20)
+    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(15)
     query.Find(&messages)
 
     for i := range messages {

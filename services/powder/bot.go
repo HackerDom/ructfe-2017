@@ -40,6 +40,10 @@ func understandMessage(message string) float32 {
 }
 
 func (bot *Bot) Listen(message *Message) {
+    if message == nil {
+        return
+    }
+
     user := bot.user
     if message.Author == user.Username {
         return
@@ -75,9 +79,13 @@ func addMessage(user *User, to string, message string, messages []*Message) []*M
 }
 
 func (bot *Bot) Say(message *Message) []*Message {
-    user := bot.user
     messages := make([]*Message, 0)
 
+    if message == nil {
+        return messages
+    }
+
+    user := bot.user
     if message.Author == user.Username {
         return messages
     }
@@ -88,14 +96,14 @@ func (bot *Bot) Say(message *Message) []*Message {
         bot.goals[message.Author] = goal
     }
 
-    address, ok := user.Properties["address"]
+    key, ok := user.Properties["prime1"]
     if !ok {
-        address = "Moscow, Red Square, 1"
+        key = "Moscow, Red Square, 1"
     }
 
     messages = addMessage(user,
                           message.Author,
-                          goal.Status(user, address),
+                          goal.Status(user, key),
                           messages)
 
     return messages

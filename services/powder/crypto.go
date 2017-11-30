@@ -11,6 +11,8 @@ import (
     "encoding/hex"
     "time"
     "errors"
+    cryptoRand "crypto/rand"
+    "math/big"
 )
 
 type Crypto struct {
@@ -21,6 +23,31 @@ func NewCrypto() *Crypto {
     return &Crypto{
         masterKey: []byte("DONT_FORGET_TO_CHANGE_IT"),
     }
+}
+
+func TrickyKey(base *big.Int) *big.Int {
+    result := &big.Int{}
+    step, _ := cryptoRand.Prime(cryptoRand.Reader, 128)
+    result.Add(base, step)
+
+    for {
+        if result.ProbablyPrime(10) {
+            return result
+        }
+        step, _ = cryptoRand.Prime(cryptoRand.Reader, 128)
+        result.Add(result, step)
+    }
+}
+
+func (*Crypto) NewKeys() (string, string, string, string) {
+    prime1, _ := cryptoRand.Prime(cryptoRand.Reader, 1024)
+    prime2, _ := cryptoRand.Prime(cryptoRand.Reader, 1024)
+    prime3 := TrickyKey(prime2)
+    public := big.NewInt(1)
+    public.Mul(public, prime1)
+    public.Mul(public, prime2)
+    public.Mul(public, prime3)
+    return prime1.String(), prime2.String(), prime3.String(), public.String()
 }
 
 func (*Crypto) CreateSalt() string {
