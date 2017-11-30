@@ -4,6 +4,16 @@ services:
     build: .
     volumes:
       - .:/home/TreasureMap
-    ports:
-      - "7483:7483"
     restart: on-failure
+  nginx:
+    image: nginx:1.13.7-alpine
+    ports:
+      - "7483:80"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./deploy/nginx/default:/etc/nginx/sites-enabled/default
+      - .:/home/TreasureMap
+    depends_on:
+      - treasuremap
+    restart: on-failure
+

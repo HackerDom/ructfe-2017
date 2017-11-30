@@ -1,5 +1,5 @@
-mk %1\deploy\service
-mk %1\deploy\service\dump
+md %1\deploy\service
+md %1\deploy\service\dump
 
 
 copy %2\*.exe %1\deploy\service

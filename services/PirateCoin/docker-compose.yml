@@ -1,0 +1,20 @@
+version: '3'
+services:
+  geth:
+    build:
+      context: .
+      dockerfile: Dockerfile-geth
+    volumes:
+      - .:/home/PirateCoin
+    restart: on-failure
+    ports:
+      - "30303:30303"
+  piratecoin:
+    build: .
+    volumes:
+      - .:/home/PirateCoin
+    depends_on:
+      - geth
+    restart: on-failure
+    ports:
+      - "14473:14473"

@@ -84,7 +84,7 @@ class State:
 	async def register(self, username=None, password=None):
 		can_retry = username is None
 		request = {'user': checker.get_value_or_rand_string(username, 8), 'password': checker.get_value_or_rand_string(password, 16)}
-		status, text = await self.post('/api/register', request, need_check_status = False)
+		status, text = await self.post('/api/login', request, need_check_status = False)
 		if status == 200:
 			return request['user'], request['password']
 		if status == 400 and can_retry:
@@ -117,8 +117,8 @@ class State:
 
 	async def put_point(self, x = None, y = None, message = None, is_public = None, user = None):
 		point = {
-			'x' : checker.get_value_or_rand_string(x, 13), 
-			'y' : checker.get_value_or_rand_string(y, 13), 
+			'x' : checker.get_value_or_rand_string(x, 13, checker.printable), 
+			'y' : checker.get_value_or_rand_string(y, 13, checker.printable), 
 			'message' : checker.get_value_or_rand_string(message, 50), 
 			'public' : is_public if is_public is not None else random.choice([True, False])}
 		point['id'] = await self.post('/api/add', point)

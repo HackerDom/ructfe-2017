@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl";
 
 export const addPointToMap = rawPoint => {
   const { id, x, y, message: description } = getCoordinatesFromPoint(rawPoint);
+
   const layer = {
     id,
     type: "symbol",
@@ -29,7 +30,6 @@ export const addPointToMap = rawPoint => {
       "text-anchor": "top"
     }
   };
-  console.log(layer);
   try {
     map.addLayer(layer).on("click", id, e => {
       if (e.features[0].properties.description) {

@@ -83,7 +83,6 @@
     <Compile Include="Handlers\PathDrawer.cs" />
     <Compile Include="PathFinders\HeuristicPathFinder.cs" />
     <Compile Include="PathFinders\PathFinder.cs" />
-    <Compile Include="Handlers\RegisterHandler.cs" />
     <Compile Include="Handlers\Helpers\SecureCookieHelper.cs" />
     <Compile Include="Handlers\ShortestPathHandler.cs" />
     <Compile Include="Http\HttpContextHelper.cs" />
@@ -112,7 +111,4 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>$(ProjectDir)\deploy.bat $(ProjectDir) $(ProjectDir)$(OutDir)</PostBuildEvent>
-  </PropertyGroup>
 </Project>

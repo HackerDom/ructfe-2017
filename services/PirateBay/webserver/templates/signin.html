@@ -18,11 +18,11 @@
         <div id="login">
             <form name='form-login' action="signin" method="post">
                 <div>
-                    <p class="error" id="login_message">{{ error_message}}</p>
+                    <p class="error" id="error_message">{{ error_message}}</p>
                     <span class="fontawesome-user"></span>
                     <input type="text" name="login" placeholder="Username" onchange="validate_login(this.form)">
                     <span class="fontawesome-lock"></span>
-                    <input type="password" name="password" placeholder="Password">
+                    <input type="password" name="password" placeholder="Password" onchange="validate_password(this.form)">
                     <input id="submit" type="submit" value="Sign in">
                 </div>
             </form>
