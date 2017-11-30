@@ -1,0 +1,3 @@
+baz: baz_0.s baz.c num.c vm.c storage.c baz.vm compilevm.py
+	cat baz.vm | python3 compilevm.py > baz.vm.h
+	gcc-7 baz_0.s baz.c num.c vm.c storage.c -nostdlib -fno-builtin -m64 -mno-sse -O2 -o baz
