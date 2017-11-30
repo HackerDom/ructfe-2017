@@ -274,7 +274,7 @@ class RequestHandler:
     def upload(self, upload_file):
         user = get_authorized_user()
         if user is None:
-            raise cherrypy.HTTPError(403)
+            raise cherrypy.HTTPError(401)
         raw_torrent_info_file = bytearray()
         while True:
             data = upload_file.file.read(8192)
@@ -331,7 +331,7 @@ class RequestHandler:
     def upload_private(self, upload_file):
         user = get_authorized_user()
         if user is None:
-            raise cherrypy.HTTPError(403)
+            raise cherrypy.HTTPError(401)
         raw_torrent_info_file = bytearray()
         while True:
             data = upload_file.file.read(8192)
@@ -342,7 +342,7 @@ class RequestHandler:
         try:
             PrivateTorrentFile(bytes(raw_torrent_info_file), upload_by=user_login).save()
             self.reset_error()
-            raise cherrypy.HTTPRedirect('/storage')
+            raise cherrypy.HTTPRedirect('/private_storage')
         except (InvalidTorrentFileError, ValidationError) as error:
             self.set_error('File "{}" is invalid .torrent file: {}'.format(upload_file.filename, error))
             raise cherrypy.HTTPRedirect("/upload_file")
