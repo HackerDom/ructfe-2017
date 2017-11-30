@@ -36,7 +36,7 @@ func understandMessage(message string) float32 {
     }
 
     g /= float32(len(h.Sum(nil)))
-    return g * 0.001
+    return g * 0.003
 }
 
 func (bot *Bot) Listen(message *Message) {
@@ -118,7 +118,11 @@ func StartBot(user *User, storage *Storage) {
             for _, message := range bot.Say(lastMessage) {
                 storage.SaveMessage(message)
             }
-            time.Sleep(3 * time.Second)
+            if lastMessage == nil {
+                time.Sleep(5 * time.Second)
+            } else {
+                time.Sleep(time.Second)
+            }
         }
     }()
 }

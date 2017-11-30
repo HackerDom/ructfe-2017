@@ -11,6 +11,7 @@ import (
     "crypto/rand"
     "encoding/hex"
     "os"
+    "time"
 )
 
 type Server struct {
@@ -45,6 +46,14 @@ func (server *Server) GetUsersUrl(limit int, re string) string {
 
 func (server *Server) AutoReplyUrl() string {
     return fmt.Sprintf("%s/api/v1/autoreply", server.Host)
+}
+
+func (server *Server) SendMessageUrl() string {
+    return fmt.Sprintf("%s/api/v1/conversations", server.Host)
+}
+
+func (server *Server) GetMessagesUrl(to string) string {
+    return fmt.Sprintf("%s/api/v1/conversations?to=%s", server.Host, to)
 }
 
 func (server *Server) SignUp(user *User) (*User, error, int) {
@@ -145,6 +154,90 @@ func (server *Server) GetProfile(user *User) (map[string]string, error, int) {
     }
 
     return profile, nil, OK
+}
+
+func (server *Server) GetMessages(user *User, to string) ([]string, error, int) {
+    if user.Token == "" {
+        return nil, errors.New("user.Token must be filled"), CHECKER_ERROR
+    }
+
+    request, err := http.NewRequest("GET", server.GetMessagesUrl(to), nil)
+    if err != nil {
+        return nil, err, CHECKER_ERROR
+    }
+    request.Header.Add("token", user.Token)
+    client := &http.Client{}
+    response, err := client.Do(request)
+
+    if err != nil {
+        return nil, err, DOWN
+    }
+
+    defer response.Body.Close()
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return nil, err, MUMBLE
+    }
+
+    var data map[string]interface{}
+    if err := json.Unmarshal(body, &data); err != nil {
+        return nil, err, MUMBLE
+    }
+
+    if data["error"].(bool) {
+        return nil, errors.New(data["errorMessage"].(string)), MUMBLE
+    }
+
+    messages := make([]string, 0)
+    for _, message := range data["messages"].([]interface{}){
+        messages = append(messages, message.(string))
+    }
+
+    return messages, nil, OK
+}
+
+func (server *Server) SendMessage(user *User, to string, message string) (error, int) {
+    if user.Token == "" {
+        return errors.New("user.Token must be filled"), CHECKER_ERROR
+    }
+
+    values := url.Values{}
+    values.Add("to", to)
+    values.Add("message", message)
+
+    request, err := http.NewRequest("POST",
+                                    server.SendMessageUrl(),
+                                    strings.NewReader(values.Encode()))
+    if err != nil {
+        return err, DOWN
+    }
+
+    request.Header.Add("token", user.Token)
+    request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+    client := &http.Client{}
+    response, err := client.Do(request)
+
+    if err != nil {
+        return err, MUMBLE
+    }
+
+    defer response.Body.Close()
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return err, MUMBLE
+    }
+
+    var data map[string]interface{}
+    if err := json.Unmarshal(body, &data); err != nil {
+        return err, MUMBLE
+    }
+
+    if data["error"].(bool) {
+        return errors.New(data["errorMessage"].(string)), MUMBLE
+    }
+
+    return nil, OK
 }
 
 func (server *Server) SaveProfile(user *User, profile map[string]string) (error, int) {
@@ -275,9 +368,97 @@ func Info(args []string) int {
     return OK
 }
 
+func MessageToRank(messageAndNick string) int {
+    parts := strings.Split(messageAndNick, " > ")
+    message := parts[1]
+    if strings.HasPrefix(message, "OK") {
+        return 0
+    }
+    if strings.HasPrefix(message, "I don't") {
+        return 1
+    }
+    if strings.HasPrefix(message, "Hmm") {
+        return 2
+    }
+    if strings.HasPrefix(message, "Tell") {
+        return 3
+    }
+    if strings.HasPrefix(message, "Do") {
+        return 4
+    }
+    if strings.HasPrefix(message, "Today") {
+        return 5
+    }
+    if strings.HasPrefix(message, "Today") {
+        return 6
+    }
+    return 7
+}
+
 func Check(args []string) int {
-    alice := &User{login: RandomString(5), password: RandomString(5)}
-    bob := &User{login: RandomString(5), password: RandomString(5)}
+    if len(args) != 1 {
+        return CHECKER_ERROR
+    }
+
+    hostname := args[0]
+
+    server := &Server{Host: fmt.Sprintf("http://%s", hostname)}
+    alice := &User{Login: RandomString(5), Password: RandomString(5)}
+    bob := &User{Login: RandomString(5), Password: RandomString(5)}
+
+    alice, err, code := server.SignUp(alice)
+    if err != nil {
+        return code
+    }
+
+    bob, err, code = server.SignUp(bob)
+    if err != nil {
+        return code
+    }
+
+    err, code = server.AutoReply(bob)
+    if err != nil {
+        return code
+    }
+
+    step := "l"
+
+    err, code = server.SendMessage(alice, bob.Login, step)
+    if err != nil {
+        return code
+    }
+    time.Sleep(6 * time.Second)
+    messages, err, code := server.GetMessages(alice, bob.Login)
+    if err != nil {
+        return code
+    }
+
+    lastAnswer := MessageToRank(messages[len(messages) - 1])
+
+    for i := 0; i < 10; i++ {
+        err, code = server.SendMessage(alice, bob.Login, step)
+        if err != nil {
+            return code
+        }
+        time.Sleep(2 * time.Second)
+        messages, err, code = server.GetMessages(alice, bob.Login)
+        if err != nil {
+            return code
+        }
+
+        answer := MessageToRank(messages[len(messages) - 1])
+        if answer == 0 {
+            fmt.Println(messages[len(messages) - 1])
+            break
+        }
+        if lastAnswer - answer < 0 {
+            step = "o"
+        }
+
+        fmt.Println(lastAnswer, answer)
+        lastAnswer = answer
+    }
+
     return OK
 }
 
