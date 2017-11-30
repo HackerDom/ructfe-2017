@@ -283,10 +283,8 @@ bool BuildSeaVb( VertexBuffer* vb, Lib3dsMatrix view, Lib3dsMatrix proj, f32 nea
                 lib3ds_vector_add( p, p0[ i ], p );
 
                 u32 _mask = 1 << i;
-                if( mask & _mask ) {
-                    printf( "Intersection of intersections\n" );
-                    exit( 1 );
-                }
+                if( mask & _mask )
+                    return false;
                 mask |= _mask;
                 lib3ds_vector_copy( intersections[ i ], p );
             }
@@ -296,10 +294,8 @@ bool BuildSeaVb( VertexBuffer* vb, Lib3dsMatrix view, Lib3dsMatrix proj, f32 nea
     if( mask == 0 )
         return false;
 
-    if( mask != 0b1111 ) {
-        printf( "Not enough intersections\n" );
-        exit( 1 );
-    }
+    if( mask != 0b1111 )
+        return false;
 
     vb->vertices[ 0 ].f = _mm_set_ps( 1.0f, intersections[ 0 ][ 2 ], intersections[ 0 ][ 1 ], intersections[ 0 ][ 0 ] );
     vb->vertices[ 1 ].f = _mm_set_ps( 1.0f, intersections[ 1 ][ 2 ], intersections[ 1 ][ 1 ], intersections[ 1 ][ 0 ] );
