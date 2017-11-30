@@ -39,7 +39,7 @@ namespace BlackMarket
 		private static async Task PutFlagCallback(HttpListenerContext context)
 		{
 			var flag = context.Request.QueryString["flag"];
-			var contractAddr = context.Request.QueryString["contractAddr"];
+			var contractAddr = context.Request.QueryString["contractAddr"]?.ToLowerInvariant();
 			var sumStr = context.Request.QueryString["sum"];
 
 			if(flag == null || contractAddr == null || !decimal.TryParse(sumStr, out var sum))
@@ -54,7 +54,7 @@ namespace BlackMarket
 		private static async Task CheckTransactionCallback(HttpListenerContext context)
 		{
 			var transaction = context.Request.QueryString["transaction"];
-			var contractAddr = context.Request.QueryString["contractAddr"];
+			var contractAddr = context.Request.QueryString["contractAddr"]?.ToLowerInvariant();
 			if(transaction == null || contractAddr == null)
 			{
 				context.Close((int)HttpStatusCode.BadRequest);
@@ -85,10 +85,14 @@ namespace BlackMarket
 			}
 
 			//NOTE race condition, but it's ok. just giving concurrnt hackers their flags
-			if(await transactionChecker.Check(transaction, contractAddr))
+			var hackerContractAddr = await transactionChecker.FindHackerContractAddr(transaction, contractAddr, flagsData.First().sum);
+			if(hackerContractAddr !=  null)
 			{
 				foreach(var flagData in flagsData)
+				{
 					flagData.hackerIp = requestIp;
+					stateManager.Insert(flagData);
+				}
 				await context.WriteStringAsync(flags);
 				return;
 			}
@@ -109,7 +113,7 @@ namespace BlackMarket
 		private static async Task CheckFlagCallback(HttpListenerContext context)
 		{
 			var flag = context.Request.QueryString["flag"];
-			var contractAddr = context.Request.QueryString["contractAddr"];
+			var contractAddr = context.Request.QueryString["contractAddr"]?.ToLowerInvariant();
 			if(flag == null || contractAddr == null)
 			{
 				context.Close((int)HttpStatusCode.BadRequest);

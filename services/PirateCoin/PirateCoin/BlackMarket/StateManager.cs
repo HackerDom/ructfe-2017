@@ -47,9 +47,13 @@ namespace BlackMarket
 
 		private void InsertInternal(FlagData flagData)
 		{
-			dict.AddOrUpdate(flagData.contractAddr, new HashSet<FlagData>(new FlagData.Comparer()), (key, set) =>
+			dict.AddOrUpdate(flagData.contractAddr, new HashSet<FlagData>(new FlagData.Comparer()) {flagData}, (key, set) =>
 			{
-				lock(set) set.Add(flagData);
+				lock(set)
+				{
+					set.Remove(flagData);
+					set.Add(flagData);
+				}
 				return set;
 			});
 		}
