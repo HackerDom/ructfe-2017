@@ -6,13 +6,15 @@ from urllib.parse import urlencode
 from urllib.error import URLError
 from socket import socket
 
-from web3 import IPCProvider, Web3
+from web3 import RPCProvider, Web3
 from web3.contract import ConciseContract
 from web3.exceptions import BadFunctionCallOutput
 
 from answer_codes import CheckerAnswers
+from utils import parse_team_addr
 from config import \
-    GETH_IPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD, BLACK_MARKET_ADDR
+    GETH_RPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD,\
+    BLACK_MARKET_ADDR, SERVICE_COINBASE
 
 
 TIMEOUT = 8
@@ -22,6 +24,21 @@ TRANSACTION_COOLDOWN = 60
 def get_check_contract(team_addr, flag_id, flag):
     contract_addr, wei_in_transaction, contract_creation_time \
         = flag_id.split(":")
+    team_addr = parse_team_addr(team_addr)
+
+    w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
+    w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
+
+    try:
+        response = urlopen(SERVICE_COINBASE.format(team_addr), timeout=5)
+    except (URLError, socket.timeout):
+        return CheckerAnswers.DOWN("Can't resolve team ")
+
+
+
+
+    w3.eth.sendTransaction({"to"})
+
 
     """
     try:
@@ -48,17 +65,13 @@ def get_check_contract(team_addr, flag_id, flag):
         with open("contract_abi.json") as abi:
             contract_abi = json.load(abi)
     except OSError as e:
-        return CheckerAnswers.CHECKER_ERROR("", str(e))
-
-    w3 = Web3(IPCProvider(GETH_IPC_PATH))
-    w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
+        return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
 
     contract_instance = w3.eth.contract(
         contract_abi,
         contract_addr,
         ContractFactoryClass=ConciseContract)
 
-    w3 = Web3(IPCProvider(GETH_IPC_PATH))
     contract_ethereum_balance = w3.eth.getBalance(contract_addr)
     try:
         bank_balance = int(contract_instance.totalBankBalance())

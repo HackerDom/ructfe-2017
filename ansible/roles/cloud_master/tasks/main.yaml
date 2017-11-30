@@ -21,6 +21,16 @@
   copy: src=apache2/000-default.conf dest=/etc/apache2/sites-available/000-default.conf
   notify: restart apache2
 
+- name: copy apache2 certs
+  copy: src=apache2/{{item}} dest=/etc/apache2/{{item}}
+  with_items:
+    - cert.pem
+    - key.pem
+  notify: restart apache2
+
+- name: enabled ssl
+  apache2_module: name=ssl state=present  
+
 - name: copy cloudapi.wsgi
   copy: src=wsgi/cloudapi.wsgi dest=/cloud/api/
 
@@ -58,8 +68,16 @@
       - "--exclude=*"
 
 - name: copy backend init configs
-  synchronize: 
+  synchronize:
     src: api_srv/db_init_state
+    dest: /cloud/backend/
+    rsync_opts:
+      - "--chmod=D0700,F0600"
+      - "--chown=cloud:cloud"
+
+- name: copy backend init configs
+  synchronize:
+    src: api_srv/db_init_state_dev
     dest: /cloud/backend/
     rsync_opts:
       - "--chmod=D0700,F0600"

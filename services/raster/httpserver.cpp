@@ -42,11 +42,7 @@ void HttpServer::Start(uint32_t port)
 	{
 		printf("Failed to start MHD_Daemon!\n");
 		exit(1);
-	}
-
-#if DEBUG
-	printf(":: current thread id = %lX\n", pthread_self());
-#endif
+    }
 
 	printf("Listening on port %d...\n", port);
 
@@ -65,11 +61,7 @@ void HttpServer::Stop()
 
 int HttpServer::HandleRequest(void *param, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **context)
 {
-	HttpServer *self = (HttpServer *)param;
-
-#if DEBUG
-	printf(":: current thread id = %ld\n", pthread_self());
-#endif
+    HttpServer *self = (HttpServer *)param;
 
 	printf("Received request: %s %s\n", method, url);
 

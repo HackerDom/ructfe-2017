@@ -3,13 +3,13 @@ import sys
 
 N = 768
 
-SERVER = "5.45.248.210"
+SERVER = "game.vpn.ructfe.org"
 
 CLIENT_DATA = """mode p2p
 dev game
 dev-type tun
 remote {0} {1}
-#remote-random-hostname
+remote-random-hostname
 ifconfig 10.{2}.{3}.2 10.{2}.{3}.1
 route 10.60.0.0 255.252.0.0
 route 10.80.0.0 255.252.0.0

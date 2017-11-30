@@ -1,0 +1,104 @@
+- name: add java repository
+  apt_repository: repo="ppa:webupd8team/java"
+  tags:
+    - elasticsearch
+    - graylog
+
+- name: accept oracle license
+  debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+  tags:
+    - elasticsearch
+    - graylog
+
+- name: install packages for elasticsearch
+  apt: name={{item}} state=latest
+  with_items:
+    - software-properties-common
+    - oracle-java8-installer
+    - apt-transport-https
+  tags:
+    - elasticsearch
+
+- name: get elasticsearch package
+  get_url:
+    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.4.deb
+    dest: /root/elasticsearch-5.6.4.deb
+  tags:
+    - elasticsearch
+
+- name: install elasticsearch package
+  apt: deb=/root/elasticsearch-5.6.4.deb
+  tags:
+    - elasticsearch
+
+- name: create data directory for elasticsearch
+  file: name=/home/elasticsearch state=directory owner=elasticsearch group=elasticsearch
+  notify: enable and restart elasticsearch
+  tags:
+    - elasticsearch
+
+- name: make elasticsearch listen on localhost
+  lineinfile: 
+    dest: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^path\.data\s*:'
+    line: "path.data: /home/elasticsearch/"
+    insertafter: '^#path\.data\s*:'
+  notify: enable and restart elasticsearch
+  tags:
+    - elasticsearch
+
+- name: get graylog repo deb
+  get_url: 
+    url: https://packages.graylog2.org/repo/packages/graylog-2.3-repository_latest.deb
+    dest: /root/graylog-2.3-repository_latest.deb
+  tags: graylog
+
+- name: install packages for graylog
+  apt: name={{item}} state=latest
+  with_items:
+    - apt-transport-https
+  tags:
+    - graylog
+
+- name: install graylog repo
+  apt: deb=/root/graylog-2.3-repository_latest.deb
+  tags: graylog
+
+- name: install packages for graylog
+  apt: name={{item}} update_cache=True
+  with_items:
+    - python-software-properties
+    - apt-transport-https
+    - graylog-server
+    - mongodb
+  tags: graylog
+
+- name: copy graylog config
+  template: src=server.conf.j2 dest=/etc/graylog/server/server.conf
+  notify: enable and restart graylog
+  tags: graylog
+
+- name: change owner of /etc/graylog/server
+  file: path=/etc/graylog/server owner=graylog group=graylog
+  notify: enable and restart graylog
+  tags: graylog
+
+- name: modify nginx config for graylog
+  blockinfile:
+    dest: /etc/nginx/sites-enabled/default
+    insertafter: "server {"
+    block: |
+        location /l/ {
+                proxy_pass  http://127.0.0.1:9000/l/;
+                proxy_redirect     off;
+                proxy_set_header   Host $host;
+        }
+
+        location /l/api_cu9ESIXKtU/ {
+                auth_basic          off;
+                proxy_pass  http://127.0.0.1:9000/l/api_cu9ESIXKtU/;
+                proxy_redirect     off;
+                proxy_set_header   Host $host;
+        }
+  notify: restart nginx
+  tags: graylog

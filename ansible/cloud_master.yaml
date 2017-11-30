@@ -3,3 +3,4 @@
     - common
     - cloud_master
     - monitoring_client
+    - logging_client

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Torrent files</title>
+    <link rel="stylesheet" href="css/sea.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript">
+        $("#search_field").keyup(function(event) {
+            if (event.keyCode === 13) {
+                $("#search_btn").click();
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">Home</a>
+        <a href="/signout">Sign out</a>
+        <a href="/private_storage">Private files</a>
+        <a href="/upload_file">Upload file</a>
+        <form action="storage">
+            <input value="{{ value }}" type="search" id="search_field" name="search_filter" placeholder="Search..." autofocus/>
+            <input type="submit" id="search_btn" style="display:none;" />
+        </form>
+        <p>Hello, {{ authed }}!</p>
+    </div>
+    <div>
+        <table width="100%" border="1">
+            <tr>
+                <th>announce</th>
+                <th>length</th>
+                <th>name</th>
+                <th>comment</th>
+                <th>upload by</th>
+                <th></th>
+            </tr>
+            {% for file in files %}
+            <tr>
+                <td>{{file.announce}}</td>
+                <td>{{file.length}}</td>
+                <td>{{file.name}}</td>
+                <td>{{file.comment}}</td>
+                <td>{{file.upload_by}}</td>
+                <td><a href="download?file_id={{file.uid}}">donwload</a> </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% if max_page|int != -1 %}
+        <div class="pagination">
+            <a href="/storage?page_number=0">&laquo;</a>
+            {% if page_number|int != 0 %}
+            <a href="/storage?page_number={{page_number|int - 1}}">{{page_number}}</a>
+            {% endif %}
+            <a class="active" href="/storage?page_number={{page_number|int}}">{{page_number|int + 1}}</a>
+            {% if page_number|int != max_page|int %}
+            <a href="/storage?page_number={{page_number|int + 1}}">{{page_number|int + 2}}</a>
+            {% endif %}
+            <a href="/storage?page_number={{max_page}}">&raquo;</a>
+        </div>
+    {% endif %}
+</body>
+</html>

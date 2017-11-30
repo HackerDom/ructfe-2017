@@ -6,7 +6,7 @@ services:
       - .:/home/raster
     restart: on-failure
   nginx:
-    image: nginx:alpine
+    image: nginx:1.13.7-alpine
     ports:
       - "8080:80"
     volumes:

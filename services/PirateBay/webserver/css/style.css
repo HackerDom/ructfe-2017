@@ -1,0 +1,257 @@
+@charset "utf-8";
+@import url(http://weloveiconfonts.com/api/?family=fontawesome);
+
+
+body {
+  margin: 0;
+}
+
+
+.topbar {
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.topbar a {
+    float: left;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+.topbar a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.topbar a.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.topbar p {
+    position: absolute;
+    right: 0;
+    display: block;
+    color: #f2f2f2;
+    font-size: 17px;
+}
+
+.topbar input#search_field{
+    background: #181818;
+    border: none;
+    float: left;
+    color: #fff;
+    padding: 12px 14px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.bigmain {
+    text-align: center;
+    margin-top: 5%;
+    color: white;
+    font-size: xx-large;
+}
+
+.error {
+    margin: 0;
+    color: red;
+    padding-bottom: 10px;
+    line-height: 30px;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    color: #fff;
+    background-color: rgba(1, 1, 1, 0.2);
+}
+
+td, th {
+    border: 0;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #013101;
+}
+
+a {
+    color: white;
+}
+
+[class*="fontawesome-"]:before {
+  font-family: 'FontAwesome', sans-serif;
+}
+
+input {
+    border: none;
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5em;
+    padding: 0;
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+#login {
+    width: 320px;
+    margin: 12% auto;
+}
+
+#login form {
+  margin: auto;
+  padding: 22px 22px 22px 22px;
+  width: 100%;
+  border-radius: 5px;
+  background: #282e33;
+  border-top: 3px solid #434a52;
+  border-bottom: 3px solid #434a52;
+}
+
+#login form span {
+  background-color: #363b41;
+  border-radius: 3px 0px 0px 3px;
+  border-right: 3px solid #434a52;
+  color: #606468;
+  display: block;
+  float: left;
+  line-height: 50px;
+  text-align: center;
+  width: 50px;
+  height: 50px;
+}
+
+#login form input[type="text"] {
+  background-color: #3b4148;
+  border-radius: 0px 3px 3px 0px;
+  color: #a9a9a9;
+  margin-bottom: 1em;
+  padding: 0 16px;
+  width: 235px;
+  height: 50px;
+}
+
+#login form input[type="password"] {
+    background-color: #3b4148;
+    border-radius: 0px 3px 3px 0px;
+    color: #a9a9a9;
+    margin-bottom: 1em;
+    padding: 0 16px;
+    width: 235px;
+    height: 50px;
+}
+
+#login form input[type="submit"] {
+    background: #b5cd60;
+    border: 0;
+    width: 100%;
+    height: 40px;
+    border-radius: 3px;
+    color: black;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+#login form input[type="submit"]:hover {
+  background: #16aa56;
+  color: white;
+}
+
+#login form input[type="submit"]:disabled {
+  background: #5f0000;
+  color: white;
+}
+
+.checkbox {
+  vertical-align: top;
+  margin: 0 3px 0 0;
+  width: 17px;
+  height: 17px;
+}
+
+.checkbox + label {
+  cursor: pointer;
+    color: white;
+}
+
+.checkbox:not(checked) {
+  position: absolute;
+  opacity: 0;
+}
+.checkbox:not(checked) + label {
+  position: relative;
+  padding: 0 100px 0 60px;
+}
+
+.checkbox:not(checked) + label:before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 50px;
+  height: 26px;
+  border-radius: 13px;
+  background: #CDD1DA;
+  box-shadow: inset 0 2px 3px rgba(0,0,0,.2);
+}
+
+.checkbox:not(checked) + label:after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 10px;
+  background: #FFF;
+  box-shadow: 0 2px 5px rgba(0,0,0,.3);
+  transition: all .2s;
+}
+
+.checkbox:checked + label:before {
+  background: #9FD468;
+}
+
+.checkbox:checked + label:after {
+  left: 26px;
+}
+
+.checkbox:focus + label:before {
+  box-shadow: white;
+}
+
+.pagination {
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    bottom: 0;
+    left: 45%;
+}
+
+.pagination a {
+    float: left;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+.pagination a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.pagination a.active {
+    background-color: #4CAF50;
+    color: white;
+}

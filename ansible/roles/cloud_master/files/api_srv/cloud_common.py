@@ -9,10 +9,10 @@ import time
 import os
 import shutil
 
-DOMAIN = "cloud.alexbers.com"
+DOMAIN = "cloud.ructfe.org"
 
 # change me before the game
-ROUTER_HOST = "router2.ructfe.clients.haas.yandex.net"
+ROUTER_HOST = "vpn-dev.ructfe.org"
 
 SSH_OPTS = [
     "-o", "StrictHostKeyChecking=no",

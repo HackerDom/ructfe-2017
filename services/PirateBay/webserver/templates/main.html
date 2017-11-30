@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Pirate bay</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/sea.css">
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">Home</a>
+        {% if authed == "" %}
+        <a href="/signup_page">Sign up</a>
+        <a href="/signin_page">Sign in</a>
+        {% else %}
+        <a href="/signout">Sign out</a>
+        <a href="/storage">Files</a>
+        <a href="/private_storage">Private files</a>
+        <a href="/upload_file">Upload file</a>
+        <p>Hello, {{ authed }}!</p>
+        {% endif %}
+    </div>
+    <div class="bigmain">
+        <img src="images/ps.png" width=30%">
+    </div>
+</body>
+</html>

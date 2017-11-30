@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>Upload file</title>
+    <link rel="stylesheet" href="css/upload_form.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/sea.css">
+    <script src="js/upload_form.js"></script>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">Home</a>
+        <a href="/signout">Sign out</a>
+        <a href="/storage">Files</a>
+        <a href="/private_storage">Private files</a>
+        <p>Hello, {{ authed }}!</p>
+    </div>
+
+<form action="upload" method="post" enctype="multipart/form-data" id="form" accept-charset="utf-8">
+    <input type="file" id="upload_file" name="upload_file">
+    <p id="mess">Drag your files here or click in this area.</p>
+    <button type="submit">Upload</button>
+    <input type="checkbox" class="checkbox" id="checkbox" onclick="set_private(this)"/>
+    <label for="checkbox" class="checklabel">Private file</label>
+    <p class="error">{{ error_message }}</p>
+</form>
+</body>
+</html>

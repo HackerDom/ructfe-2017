@@ -11,81 +11,8 @@
 #include <time.h>
 #include <tuple>
 
-void DrawTest()
-{
-    Image image( 256, 256 );
-    Shader vs( "shaders/simple.vs.bin" );
-    Shader ps( "shaders/draw_test.ps.bin" );
 
-    VertexBuffer vb( 4, 2 );
-    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  0.0f,  1.0f );
-
-    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
-
-    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 1.0f, 1.0f,  0.0f,  0.0f );
-
-    vb.vertices[ 3 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 3 * 2 + 1 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  0.0f );
-
-    IndexBuffer ib( 6 );
-    ib.indices[ 0 ] = 0;
-    ib.indices[ 1 ] = 1;
-    ib.indices[ 2 ] = 2;
-    ib.indices[ 3 ] = 0;
-    ib.indices[ 4 ] = 2;
-    ib.indices[ 5 ] = 3;
-
-    PipelineState pState;
-    pState.vb = &vb;
-    pState.ib = &ib;
-    pState.vs = &vs;
-    pState.ps = &ps;
-    pState.rt = &image;
-    Draw( pState );
-    save_png( "test.png", image );
-}
-
-void TextureTest()
-{
-    Image image( 256, 256 );
-    Image texture;
-    read_png( "texture.png", texture );
-    Shader vs( "shaders/simple.vs.bin" );
-    Shader ps( "shaders/texture_test.ps.bin" );
-
-    VertexBuffer vb( 6, 2 );
-    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
-
-    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
-
-    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
-
-    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
-    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
-
-    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
-    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
-
-    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
-
-    PipelineState pState;
-    pState.vb = &vb;
-    pState.ib = nullptr;
-    pState.vs = &vs;
-    pState.textures[ 0 ] = &texture;
-    pState.ps = &ps;
-    pState.rt = &image;
-    Draw( pState );
-    save_png( "texture_test.png", image );
-}
-
+//
 void BuildViewMatrix( Lib3dsMatrix viewMatrix, Lib3dsVector eye, Lib3dsVector at, Lib3dsVector up ) {
     Lib3dsVector zAxis;
     lib3ds_vector_sub( zAxis, at, eye );
@@ -117,19 +44,8 @@ void BuildViewMatrix( Lib3dsMatrix viewMatrix, Lib3dsVector eye, Lib3dsVector at
     viewMatrix[ 3 ][ 3 ] = 1.0f;
 }
 
-void BuildOrthoProjMatrix( Lib3dsMatrix projMatrix, f32 width, f32 height, f32 near, f32 far ) {
-    for( u32 i = 0; i < 4; i++ )
-        for( u32 j = 0; j < 4; j++ )
-            projMatrix[ i ][ j ] = 0.0f;
 
-    projMatrix[ 0 ][ 0 ] = 2.0f / width;
-    projMatrix[ 1 ][ 1 ] = 2.0f / height;
-    projMatrix[ 2 ][ 2 ] = 1.0f / ( far - near );
-    projMatrix[ 3 ][ 2 ] = near / ( near - far );
-    projMatrix[ 3 ][ 3 ] = 1.0f;
-}
-
-
+//
 void BuildProjMatrix( Lib3dsMatrix projMatrix, float fovY, float aspect, float near, float far ) {
     for( u32 i = 0; i < 4; i++ )
         for( u32 j = 0; j < 4; j++ )
@@ -239,87 +155,156 @@ std::tuple< VertexBuffer*, IndexBuffer* > CreateFlagVb()
 
 
 //
-void DrawShip()
+VertexBuffer* CreateSkyVb()
 {
-    VertexBuffer* vb = LoadShip();
+    VertexBuffer* vb = new VertexBuffer( 6, 2 );
+    float z = 1.0f;
+    vb->vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, z, -1.0f,  -1.0f );
+    vb->vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
 
-    /*VertexBuffer vb( 6, 2 );
-    vb.vertices[ 0 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  -1.0f );
-    vb.vertices[ 0 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  0.0f );
+    vb->vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, z,  1.0f, -1.0f );
+    vb->vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
 
-    vb.vertices[ 1 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f, -1.0f );
-    vb.vertices[ 1 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  0.0f );
+    vb->vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, z,  1.0f,  1.0f );
+    vb->vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
 
-    vb.vertices[ 2 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f,  1.0f,  1.0f );
-    vb.vertices[ 2 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  0.0f,  1.0f );
+    vb->vertices[ 3 * 2 + 0 ].f = vb->vertices[ 0 * 2 + 0 ].f;
+    vb->vertices[ 3 * 2 + 1 ].f = vb->vertices[ 0 * 2 + 1 ].f;
 
-    vb.vertices[ 3 * 2 + 0 ].f = vb.vertices[ 0 * 2 + 0 ].f;
-    vb.vertices[ 3 * 2 + 1 ].f = vb.vertices[ 0 * 2 + 1 ].f;
+    vb->vertices[ 4 * 2 + 0 ].f = vb->vertices[ 2 * 2 + 0 ].f;
+    vb->vertices[ 4 * 2 + 1 ].f = vb->vertices[ 2 * 2 + 1 ].f;
 
-    vb.vertices[ 4 * 2 + 0 ].f = vb.vertices[ 2 * 2 + 0 ].f;
-    vb.vertices[ 4 * 2 + 1 ].f = vb.vertices[ 2 * 2 + 1 ].f;
+    vb->vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, z, -1.0f,  1.0f );
+    vb->vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
 
-    vb.vertices[ 5 * 2 + 0 ].f = _mm_set_ps( 1.0f, 0.0f, -1.0f,  1.0f );
-    vb.vertices[ 5 * 2 + 1 ].f = _mm_set_ps( 0.0f, 0.0f,  1.0f,  1.0f );
+    return vb;
+}
 
-    Image texture;
-    read_png( "texture.png", texture );*/
 
-    Lib3dsMatrix view, proj, viewProj;
-    Lib3dsVector camPos, camAt, camUp;
-    camPos[ 0 ] = 1.0f;
-    camPos[ 1 ] = 1.0f;
-    camPos[ 2 ] = -2.0f;
-    camAt[ 0 ] = 0.0f;
-    camAt[ 1 ] = 0.0f;
-    camAt[ 2 ] = 0.0f;
-    camUp[ 0 ] = 0.0f;
-    camUp[ 1 ] = 1.0f;
-    camUp[ 2 ] = 0.0f;
-    BuildViewMatrix( view, camPos, camAt, camUp );
-    BuildProjMatrix( proj, 90.0f / 180.0f * LIB3DS_PI, 1.0f, 0.1f, 100.0f );
-    //BuildOrthoProjMatrix( proj, 4.0, 4.0, 0.1f, 100.0f );
-    lib3ds_matrix_copy( viewProj, proj );
-    lib3ds_matrix_mult( viewProj, view );
-    lib3ds_matrix_transpose( viewProj );
+//
+bool CheckIntersection( Lib3dsVector planePos, Lib3dsVector rayStart, Lib3dsVector rayDir, f32&d )
+{
+    if( fabs( rayDir[ 1 ] ) < 1e-05 )
+        return false;
 
-    Image image( 512, 512 );
-    Image depthRt( 512, 512 );
-    Shader vs( "shaders/ship.vs.bin" );
-    Shader ps( "shaders/ship.ps.bin" );
+    d = ( planePos[ 1 ] - rayStart[ 1 ] ) / rayDir[ 1 ];
+    return d >= 0.0f && d <= 1.0f;
+}
 
-    PipelineState pState;
-    memcpy( pState.constants, viewProj, 4 * 4 * sizeof( float ) );
-    memcpy( &pState.constants[ 4 ], camPos, 4 * sizeof( float ) );
-    pState.vb = vb;
-    pState.ib = nullptr;
-    pState.vs = &vs;
-    //pState.textures[ 0 ] = &texture;
-    pState.ps = &ps;
-    pState.rt = &image;
-    pState.depthRt = &depthRt;
-    ClearDepthRenderTarget( pState.depthRt, 1.0f );
-    Draw( pState );
-    save_png( "ship.png", image );
 
-    /*Lib3dsNode* nodes = file->nodes;
-    std::list< Lib3dsNode* > stack;
-    while( nodes ) {
-        //
-        if( node->type == LIB3DS_OBJECT_NODE ) {
+//
+bool BuildSeaVb( VertexBuffer* vb, Lib3dsMatrix view, Lib3dsMatrix proj, f32 nearPlane, f32 farPlane, Lib3dsVector offset )
+{
+    if( offset[ 1 ] < 0.0f )
+        return false;
 
+    f32 sx = proj[ 0 ][ 0 ];
+    f32 sy = proj[ 1 ][ 1 ];
+    //
+    // 1______2
+    // |\ __/ |
+    // | |__| |
+    // |/___\_|
+    // 0      3
+    //
+    Lib3dsVector nearPoints[ 4 ];
+    nearPoints[ 0 ][ 0 ] = -1.0f * nearPlane / sx; nearPoints[ 0 ][ 1 ] = -1.0f * nearPlane / sy; nearPoints[ 0 ][ 2 ] = nearPlane;
+    nearPoints[ 1 ][ 0 ] = -1.0f * nearPlane / sx; nearPoints[ 1 ][ 1 ] =  1.0f * nearPlane / sy; nearPoints[ 1 ][ 2 ] = nearPlane;
+    nearPoints[ 2 ][ 0 ] =  1.0f * nearPlane / sx; nearPoints[ 2 ][ 1 ] =  1.0f * nearPlane / sy; nearPoints[ 2 ][ 2 ] = nearPlane;
+    nearPoints[ 3 ][ 0 ] =  1.0f * nearPlane / sx; nearPoints[ 3 ][ 1 ] = -1.0f * nearPlane / sy; nearPoints[ 3 ][ 2 ] = nearPlane;
+
+    Lib3dsVector farPoints[ 4 ];
+    farPoints[ 0 ][ 0 ] = -1.0f * farPlane / sx; farPoints[ 0 ][ 1 ] = -1.0f * farPlane / sy; farPoints[ 0 ][ 2 ] = farPlane;
+    farPoints[ 1 ][ 0 ] = -1.0f * farPlane / sx; farPoints[ 1 ][ 1 ] =  1.0f * farPlane / sy; farPoints[ 1 ][ 2 ] = farPlane;
+    farPoints[ 2 ][ 0 ] =  1.0f * farPlane / sx; farPoints[ 2 ][ 1 ] =  1.0f * farPlane / sy; farPoints[ 2 ][ 2 ] = farPlane;
+    farPoints[ 3 ][ 0 ] =  1.0f * farPlane / sx; farPoints[ 3 ][ 1 ] = -1.0f * farPlane / sy; farPoints[ 3 ][ 2 ] = farPlane;
+
+    Lib3dsVector viewPos;
+    viewPos[ 0 ] = view[ 3 ][ 0 ]; viewPos[ 1 ] = view[ 3 ][ 1 ]; viewPos[ 2 ] = view[ 3 ][ 2 ];
+    Lib3dsMatrix viewInv;
+    for( u32 i = 0; i < 3; i++ )
+        for( u32 j = 0; j < 3; j++ ) {
+            viewInv[ i ][ j ] = view[ j ][ i ];
         }
+    viewInv[ 0 ][ 3 ] = 0.0f; viewInv[ 1 ][ 3 ] = 0.0f; viewInv[ 2 ][ 3 ] = 0.0f;
+    viewInv[ 3 ][ 0 ] = 0.0f; viewInv[ 3 ][ 1 ] = 0.0f; viewInv[ 3 ][ 2 ] = 0.0f; viewInv[ 3 ][ 3 ] = 1.0f;
 
-        // DFS
-        if( nodes->childs ) {
-            stack.push_back( nodes );
-            nodes = nodes->childs;
-        } else if( nodes->next ) {
-            nodes = nodes->next;
-        } else if( !stack.empty() ){
-            nodes = stack.pop_back()->next;
+    Lib3dsVector nearPointsWS[ 4 ];
+    Lib3dsVector farPointsWS[ 4 ];
+    for( u32 i = 0; i < 4; i++ ) {
+        lib3ds_vector_transform( nearPointsWS[ i ], viewInv, nearPoints[ i ] );
+        lib3ds_vector_sub( nearPointsWS[ i ], nearPointsWS[ i ], viewPos );
+
+        lib3ds_vector_transform( farPointsWS[ i ], viewInv, farPoints[ i ] );
+        lib3ds_vector_sub( farPointsWS[ i ], farPointsWS[ i ], viewPos );
+    }
+
+    //
+    Lib3dsVector seaPos;
+    lib3ds_vector_zero( seaPos );
+    seaPos[ 1 ] = -offset[ 1 ];
+
+    //
+    Lib3dsVector intersections[ 4 ];
+    u32 mask = 0;
+
+    for( u32 i = 0; i < 4; i++ ) {
+        Lib3dsVector ray;
+        lib3ds_vector_sub( ray, farPointsWS[ i ], nearPointsWS[ i ] );
+
+        f32 d = 0.0f;
+        if( CheckIntersection( seaPos, nearPointsWS[ i ], ray, d ) ) {
+            lib3ds_vector_scalar( ray, d );
+            lib3ds_vector_add( ray, nearPointsWS[ i ], ray );
+
+            mask |= 1 << i;
+            lib3ds_vector_copy( intersections[ i ], ray );
         }
-    }*/
+    }
+
+    if( mask != 0b1111 ) {
+        Lib3dsVector rays[ 4 ];
+        lib3ds_vector_sub( rays[ 0 ], nearPointsWS[ 1 ], nearPointsWS[ 0 ] );
+        lib3ds_vector_sub( rays[ 3 ], nearPointsWS[ 2 ], nearPointsWS[ 3 ] );
+        lib3ds_vector_sub( rays[ 1 ], farPointsWS[ 1 ], farPointsWS[ 0 ] );
+        lib3ds_vector_sub( rays[ 2 ], farPointsWS[ 2 ], farPointsWS[ 3 ] );
+        Lib3dsVector p0[ 4 ];
+        lib3ds_vector_copy( p0[ 0 ], nearPointsWS[ 0 ] );
+        lib3ds_vector_copy( p0[ 3 ], nearPointsWS[ 3 ] );
+        lib3ds_vector_copy( p0[ 1 ], farPointsWS[ 0 ] );
+        lib3ds_vector_copy( p0[ 2 ], farPointsWS[ 3 ] );
+
+        for( u32 i = 0; i < 4; i++ ) {
+            f32 d = 0.0f;
+            if( CheckIntersection( seaPos, p0[ i ], rays[ i ], d ) ) {
+                Lib3dsVector p;
+                lib3ds_vector_copy( p, rays[ i ] );
+                lib3ds_vector_scalar( p, d );
+                lib3ds_vector_add( p, p0[ i ], p );
+
+                u32 _mask = 1 << i;
+                if( mask & _mask )
+                    return false;
+                mask |= _mask;
+                lib3ds_vector_copy( intersections[ i ], p );
+            }
+        }
+    }
+
+    if( mask == 0 )
+        return false;
+
+    if( mask != 0b1111 )
+        return false;
+
+    vb->vertices[ 0 ].f = _mm_set_ps( 1.0f, intersections[ 0 ][ 2 ], intersections[ 0 ][ 1 ], intersections[ 0 ][ 0 ] );
+    vb->vertices[ 1 ].f = _mm_set_ps( 1.0f, intersections[ 1 ][ 2 ], intersections[ 1 ][ 1 ], intersections[ 1 ][ 0 ] );
+    vb->vertices[ 2 ].f = _mm_set_ps( 1.0f, intersections[ 2 ][ 2 ], intersections[ 2 ][ 1 ], intersections[ 2 ][ 0 ] );
+    vb->vertices[ 3 ].f = vb->vertices[ 0 ].f;
+    vb->vertices[ 4 ].f = vb->vertices[ 2 ].f;
+    vb->vertices[ 5 ].f = _mm_set_ps( 1.0f, intersections[ 3 ][ 2 ], intersections[ 3 ][ 1 ], intersections[ 3 ][ 0 ] );
+
+    return true;
 }
 
 
@@ -422,7 +407,8 @@ int AddShipProcessor::IteratePostData( MHD_ValueKind kind, const char *key, cons
 class RequestHandler : public HttpRequestHandler
 {
 public:
-    RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb, VertexBuffer* flagVb, IndexBuffer* flagIb );
+    RequestHandler( ShipStorage* shipStorage, VertexBuffer* shipVb, VertexBuffer* flagVb, IndexBuffer* flagIb, Image* skyTexture, Image* seaTexture, VertexBuffer* skyVb,
+                    Shader* shipVs, Shader* shipPs, Shader* skyVs, Shader* skyPs, Shader* seaVs, Shader* seaPs );
 
     HttpResponse HandleGet( HttpRequest request );
     HttpResponse HandlePost( HttpRequest request, HttpPostProcessor **postProcessor );
@@ -432,15 +418,35 @@ private:
     VertexBuffer* m_shipVb;
     VertexBuffer* m_flagVb;
     IndexBuffer* m_flagIb;
+    Image* m_skyTexture;
+    Image* m_seaTexture;
+    VertexBuffer* m_skyVb;
+    VertexBuffer* m_seaVb;
+    Shader* m_shipVs;
+    Shader* m_shipPs;
+    Shader* m_skyVs;
+    Shader* m_skyPs;
+    Shader* m_seaVs;
+    Shader* m_seaPs;
 };
 
 
 //
-RequestHandler::RequestHandler(ShipStorage* shipStorage, VertexBuffer* shipVb , VertexBuffer *flagVb, IndexBuffer *flagIb)
+RequestHandler::RequestHandler(ShipStorage* shipStorage, VertexBuffer* shipVb, VertexBuffer* flagVb, IndexBuffer* flagIb, Image* skyTexture, Image* seaTexture, VertexBuffer* skyVb,
+                               Shader* shipVs, Shader* shipPs, Shader* skyVs, Shader* skyPs, Shader* seaVs, Shader* seaPs )
     : m_shipStorage( shipStorage )
     , m_shipVb( shipVb )
     , m_flagVb( flagVb )
     , m_flagIb( flagIb )
+    , m_seaTexture( seaTexture )
+    , m_skyTexture( skyTexture )
+    , m_skyVb( skyVb )
+    , m_shipVs( shipVs )
+    , m_shipPs( shipPs )
+    , m_skyVs( skyVs )
+    , m_skyPs( skyPs )
+    , m_seaVs( seaVs )
+    , m_seaPs( seaPs )
 {
 }
 
@@ -499,19 +505,19 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         lib3ds_vector_cross( camUp, temp, dir );
 
         // draw
+        const f32 nearPlane = 0.1f;
+        const f32 farPlane = 100.0f;
         Lib3dsMatrix view, proj, viewProj;
         BuildViewMatrix( view, camPos, camAt, camUp );
-        BuildProjMatrix( proj, 90.0f / 180.0f * LIB3DS_PI, 1.0f, 0.1f, 100.0f );
+        BuildProjMatrix( proj, 90.0f / 180.0f * LIB3DS_PI, 1.0f, nearPlane, farPlane );
         //BuildOrthoProjMatrix( proj, 4.0, 4.0, 0.1f, 100.0f );
         lib3ds_matrix_copy( viewProj, proj );
         lib3ds_matrix_mult( viewProj, view );
         lib3ds_matrix_transpose( viewProj );
 
-        const u32 S = 64;
+        const u32 S = 128;
         Image image( S, S );
         Image depthRt( S, S );
-        Shader shipVs( "shaders/ship.vs.bin" );
-        Shader shipPs( "shaders/ship.ps.bin" );
 
         PipelineState pState;
         memcpy( pState.constants, viewProj, 4 * 4 * sizeof( float ) );
@@ -520,9 +526,26 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
         pState.rt = &image;
         pState.depthRt = &depthRt;
 
-        ClearRenderTarget( pState.rt, 50, 50, 127, 255 );
         ClearDepthRenderTarget( pState.depthRt, 1.0f );
 
+        // draw sea
+        VertexBuffer seaVb( 6, 1 );
+        if( BuildSeaVb( &seaVb, view, proj, nearPlane + 0.5f, farPlane - 0.5f, offset ) ) {
+            pState.vb = &seaVb;
+            pState.textures[ 0 ] = m_seaTexture;
+            pState.vs = m_seaVs;
+            pState.ps = m_seaPs;
+            Draw( pState );
+        }
+
+        // draw sky
+        pState.vb = m_skyVb;
+        pState.textures[ 0 ] = m_skyTexture;
+        pState.vs = m_skyVs;
+        pState.ps = m_skyPs;
+        Draw( pState );
+
+        // draw ships
         const f32 MAX_DISTANCE = 40.0f;
 		const u32 MAX_SHIPS_TO_DRAW = 10;
 		u32 shipsDrawn = 0;
@@ -554,8 +577,8 @@ HttpResponse RequestHandler::HandleGet( HttpRequest request ) {
             memcpy( &pState.constants[ 5 ], tr, 4 * 4 * sizeof( float ) );
             // draw ship
             pState.vb = m_shipVb;
-            pState.vs = &shipVs;
-            pState.ps = &shipPs;
+            pState.vs = m_shipVs;
+            pState.ps = m_shipPs;
             Draw( pState );
             // draw flag
             pState.vb = m_flagVb;
@@ -594,49 +617,43 @@ HttpResponse RequestHandler::HandlePost( HttpRequest request, HttpPostProcessor 
 
 
 //
-void GpuTests()
-{
-    DrawTest();
-    TextureTest();
-
-    timespec tp;
-    double startTime, endTime;
-    clock_gettime( CLOCK_REALTIME, &tp );
-    startTime = tp.tv_sec + tp.tv_nsec / 1000000000.0;
-    DrawShip();
-    clock_gettime( CLOCK_REALTIME, &tp );
-    endTime = tp.tv_sec + tp.tv_nsec / 1000000000.0;
-    printf( ":: Time: %f\n", endTime - startTime );
-}
-
-
-//
 void Service()
 {
     VertexBuffer* shipVb = LoadShip();
     VertexBuffer* flagVb;
     IndexBuffer* flagIb;
     std::tie( flagVb, flagIb ) = CreateFlagVb();
+    Image skyTexture;
+    read_png( "textures/sky.png", skyTexture );
+    Image seaTexture;
+    read_png( "textures/water.png", seaTexture );
+    VertexBuffer* skyVb = CreateSkyVb();
+    Shader shipVs( "shaders/ship.vs.bin" );
+    Shader shipPs( "shaders/ship.ps.bin" );
+    Shader skyVs( "shaders/simple.vs.bin" );
+    Shader skyPs( "shaders/texture.ps.bin" );
+    Shader seaVs( "shaders/sea.vs.bin" );
+    Shader seaPs( "shaders/sea.ps.bin" );
+
     ShipStorage shipStorage( "storage.dat" );
-    RequestHandler handler( &shipStorage, shipVb, flagVb, flagIb );
+    RequestHandler handler( &shipStorage, shipVb, flagVb, flagIb, &skyTexture, &seaTexture, skyVb, &shipVs, &shipPs, &skyVs, &skyPs, &seaVs, &seaPs );
     HttpServer server(&handler);
 
     server.Start(16780);
 
-    while(1){
+    while(1)
         sleep(1);
-    }
 
     server.Stop();
     delete shipVb;
     delete flagVb;
     delete flagIb;
+    delete skyVb;
 }
 
 
 int main()
 {
-    //GpuTests();
     Service();
     return 0;
 }

@@ -264,7 +264,7 @@ struct Shader : public NonMovable
     {
         struct
         {
-            ShaderType type : 1;
+            u32 type : 1;
             u32 instructionsNum : 10;
         };
         union
