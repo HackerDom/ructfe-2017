@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "bytes"
+    "strconv"
 
     "github.com/labstack/echo"
 )
@@ -155,7 +156,14 @@ func (api *API) GetProfile(c echo.Context) error {
 func (api *API) GetUsers(c echo.Context) error {
     users := make([]map[string]string, 0)
 
-    api.storage.IterateUsers(10, func (user *User) {
+    re := c.FormValue("re")
+    limit := 10
+
+    if parsedLimit, err := strconv.Atoi(c.FormValue("limit")); err == nil {
+        limit = parsedLimit
+    }
+
+    api.storage.IterateUsers(limit, re, func (user *User) {
         properties := make(map[string]string)
 
         for _, key := range []string{"fullname", "picture", "public", "address"} {
