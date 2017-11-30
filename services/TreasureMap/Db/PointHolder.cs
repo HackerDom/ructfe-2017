@@ -25,6 +25,8 @@ namespace TreasureMap.Db
 					AddIntenal(point);
 			});
 
+			DataBase.ForEach(pair => currentId = Math.Max(currentId, long.Parse(pair.Value.Id)));
+
 			new PeriodicSaver<Point>(path, sleep, () =>
 			{
 				var dl = DateTime.UtcNow.AddMilliseconds(-ttl);

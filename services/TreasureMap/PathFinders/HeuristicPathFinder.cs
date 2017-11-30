@@ -47,6 +47,7 @@ namespace TreasureMap.PathFinders
 				for (var i = 0; i < VertexCount; ++i)
 					if (used[current] || !used[i] && dist[current] > dist[i])
 						current = i;
+				used[current] = true;
 				for (var i = 0; i < VertexCount; ++i)
 				{
 					if (used[i])

@@ -36,6 +36,7 @@ namespace TreasureMap.Handlers
 					continue;
 				while (res.Count >= 2 && BadState(res.PreLast(), res.Last(), path[i]))
 					res.RemoveAt(res.Count - 1);
+				res.Add(path[i]);
 			}
 
 			return res;

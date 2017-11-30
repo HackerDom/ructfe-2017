@@ -97,7 +97,7 @@ async def check_path(username, sender, another, aname):
 		checker.mumble(error='path must contains at least one point')
 	if not equal_points(path[0], start):
 		checker.mumble(error='start point is bad: {} vs {}'.format(start, path[0]))
-	if not equal_points(path[-1], start):
+	if not equal_points(path[-1], finish):
 		checker.mumble(error='finish point is bad: {} vs {}'.format(finish, path[-1]))
 
 	for p in responses:
