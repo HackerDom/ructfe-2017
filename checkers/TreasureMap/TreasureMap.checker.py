@@ -64,8 +64,8 @@ async def check_one(username, sender, viewer, is_public):
 
 def get_rand_point():
 	return {
-			'x' : checker.get_rand_string(13), 
-			'y' : checker.get_rand_string(13)
+			'x' : checker.get_rand_string(13, checker.printable),
+			'y' : checker.get_rand_string(13, checker.printable)
 	}
 
 def equal_points(p1, p2):
@@ -75,8 +75,7 @@ def is_between_str(l, r, p):
 	return l <= p <= r or l >= p >= r
 
 def is_between(l, r, p):
-	return l['x'] == p['x'] == r['x'] and is_between(l['y'], r['y'], p['y']) or l['y'] == p['y'] == r['y'] and is_between(l['x'], r['x'], p['x'])
-
+	return l['x'] == p['x'] == r['x'] and is_between_str(l['y'], r['y'], p['y']) or l['y'] == p['y'] == r['y'] and is_between_str(l['x'], r['x'], p['x'])
 
 async def check_path(username, sender, another, aname):
 	responses = []
@@ -97,7 +96,7 @@ async def check_path(username, sender, another, aname):
 		checker.mumble(error='path must contains at least one point')
 	if not equal_points(path[0], start):
 		checker.mumble(error='start point is bad: {} vs {}'.format(start, path[0]))
-	if not equal_points(path[-1], start):
+	if not equal_points(path[-1], finish):
 		checker.mumble(error='finish point is bad: {} vs {}'.format(finish, path[-1]))
 
 	for p in responses:
@@ -116,13 +115,10 @@ async def handler_check(hostname):
 	username, password = await state.register()
 	tasks = []
 
-	await check_one(username, state, viewer, True)
-	await check_one(username, state, state, False)
-	await check_path(username, state, viewer, auser)
-#	tasks.append(asyncio.ensure_future(check_one(username, state, viewer, True)))
-#	tasks.append(asyncio.ensure_future(check_one(username, state, state, False)))
-#	tasks.append(asyncio.ensure_future(check_path(username, state, viewer, auser)))
-#	await asyncio.gather(*tasks)
+	tasks.append(asyncio.ensure_future(check_one(username, state, viewer, True)))
+	tasks.append(asyncio.ensure_future(check_one(username, state, state, False)))
+	tasks.append(asyncio.ensure_future(check_path(username, state, viewer, auser)))
+	await asyncio.gather(*tasks)
 
 	checker.ok()
 

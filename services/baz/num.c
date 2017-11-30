@@ -69,3 +69,19 @@ bool is_zero(uint192 n)
 {
 	return !n.i2 && !n.i1 && !n.i0; 
 }
+
+uint192 xor(uint192 a, uint192 b)
+{
+	a.i0 ^= b.i0;
+	a.i1 ^= b.i1;
+	a.i2 ^= b.i2;
+
+	return a;
+}
+
+uint192 not(uint192 n)
+{
+	n.i0 = ~n.i0;
+	n.i1 = ~n.i1;
+	n.i2 = ~n.i2;
+}

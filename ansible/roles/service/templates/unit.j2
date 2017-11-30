@@ -1,3 +1,4 @@
+#jinja2: lstrip_blocks: "True"
 [Unit]
     Description=RuCTFE 2017: {{ service_name }}
     After=network-online.target docker.service
@@ -5,8 +6,12 @@
     Requires=docker.service
 
 [Service]
-    ExecStart=/usr/local/bin/docker-compose up
-    WorkingDirectory=/home/{{ service_name }}/{{ service_path | default(service_name) | basename }}
+    ExecStart=/usr/local/bin/docker-compose up --build
+    {% if service_name == "PirateCoin" %}
+    ExecStartPre=/home/{{ service_name }}/get_ip.sh
+    PermissionsStartOnly=true
+    {% endif %}
+    WorkingDirectory=/home/{{ service_name }}
     User={{ service_name }}
     Group={{ service_name }}
     Restart=on-failure

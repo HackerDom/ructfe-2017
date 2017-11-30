@@ -1,20 +1,13 @@
 
-flag_alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+flag_alpha = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 spirits = [
-"Bitter ale",
-"Brown ale",
-"Mild ale",
-"Pale ale",
-"Scotch ale",
+"Ale",
 "Porter",
 "Stout",
 "Lager",
-"Pilsener",
-"Wheat beer",
 "Cider",
 "Mead",
-"Sake",
 "Wine",
 "Port",
 "Sherry",
@@ -22,10 +15,10 @@ spirits = [
 "Vinsanto",
 "Sangria",
 "Champagne",
-"Absinthe",
+"Sake",
 "Brandy",
-"Armagnac",
 "Cognac",
+"Armagnac",
 "Schnapps",
 "Gin",
 "Horilka",
@@ -37,9 +30,11 @@ spirits = [
 "Tequila",
 "Vodka",
 "Bourbon",
-"Irish whiskey",
-"Japanese whisky",
-"Scotch whisky",
+"Whiskey",
+"Absinthe",
+"Juice",
+"Cola",
+"Water"
 ]
 
 def parse_flag(flag):

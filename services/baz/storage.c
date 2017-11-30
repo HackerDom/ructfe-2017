@@ -2,7 +2,7 @@
 #include "num.h"
 
 #define MAXITEMS 4096
-#define MAXNODES 4096
+#define MAXNODES 409600
 
 typedef struct 
 {
@@ -12,36 +12,89 @@ typedef struct
 
 typedef struct
 {
-	uint16 trans[26];
-	uint16 value;
+	uint32 trans[26];
+	uint32 value;
+	uint32 used; 
 } node;
 
 node nodes[MAXNODES];
 slot slots[MAXITEMS];
-uint64 items_count;
-uint64 next_node;
+uint64 current_item;
+uint64 current_node;
 
 void init_storage()
 {
-	items_count = 0;
-	next_node = 1;
+	current_item = 0;
+	current_node = 1;
 	memzero(nodes, sizeof(nodes));
+	memzero(slots, sizeof(slots));
+	nodes[0].used = true;
 }
 
 uint64 allocate_node()
 {
-	uint64 nd = next_node;
-	next_node++;
-	if (next_node >= MAXNODES)
-		return 0;
-	return nd;
+	uint64 i;
+	for (i = 0; i < MAXNODES; i++)
+	{
+		uint64 idx = (i + current_node) % MAXNODES;
+		if (nodes[idx].used)
+			continue;
+		nodes[idx].used = true;
+		current_node = idx + 1;
+		return idx;
+	}
+	return -1;
 }
 
-uint16 add_item(const slot *item)
+void delete_item(slot *item)
 {
-	// TODO handle overflow
-	slots[items_count + 1] = *item;
-	return ++items_count;
+	uint64 current = 0;
+	char *key;
+	uint32 path[32] = { 0 };
+	uint64 i = 0;
+	for (key = item->key; *key && key < item->value; key++)
+	{
+		uint64 n = *key - 'A';
+		path[i++] = current;
+		current = nodes[current].trans[n] - 1;
+	}
+
+	nodes[current].value = 0;
+
+	uint64 deleted = 0;
+	for (i--; i > 0; i--)
+	{
+		if (nodes[current].value)
+			break;
+
+		uint64 j;
+		for (j = 0; j < 26; j++)
+		{
+			if (nodes[current].trans[j])
+				break;
+		}
+
+		if (j < 26)
+			break;
+
+		key--;
+		uint64 n = *key - 'A';
+
+		memzero(&nodes[current], sizeof(node));
+		current = path[i];
+		nodes[current].trans[n] = 0;
+		deleted++;
+	}
+}
+
+uint32 add_item(const slot *item)
+{
+	current_item = (current_item + 1) % MAXITEMS;
+	if (slots[current_item].key[0])
+		delete_item(&slots[current_item]);
+
+	slots[current_item] = *item;
+	return current_item;
 }
 
 void copy_value(const void *src, void *dest)
@@ -71,17 +124,17 @@ char * store_item(const char *key, char *value)
 		if (!nodes[current].trans[n])
 		{
 			uint64 nd = allocate_node();
-			if (!nd)
+			if (nd == -1)
 				return 0;
-			nodes[current].trans[n] = nd;
+			nodes[current].trans[n] = nd + 1;
 		}
-		current = nodes[current].trans[n];
+		current = nodes[current].trans[n] - 1;
 	}
 
 	if (nodes[current].value)
 		return 0;
 
-	nodes[current].value = add_item(&item);
+	nodes[current].value = add_item(&item) + 1;
 
 	return value;
 }
@@ -100,14 +153,14 @@ char * load_item(const char *key, char *buffer)
 			return 0;
 		if (!nodes[current].trans[n])
 			return 0;
-		current = nodes[current].trans[n];
+		current = nodes[current].trans[n] - 1;
 		key++;
 	}
 
 	if (!nodes[current].value)
 		return 0;
 
-	copy_value(slots[nodes[current].value].value, buffer);
+	copy_value(slots[nodes[current].value - 1].value, buffer);
 	buffer[32] = 0; 
 
 	return buffer;
@@ -118,7 +171,7 @@ char * list_items(uint64 skip, uint64 take, char *buffer, uint64 length)
 	if (!buffer)
 		return 0;
 
-	if ((skip + take) * 33 > length)
+	if (take * 33 > length)
 		return 0;
 
 	buffer[0] = 0;
@@ -126,7 +179,7 @@ char * list_items(uint64 skip, uint64 take, char *buffer, uint64 length)
 	uint64 i;
 	for (i = skip; i < skip + take; i++)
 	{
-		if (i >= items_count)
+		if (i >= current_item)
 			break;
 		strncat(buffer, slots[i + 1].key, 32);
 		strcat(buffer, "\n");
@@ -135,7 +188,7 @@ char * list_items(uint64 skip, uint64 take, char *buffer, uint64 length)
 	return buffer;
 }
 
-#define CSPIRITS 30
+#define CSPIRITS 33
 #define MAXRECIPE 32
 char *spirits[] = {
 "Ale",
@@ -144,7 +197,6 @@ char *spirits[] = {
 "Lager",
 "Cider",
 "Mead",
-"Sake",
 "Wine",
 "Port",
 "Sherry",
@@ -152,10 +204,10 @@ char *spirits[] = {
 "Vinsanto",
 "Sangria",
 "Champagne",
-"Absinthe",
+"Sake",
 "Brandy",
-"Armagnac",
 "Cognac",
+"Armagnac",
 "Schnapps",
 "Gin",
 "Horilka",
@@ -167,8 +219,14 @@ char *spirits[] = {
 "Tequila",
 "Vodka",
 "Bourbon",
-"Whiskey"
+"Whiskey",
+"Absinthe",
+"Juice",
+"Cola",
+"Water"
 };
+
+uint192 magic = { .i0 = 0xb0b8bad, .i1 = 0xbeefdefec87edfec, .i2 = 0xe5f100deda11dead };
 
 char * encode_flag(const char *recipe, char *buffer)
 {
@@ -214,6 +272,9 @@ char * encode_flag(const char *recipe, char *buffer)
 		}
 		recipe++;
 	}
+
+	n = not(n);
+	n = xor(n, magic);
 	
 	buffer[32] = 0;
 	buffer[31] = '=';
@@ -242,14 +303,43 @@ char * hash_flag(const char *flag, char *buffer)
 {
 	if (!flag || !buffer)
 		return 0;
-	char *bptr = buffer;
-	while (*flag)
+
+	char flag_copy[32];
+	uint64 i;
+	for (i = 0; i < 32; i++)
+		flag_copy[i % 2 ? 32 - i : i] = flag[i] > '9' ? flag[i] - 'A' + 10 : flag[i] - '0';
+	
+	const uint64 seed = 0x60d15dead;
+	const uint64 m = 0xc6a4a7935bd1e995;
+	const int32 r = 47;
+
+	uint64 h = seed ^ (32 * m);
+
+	const uint64 *data = (const uint64 *)flag_copy;
+	const uint64 *end = 4 + data;
+
+	while (data != end)
 	{
-		*bptr = *flag;
-		flag++;
-		bptr++;
+		uint64 k = *data++;
+
+		k *= m; 
+		k ^= k >> r; 
+		k *= m; 
+
+		h ^= k;
+		h *= m; 
 	}
-	*bptr = 0;
+
+	h *= m;
+
+	h ^= h >> r;
+	h *= m;
+	h ^= h >> r;
+
+	if (!(h >> 63))
+		h = ~h;
+
+	to_string_hex(h, buffer, 32);
 	return buffer;
 }
 

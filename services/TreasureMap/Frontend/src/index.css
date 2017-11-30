@@ -10,5 +10,11 @@ body {
 .map {
   height: 100%;
   width: 100%;
-  background: red;
+  background: #343332;
+}
+
+.userForm {
+  position: absolute;
+  top: 0;
+  right: 0;
 }

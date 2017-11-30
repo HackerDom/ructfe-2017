@@ -29,7 +29,6 @@ export const addPointToMap = rawPoint => {
       "text-anchor": "top"
     }
   };
-  console.log(layer);
   try {
     map.addLayer(layer).on("click", id, e => {
       if (e.features[0].properties.description) {

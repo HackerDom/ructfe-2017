@@ -33,7 +33,6 @@ namespace TreasureMap
 				var server = new HttpServer(port);
 
 				server
-					.AddHandler(RegisterHandler.Instanse)
 					.AddHandler(LoginHandler.Instance)
 					.AddHandler(AddPointHandler.Instance)
 					.AddHandler(GetAllPublicsHandler.Instance)
