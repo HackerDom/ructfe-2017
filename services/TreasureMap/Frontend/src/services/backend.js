@@ -24,3 +24,8 @@ export const fetchData = async () => {
   ];
   return normalize(data, points).entities.point;
 };
+
+export const putNewPoint = async data => {
+  // типа айдишник
+  return Date.now().toString();
+};
