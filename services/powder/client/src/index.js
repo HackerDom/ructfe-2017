@@ -12,17 +12,13 @@ import { doReduce } from './reducers'
 import { loadChats, loadUsers, applicationStart, loadProfile } from './actions'
 
 import { createStore, applyMiddleware, compose } from 'redux'
-import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 
 import { autoRehydrate, persistStore } from 'redux-persist'
 
-let loggerMiddleware = createLogger()
-
 let store = compose(
     applyMiddleware(
-        thunkMiddleware,
-        loggerMiddleware),
+        thunkMiddleware),
     autoRehydrate()
 )(createStore)(doReduce)
 

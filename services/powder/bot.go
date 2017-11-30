@@ -19,9 +19,9 @@ func NewBot(user *User) *Bot {
 }
 
 func SetupAutoReply(storage *Storage) {
-    storage.IterateUsers(0, "", func (user *User) {
+    storage.IterateUsers(0, "", func (user User) {
         if user.AutoReply {
-            StartBot(user, storage)
+            StartBot(&user, storage)
         }
     })
 }
@@ -118,7 +118,7 @@ func StartBot(user *User, storage *Storage) {
             for _, message := range bot.Say(lastMessage) {
                 storage.SaveMessage(message)
             }
-            time.Sleep(time.Second)
+            time.Sleep(3 * time.Second)
         }
     }()
 }
