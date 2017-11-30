@@ -27,21 +27,21 @@ func NewCrypto() *Crypto {
 
 func TrickyKey(base *big.Int) *big.Int {
     result := &big.Int{}
-    step, _ := cryptoRand.Prime(cryptoRand.Reader, 128)
+    step, _ := cryptoRand.Prime(cryptoRand.Reader, 32)
     result.Add(base, step)
 
     for {
         if result.ProbablyPrime(10) {
             return result
         }
-        step, _ = cryptoRand.Prime(cryptoRand.Reader, 128)
+        step, _ = cryptoRand.Prime(cryptoRand.Reader, 32)
         result.Add(result, step)
     }
 }
 
 func (*Crypto) NewKeys() (string, string, string, string) {
-    prime1, _ := cryptoRand.Prime(cryptoRand.Reader, 1024)
-    prime2, _ := cryptoRand.Prime(cryptoRand.Reader, 1024)
+    prime1, _ := cryptoRand.Prime(cryptoRand.Reader, 512)
+    prime2, _ := cryptoRand.Prime(cryptoRand.Reader, 512)
     prime3 := TrickyKey(prime2)
     public := big.NewInt(1)
     public.Mul(public, prime1)

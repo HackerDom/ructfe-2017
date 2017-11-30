@@ -10,6 +10,7 @@ import (
     "syscall"
     r "math/rand"
     "strings"
+    "strconv"
 )
 
 type TCase struct {
@@ -119,22 +120,28 @@ func (ss *TSS) MakeRandomGet() {
 }
 
 func main() {
-    if len(os.Args) != 3 {
+    if len(os.Args) != 4 {
         return
     }
 
-    checker, hostname := os.Args[1], os.Args[2]
+    checker, hostname, concurrencyS := os.Args[1], os.Args[2], os.Args[3]
     ss := NewTSS(checker, hostname)
 
-    for {
-        ss.MakePut()
-        ss.MakeRandomGet()
+    concurrency, _ := strconv.Atoi(concurrencyS)
 
-        for statusCode, count := range ss.Stats {
-            fmt.Printf("%d\t%d\n", statusCode, count)
-        }
+    for i := 0; i < concurrency; i++ {
+        go func() {
+            for {
+                ss.MakePut()
+                ss.MakeRandomGet()
+
+                for statusCode, count := range ss.Stats {
+                    fmt.Printf("%d\t%d\n", statusCode, count)
+                }
+            }
+        }()
+    }
+    for {
         time.Sleep(time.Second)
     }
-
-    fmt.Println(NewCase())
 }

@@ -280,11 +280,11 @@ func Get(args []string) int {
     hostname, joinedId, flag := args[0], args[1], args[2]
     splittedId := strings.Split(joinedId, ",")
 
-    if len(splittedId) != 2 {
-        return CHECKER_ERROR
-    }
+    id, password := splittedId[0], splittedId[0]
 
-    id, password := splittedId[0], splittedId[1]
+    if len(splittedId) == 2 {
+        password = splittedId[1]
+    }
 
     server := &Server{Host: fmt.Sprintf("http://%s", hostname)}
     user := &User{Login: id, Password: password}
