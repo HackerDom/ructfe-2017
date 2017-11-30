@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile-geth
     volumes:
       - .:/home/PirateCoin
+      - ./geth_root:/root/
     restart: on-failure
     ports:
       - "30303:30303"
