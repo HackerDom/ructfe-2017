@@ -4,6 +4,7 @@ import checker
 import aiohttp
 import random
 import asyncio
+import string
 
 import UserAgents
 
@@ -114,11 +115,20 @@ class State:
 		helper.start()
 		return helper
 
-	async def put_point(self, x = None, y = None, message = None, is_public = None):
+	async def put_point(self, x = None, y = None, message = None, is_public = None, user = None):
 		point = {
 			'x' : checker.get_value_or_rand_string(x, 13), 
 			'y' : checker.get_value_or_rand_string(y, 13), 
 			'message' : checker.get_value_or_rand_string(message, 50), 
-			'public' : is_public if is_public is not None else random.choise([True, False])}
+			'public' : is_public if is_public is not None else random.choice([True, False])}
 		point['id'] = await self.post('/api/add', point)
+		point['user'] = user
 		return point
+
+	async def get_path(self, start, finish, inners):
+		response = await self.post('/api/path', {
+			'start': start,
+			'finish': finish,
+			'sub': inners
+		})
+		return checker.parse_json(response)

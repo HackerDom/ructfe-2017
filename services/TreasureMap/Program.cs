@@ -37,7 +37,8 @@ namespace TreasureMap
 					.AddHandler(LoginHandler.Instance)
 					.AddHandler(AddPointHandler.Instance)
 					.AddHandler(GetAllPublicsHandler.Instance)
-					.AddHandler(GetPointsHandler.Instance);
+					.AddHandler(GetPointsHandler.Instance)
+					.AddHandler(ShortestPathHandler.Instance);
 
 				server.AcceptLoopAsync(new CancellationToken()).Wait();
 			}

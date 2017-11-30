@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,6 +54,9 @@ namespace TreasureMap.Http
 
 		private async void TryProcessRequestAsync(HttpListenerContext context)
 		{
+			Log.Info($"Request start {context.Request.Url.LocalPath}");
+			var status = -1;
+			var sw = Stopwatch.StartNew();
 			try
 			{
 				var response = context.Response;
@@ -74,6 +78,7 @@ namespace TreasureMap.Http
 				}
 				finally
 				{
+					status = response.StatusCode;
 					response.Close();
 				}
 			}
@@ -82,6 +87,7 @@ namespace TreasureMap.Http
 				if(!(e is InvalidOperationException))
 					Log.Error(e);
 			}
+			Log.Info($"Request end {context.Request.Url.LocalPath} with status {status}, elapsed {sw.Elapsed}");
 		}
 
 		private async Task ProcessRequestAsync(HttpListenerContext context)

@@ -115,6 +115,10 @@ func (api *API) SaveProfile(c echo.Context) error {
     }
 
     user := api.storage.GetUser(login)
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
+
     for key := range params {
         value := params.Get(key)
         if key == "address" {
@@ -142,6 +146,10 @@ func (api *API) GetProfile(c echo.Context) error {
 
     user := api.storage.GetUser(login)
 
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
+
     for key := range user.Properties {
         value := user.Properties[key]
         if key == "address" {
@@ -163,7 +171,7 @@ func (api *API) GetUsers(c echo.Context) error {
         limit = parsedLimit
     }
 
-    api.storage.IterateUsers(limit, re, func (user *User) {
+    api.storage.IterateUsers(limit, re, func (user User) {
         properties := make(map[string]string)
 
         for _, key := range []string{"fullname", "picture", "public", "address"} {
@@ -221,7 +229,7 @@ func (api *API) GetConversation(c echo.Context) error {
     messages := make([]string, 0)
     to := c.FormValue("to")
 
-    api.storage.IterateMessages(login, to, func (message *Message) {
+    api.storage.IterateMessages(login, to, func (message Message) {
         messages = append(messages, fmt.Sprintf("%s > %s", message.Author, message.Message))
     })
 

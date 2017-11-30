@@ -68,16 +68,24 @@
     <Compile Include="Db\PointHolder.cs" />
     <Compile Include="Db\SecretHolder.cs" />
     <Compile Include="Handlers\AddPointHandler.cs" />
+    <Compile Include="PathFinders\FastPathFinder.cs" />
     <Compile Include="Handlers\GetAllPublicsHandler.cs" />
     <Compile Include="Handlers\GetPointsHandler.cs" />
     <Compile Include="Handlers\Helpers\BaseHandler.cs" />
     <Compile Include="Handlers\Helpers\CredentialsHandlerHelper.cs" />
     <Compile Include="Handlers\Helpers\PointConverter.cs" />
+    <Compile Include="PathFinders\IPathFinder.cs" />
     <Compile Include="Handlers\LoginHandler.cs" />
+    <Compile Include="Handlers\Models\DrawPoint.cs" />
+    <Compile Include="Handlers\Models\PathRequest.cs" />
     <Compile Include="Handlers\Models\Point.cs" />
     <Compile Include="Handlers\Helpers\NeedAuthorizeHandler.cs" />
+    <Compile Include="Handlers\PathDrawer.cs" />
+    <Compile Include="PathFinders\HeuristicPathFinder.cs" />
+    <Compile Include="PathFinders\PathFinder.cs" />
     <Compile Include="Handlers\RegisterHandler.cs" />
     <Compile Include="Handlers\Helpers\SecureCookieHelper.cs" />
+    <Compile Include="Handlers\ShortestPathHandler.cs" />
     <Compile Include="Http\HttpContextHelper.cs" />
     <Compile Include="Http\HttpServer.cs" />
     <Compile Include="Http\HttpServerExtentions.cs" />
@@ -104,4 +112,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(ProjectDir)\deploy.bat $(ProjectDir) $(ProjectDir)$(OutDir)</PostBuildEvent>
+  </PropertyGroup>
 </Project>

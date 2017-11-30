@@ -18,13 +18,14 @@ for (@$teams) {
   my $a   = 60 + int($team_id / 256);
   my $b   = $team_id % 256;
   my $net = "10.$a.$b.0/24";
+  my $ip  = "10.$a.$b.2";
 
   $_->{name} =~ s/'/\\'/;
 
-  print "{name => '$_->{name}', network => '$net', host => 'team${team_id}.ructfe.org', "
+  print "{name => '$_->{name}', network => '$net', host => '$ip', "
     . "logo => 'https://ructfe.org$_->{logo}', token => '$_->{checker_token}', country => '$_->{country}',";
 
-  if ($team_id > 100) {
+  if ($team_id > 255) {
     print "bot => [";
     my $bot = [];
     for (1 .. 6) {

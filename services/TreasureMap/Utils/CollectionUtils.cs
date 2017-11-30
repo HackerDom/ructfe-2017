@@ -30,5 +30,11 @@ namespace TreasureMap.Utils
 				return new List<TValue>(set);
 			}
 		}
+
+		public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
+			=> collection == null || collection.Count == 0;
+
+		public static T PreLast<T>(this List<T> list) 
+			=> list[list.Count - 2];
 	}
 }

@@ -25,6 +25,8 @@ namespace TreasureMap.Db
 					AddIntenal(point);
 			});
 
+			DataBase.ForEach(pair => currentId = Math.Max(currentId, long.Parse(pair.Value.Id)));
+
 			new PeriodicSaver<Point>(path, sleep, () =>
 			{
 				var dl = DateTime.UtcNow.AddMilliseconds(-ttl);
@@ -63,6 +65,11 @@ namespace TreasureMap.Db
 		public static IEnumerable<Point> GetPoints(string login)
 		{
 			return PerUser.GetClonedList(login).EmptyIfNull().Select(id => DataBase.GetOrDefault(id)).WhereNotNull();
+		}
+
+		public static Point GetPoint(string id)
+		{
+			return DataBase.GetOrDefault(id);
 		}
 
 		private static void Gc(int ttl, int sleep)
