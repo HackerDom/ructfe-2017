@@ -11,9 +11,9 @@ namespace TreasureMap.Handlers.Models
 
 		public static bool operator ==(DrawPoint left, DrawPoint right)
 		{
-			if (left == null && right == null)
+			if (ReferenceEquals(left, null) && ReferenceEquals(right, null))
 				return true;
-			if (left == null || right == null)
+			if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
 				return false;
 			return left.X == right.X && left.Y == right.Y;
 		}
