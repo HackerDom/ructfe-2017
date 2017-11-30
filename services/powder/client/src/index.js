@@ -9,7 +9,7 @@ import { Provider } from 'react-redux'
 import './index.css';
 import { App } from './app'
 import { doReduce } from './reducers'
-import { loadUsers, applicationStart, loadProfile } from './actions'
+import { loadChats, loadUsers, applicationStart, loadProfile } from './actions'
 
 import { createStore, applyMiddleware, compose } from 'redux'
 import { createLogger } from 'redux-logger'
@@ -31,6 +31,7 @@ persistStore(store, {}, () => {
     store.dispatch(loadProfile())
     store.dispatch(loadUsers())
     setInterval(() => store.dispatch(loadUsers()), 5000)
+    setInterval(() => store.dispatch(loadChats()), 5000)
 })
 
 

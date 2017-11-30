@@ -66,6 +66,13 @@ export class Profile extends Component {
                 value={this.props.profile.fullname}
                 onChange={this.props.onChangeTextField('fullname')}
             />
+            <TextField
+                fullWidth={true}
+                floatingLabelText="Address"
+                value={this.props.profile.address}
+                onChange={this.props.onChangeTextField('address')}
+            />
+
             <FlatButton
                 label="Save"
                 fullWidth={true}
