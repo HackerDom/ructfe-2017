@@ -3859,10 +3859,13 @@ const _fetch = async url => {
 };
 
 const fetchData = async () => {
-  return Promise.all([_fetch("/api/publics"), _fetch("/api/points")]).then(([publics, privates]) => {
+  try {
+    let [publics, privates] = await Promise.all([_fetch("/api/publics"), _fetch("/api/points")]);
     let data = [...publics, ...privates];
     return (0, _normalizr.normalize)(data, points).entities.point;
-  }).then(() => []);
+  } catch (e) {
+    return [];
+  }
 };
 
 exports.fetchData = fetchData;
@@ -3875,17 +3878,19 @@ const putNewPoint = async data => {
 exports.putNewPoint = putNewPoint;
 
 const login = async (user, password) => {
-  console.log(user);
-  return fetch("/api/login", {
-    body: (0, _querystring.stringify)({
-      user,
-      password
-    }),
-    method: "POST",
-    credentials: "includes"
-  }).then(res => {
+  try {
+    let res = fetch("/api/login", {
+      body: JSON.stringify({
+        user,
+        password
+      }),
+      method: "POST",
+      credentials: "includes"
+    });
     return !!res.ok;
-  }).catch(e => false);
+  } catch (e) {
+    return false;
+  }
 };
 
 exports.login = login;
