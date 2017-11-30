@@ -44,6 +44,8 @@ func (api *API) Bind(group *echo.Group) {
 
     group.POST("/v1/conversations", api.UpdateConversation)
     group.GET("/v1/conversations", api.GetConversation)
+
+    group.POST("/v1/autoreply", api.AutoReply)
 }
 
 func (api *API) Login(c echo.Context) error {
@@ -203,4 +205,20 @@ func (api *API) GetConversation(c echo.Context) error {
     }
 
     return api.OK(c, result)
+}
+
+func (api *API) AutoReply(c echo.Context) error {
+    token := c.Request().Header.Get("token")
+    login, err := api.crypto.LoginFromToken(token)
+
+    if err != nil {
+        return api.Error(c, "You should login first")
+    }
+
+    user := api.storage.GetUser(login)
+    StartBot(user, api.storage)
+
+    result := map[string]interface{}{}
+    return api.OK(c, result)
+
 }

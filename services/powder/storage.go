@@ -105,3 +105,12 @@ func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Messa
         fn(&m)
     }
 }
+
+func (storage *Storage) LastMessage(to string) *Message {
+    var message Message
+    err := storage.db.Select(q.Eq("To", to)).OrderBy("SendedAt").Reverse().First(&message)
+    if err != nil {
+        return nil
+    }
+    return &message
+}
