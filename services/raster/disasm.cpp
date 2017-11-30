@@ -62,6 +62,10 @@ int main( int argc, char* argv[] ) {
     //
     for( u32 i = 0; i < shader.header.instructionsNum; i++ ){
         Instruction& inst = shader.instructions[ i ];
+		if( inst.op < 0 || inst.op >= OP_COUNT ) {
+			printf( "Invalid instruction op code\n" );
+			return 1;
+		}
 
         printf( "%s ", g_opToStr[ inst.op ] );
         if( g_opOperands[ inst.op ] & OPERAND_DST )

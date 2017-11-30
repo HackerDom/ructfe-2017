@@ -1,6 +1,5 @@
 import sqlite3
 
-from config import TORRENT_FILES_TABLE_NAME
 from db.client import GetAllQuery, InsertQuery, CreateTableIfNotExistsQuery, DBClient, FilterQuery, GetCountQuery
 from utils import cached_method
 
@@ -36,15 +35,6 @@ class IntField:
 
 class InsertionError(Exception):
     pass
-
-
-def execute_insert_query(cursor, insert_query, deep=0):
-    if deep == 20:
-        raise InsertionError
-    try:
-        cursor.execute(insert_query)
-    except sqlite3.DatabaseError:
-        execute_insert_query(cursor, insert_query, deep + 1)
 
 
 class Model:
@@ -87,7 +77,7 @@ class Model:
 
     @classmethod
     def table_name(cls):
-        return TORRENT_FILES_TABLE_NAME + "_" + cls.__name__
+        return cls.__name__
 
     @classmethod
     def create_table_if_not_exists(cls):
@@ -117,8 +107,12 @@ class Model:
             values=field_values_param,
         ).query
         cursor = db_client.connection.cursor()
-        execute_insert_query(cursor, insert_query)
-        cursor.close()
+        try:
+            cursor.execute(insert_query)
+        except sqlite3.DatabaseError:
+            raise InsertionError
+        finally:
+            cursor.close()
         db_client.connection.commit()
 
     def save(self):
@@ -157,7 +151,7 @@ class Model:
             return "{}='{}'".format(field_name, field_value)
         else:
             if params[0] == 'contains':
-                return "{} LIKE '%{}%'".format(field, field_value)
+                return "{} LIKE '%{}%' ESCAPE '\\'".format(field, field_value)
             else:
                 raise ValueError("Unexpected options: {}".format(",".join(params)))
 

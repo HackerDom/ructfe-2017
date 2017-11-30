@@ -14,7 +14,8 @@ import {
     SUCCESS_LOADING_USERS,
     FAILED_LOADING_PROFILE,
     APPLICATION_START,
-    SUCCESS_SENDING_CHAT
+    SUCCESS_SENDING_CHAT,
+    SUCCESS_LOADING_CHAT,
 } from './actions'
 
 const initialState = {
@@ -41,7 +42,8 @@ const initialState = {
         },
         profile: {
             fullname: '',
-            picture: ''
+            picture: '',
+            address: '',
         },
         chat: {
         }
@@ -105,8 +107,9 @@ function changes(state = initialState.changes, action) {
         case SUCCESS_LOADING_PROFILE:
             return update(state, {
                 profile: {
-                    fullname: {$set: action.response.fullname},
+                    fullname: {$set: action.response.fullname || ""},
                     picture: {$set: action.response.picture},
+                    address: {$set: action.response.address || ""},
                 }
             })
         case FAILED_LOADING_PROFILE:
@@ -114,6 +117,7 @@ function changes(state = initialState.changes, action) {
                 profile: {
                     fullname: {$set: ''},
                     picture: {$set: ''},
+                    address: {$set: ''},
                 },
             })
         case APPLICATION_START:
@@ -121,12 +125,19 @@ function changes(state = initialState.changes, action) {
                 profile: {
                     fullname: {$set: ''},
                     picture: {$set: ''},
+                    address: {$set: ''},
                 },
                 auth: {
                     loginLogin: {$set: ''},
                     loginPassword: {$set: ''},
                     signupLogin: {$set: ''},
                     signupPassword: {$set: ''},
+                }
+            })
+        case SUCCESS_SENDING_CHAT:
+            return update(state, {
+                chat: {
+                    [action.name]: {$set: ''}
                 }
             })
         default:
@@ -163,7 +174,13 @@ function conversations(state = initialState.conversations, action) {
     switch (action.type) {
         case SUCCESS_SENDING_CHAT:
             return update(state, {
-                [action.name]: {$push: action.nickname + " > " +action.message }
+                [action.name]: {$apply: messages => {
+                    return update(messages || [], {$push: [action.nickname + " > " + action.message]})
+                }}
+            })
+        case SUCCESS_LOADING_CHAT:
+            return update(state, {
+                [action.response.name]: {$set: action.response.messages}
             })
         default:
             return state

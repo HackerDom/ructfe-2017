@@ -6,6 +6,8 @@ import FavoriteBorder from 'material-ui/svg-icons/action/favorite-border'
 
 import { connect } from 'react-redux'
 
+import { loadChat } from './actions'
+
 export class Home extends Component {
 
     render() {
@@ -36,7 +38,8 @@ export class Home extends Component {
                             subtitle={user.login}
                             actionIcon={<IconButton
                                             onClick={() => {
-                                                this.props.history.push('/chat/' + user.login)
+                                                this.props.history.push('/chat/' + user.login);
+                                                this.props.onUserClick(user.login);
                                             }}
                                         >
                                             <FavoriteBorder color="white" />
@@ -55,4 +58,9 @@ export class Home extends Component {
 Home = connect(
 (state) => {
     return {users: state.users, user: state.user}
+},
+(dispatch) => {
+    return {
+        onUserClick: (login) => { dispatch(loadChat(login))}
+    }
 })(Home)

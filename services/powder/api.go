@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "bytes"
+    "strconv"
 
     "github.com/labstack/echo"
 )
@@ -13,9 +14,14 @@ type API struct {
 }
 
 func NewAPI() *API {
+    storage := NewStorage()
+    crypto := NewCrypto()
+
+    SetupAutoReply(storage)
+
     return &API{
-        storage: NewStorage(),
-        crypto: NewCrypto(),
+        storage: storage,
+        crypto: crypto,
     }
 }
 
@@ -43,21 +49,22 @@ func (api *API) Bind(group *echo.Group) {
     group.GET("/v1/users", api.GetUsers)
 
     group.POST("/v1/conversations", api.UpdateConversation)
+    group.GET("/v1/conversations", api.GetConversation)
+
+    group.POST("/v1/autoreply", api.AutoReply)
 }
 
 func (api *API) Login(c echo.Context) error {
     login := c.FormValue("login")
 
-    hash := api.storage.GetUserProperty(login, "hash")
-    if hash == nil {
+    user := api.storage.GetUser(login)
+    if user == nil {
         return api.Error(c,
                         fmt.Sprintf("Can't find user %s", login))
     }
 
-    salt := api.storage.GetUserProperty(login, "salt")
-    password := api.crypto.PasswordHash(salt, c.FormValue("password"))
-
-    if !bytes.Equal(hash, password) {
+    password := api.crypto.Hash(user.Salt, c.FormValue("password"))
+    if !bytes.Equal(user.Hash, password) {
         return api.Error(c, "Wrong password")
     }
 
@@ -74,17 +81,14 @@ func (api *API) Login(c echo.Context) error {
 func (api *API) SignUp(c echo.Context) error {
     login := c.FormValue("login")
 
-    hash := api.storage.GetUserProperty(login, "hash")
-    if hash != nil {
+    user := api.storage.GetUser(login)
+    if user != nil {
         return api.Error(c,
                         fmt.Sprintf("User %s already exists", login))
     }
 
-    salt := api.crypto.CreateSalt()
-    password := api.crypto.PasswordHash(salt, c.FormValue("password"))
-
-    api.storage.SetUserProperty(login, "hash", password)
-    api.storage.SetUserProperty(login, "salt", salt)
+    user = NewUser(login, c.FormValue("password"), api.crypto)
+    api.storage.SaveUser(user)
 
     token := api.crypto.MakeToken(login)
 
@@ -110,9 +114,15 @@ func (api *API) SaveProfile(c echo.Context) error {
         return api.Error(c, "Internal server error")
     }
 
+    user := api.storage.GetUser(login)
     for key := range params {
-        api.storage.SetUserProperty(login, key, []byte(params.Get(key)))
+        value := params.Get(key)
+        if key == "address" {
+            value = api.crypto.Encrypt(user, value)
+        }
+        user.Properties[key] = value
     }
+    api.storage.SaveUser(user)
 
     result := map[string]interface{}{}
     return api.OK(c, result)
@@ -130,8 +140,14 @@ func (api *API) GetProfile(c echo.Context) error {
         "nickname": login,
     }
 
-    for _, key := range []string{"fullname", "picture"} {
-        result[key] = string(api.storage.GetUserProperty(login, key))
+    user := api.storage.GetUser(login)
+
+    for key := range user.Properties {
+        value := user.Properties[key]
+        if key == "address" {
+            value = api.crypto.Decrypt(user, value)
+        }
+        result[key] = value
     }
 
     return api.OK(c, result)
@@ -140,10 +156,22 @@ func (api *API) GetProfile(c echo.Context) error {
 func (api *API) GetUsers(c echo.Context) error {
     users := make([]map[string]string, 0)
 
-    api.storage.IterateUsers(func (login string, profile map[string]string) {
-        profile["login"] = login
+    re := c.FormValue("re")
+    limit := 10
 
-        users = append(users, profile)
+    if parsedLimit, err := strconv.Atoi(c.FormValue("limit")); err == nil {
+        limit = parsedLimit
+    }
+
+    api.storage.IterateUsers(limit, re, func (user *User) {
+        properties := make(map[string]string)
+
+        for _, key := range []string{"fullname", "picture", "public", "address"} {
+            properties[key] = user.Properties[key]
+        }
+        properties["login"] = user.Username
+
+        users = append(users, properties)
     })
 
     result := map[string]interface{}{
@@ -161,9 +189,70 @@ func (api *API) UpdateConversation(c echo.Context) error {
         return api.Error(c, "You should login first")
     }
 
+    message := Message{
+        From: login,
+        To: c.FormValue("to"),
+        Author: login,
+        Message: c.FormValue("message"),
+    }
+    api.storage.SaveMessage(&message)
+
+    message = Message{
+        From: c.FormValue("to"),
+        To: login,
+        Author: login,
+        Message: c.FormValue("message"),
+    }
+    api.storage.SaveMessage(&message)
+
+    result := map[string]interface{}{}
+
+    return api.OK(c, result)
+}
+
+func (api *API) GetConversation(c echo.Context) error {
+    token := c.Request().Header.Get("token")
+    login, err := api.crypto.LoginFromToken(token)
+
+    if err != nil {
+        return api.Error(c, "You should login first")
+    }
+
+    messages := make([]string, 0)
+    to := c.FormValue("to")
+
+    api.storage.IterateMessages(login, to, func (message *Message) {
+        messages = append(messages, fmt.Sprintf("%s > %s", message.Author, message.Message))
+    })
+
     result := map[string]interface{}{
-        "nickname": login,
+        "name": to,
+        "messages": messages,
     }
 
     return api.OK(c, result)
+}
+
+func (api *API) AutoReply(c echo.Context) error {
+    token := c.Request().Header.Get("token")
+    login, err := api.crypto.LoginFromToken(token)
+
+    if err != nil {
+        return api.Error(c, "You should login first")
+    }
+
+    user := api.storage.GetUser(login)
+
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
+
+    user.AutoReply = true
+    api.storage.SaveUser(user)
+
+    StartBot(user, api.storage)
+
+    result := map[string]interface{}{}
+    return api.OK(c, result)
+
 }
