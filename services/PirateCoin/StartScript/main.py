@@ -50,8 +50,7 @@ geth_run_command = "geth " \
         geth_path=PATH_TO_GETH_DIR,
         bootnodes=",".join(STATIC_BOOTNODES),
         local_ip=get_local_ip(),
-        get_logs=PATH_TO_GETH_LOGS
-)
+        get_logs=PATH_TO_GETH_LOGS)
 
 
 if not os.path.isdir(PATH_TO_GETH_DIR):
@@ -103,5 +102,5 @@ while True:
     if p2.poll() is not None:  # oops, geth is dead?
         signal.alarm(1)
     if geth_wrapper.get_current_miner_hashrate() / 1024 < 5:
-        signal.alarm(1)  # restart on low hash rate
+        signal.alarm(1)  # restart container on low hash rate
     sleep(60)
