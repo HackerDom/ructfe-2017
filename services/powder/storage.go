@@ -12,9 +12,21 @@ type Storage struct {
 type User struct {
     Username string `storm:"id"`
     Properties map[string]string
+    Salt string
     Hash []byte
-    Salt []byte
     CreatedAt time.Time `stort:"index"`
+}
+
+func NewUser(login string, password string, crypto* Crypto) *User {
+    salt := crypto.CreateSalt()
+    hash := crypto.PasswordHash(salt, password)
+
+    return &User{
+        Username: login,
+        Salt: salt,
+        Hash: hash,
+        Properties: make(map[string]string),
+    }
 }
 
 type Message struct {
@@ -86,7 +98,7 @@ func (storage *Storage) SaveMessage(message *Message) {
 
 func (storage *Storage) IterateMessages(from string, to string, fn func(_ *Message)) {
     var messages []Message
-    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(10)
+    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Limit(10)
     query.Find(&messages)
 
     for _, m := range messages {

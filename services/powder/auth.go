@@ -1,5 +1,11 @@
 package main
 
+import (
+    "math/rand"
+    "crypto/md5"
+    "io"
+)
+
 type Crypto struct {
     masterKey []byte
 }
@@ -10,12 +16,21 @@ func NewCrypto() *Crypto {
     }
 }
 
-func (*Crypto) CreateSalt() []byte {
-    return []byte("")
+func (*Crypto) CreateSalt() string {
+    const n = 4
+    var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    salt := make([]rune, n)
+    for i := range salt {
+        salt[i] = letters[rand.Intn(len(letters))]
+    }
+    return string(salt)
 }
 
-func (*Crypto) PasswordHash(salt []byte, password string) []byte {
-    return []byte(password)
+func (*Crypto) PasswordHash(salt string, password string) []byte {
+    h := md5.New()
+    io.WriteString(h, salt)
+    io.WriteString(h, password)
+    return h.Sum(nil)
 }
 
 func (crypto *Crypto) MakeToken(login string) string {

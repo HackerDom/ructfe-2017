@@ -79,16 +79,7 @@ func (api *API) SignUp(c echo.Context) error {
                         fmt.Sprintf("User %s already exists", login))
     }
 
-    salt := api.crypto.CreateSalt()
-    hash := api.crypto.PasswordHash(salt, c.FormValue("password"))
-
-    user = &User{
-        Username: login,
-        Salt: salt,
-        Hash: hash,
-        Properties: make(map[string]string),
-    }
-
+    user = NewUser(login, c.FormValue("password"), api.crypto)
     api.storage.SaveUser(user)
 
     token := api.crypto.MakeToken(login)
