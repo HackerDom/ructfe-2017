@@ -61,6 +61,7 @@ store
 
 brnull :400
 
+hash
 pushn 201
 respond
 
@@ -91,10 +92,17 @@ respond
 
 handler list
 
+pusharg 1
 pusharg 0
 list
+brnull :400
+
 pushn 200
-swap
+respond
+
+:400
+pushn 0
+pushn 400
 respond
 
 ---

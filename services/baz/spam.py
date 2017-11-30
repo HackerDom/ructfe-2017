@@ -13,7 +13,8 @@ while True:
 	#print(url)
 	response = urllib2.urlopen(url)
 	html = response.read()
-	if not '1AG359TGGAGG7AKT5XTIO8KHYYLX0NH=' in html:
+	if not 'f4ece80d85d714b5' in html:
+		print(html)
 		raise Exception("FUCK BAD RESPONSE");
 
 	delta = time.time() - ts

@@ -13,6 +13,9 @@ int64 parse_int(const char *str)
 {
 	const int64 base = 10;
 
+	if (!str)
+		return 0;
+
 	int64 result = 0;
 	while (*str)
 	{
@@ -59,7 +62,7 @@ bool to_string(int64 value, char *buffer, int64 buffer_length)
 		}
 	}
 
-	if (i == buffer_length)
+	if (i == buffer_length - 1)
 		return false;
 
 	char *end = buffer + i;
@@ -91,7 +94,7 @@ bool to_string_hex(uint64 value, char *buffer, int64 buffer_length)
 		}
 	}
 
-	if (i == buffer_length)
+	if (i == buffer_length - 1)
 		return false;
 
 	char *end = buffer + i;
@@ -285,7 +288,7 @@ void process_request(int32 fd, char *request)
 			break;
 		if (i >= 0)
 		{
-			if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != ',')
+			if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < '0' || c > '9') && c != ',')
 			{
 				buf[i] = 0;
 				if (i > 0)
@@ -343,11 +346,6 @@ void process_request(int32 fd, char *request)
 						state = ST_KEY;
 
 						*request = 0;
-						if (handler == handler_list)
-						{
-							params[0] = parse_int((const char *)params[0]);
-							params[1] = parse_int((const char *)params[1]);
-						}
 					}
 				}
 			}
@@ -358,6 +356,12 @@ void process_request(int32 fd, char *request)
 			i = 0;
 
 		request++;
+	}
+
+	if (handler == handler_list)
+	{
+		params[0] = parse_int((const char *)params[0]);
+		params[1] = parse_int((const char *)params[1]);
 	}
 
 	run_handler(handler, fd, params);

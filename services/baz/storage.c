@@ -171,7 +171,7 @@ char * list_items(uint64 skip, uint64 take, char *buffer, uint64 length)
 	if (!buffer)
 		return 0;
 
-	if ((skip + take) * 33 > length)
+	if (take * 33 > length)
 		return 0;
 
 	buffer[0] = 0;
@@ -303,14 +303,43 @@ char * hash_flag(const char *flag, char *buffer)
 {
 	if (!flag || !buffer)
 		return 0;
-	char *bptr = buffer;
-	while (*flag)
+
+	char flag_copy[32];
+	uint64 i;
+	for (i = 0; i < 32; i++)
+		flag_copy[i % 2 ? 32 - i : i] = flag[i] > '9' ? flag[i] - 'A' + 10 : flag[i] - '0';
+	
+	const uint64 seed = 0x60d15dead;
+	const uint64 m = 0xc6a4a7935bd1e995;
+	const int32 r = 47;
+
+	uint64 h = seed ^ (32 * m);
+
+	const uint64 *data = (const uint64 *)flag_copy;
+	const uint64 *end = 4 + data;
+
+	while (data != end)
 	{
-		*bptr = *flag;
-		flag++;
-		bptr++;
+		uint64 k = *data++;
+
+		k *= m; 
+		k ^= k >> r; 
+		k *= m; 
+
+		h ^= k;
+		h *= m; 
 	}
-	*bptr = 0;
+
+	h *= m;
+
+	h ^= h >> r;
+	h *= m;
+	h ^= h >> r;
+
+	if (!(h >> 63))
+		h = ~h;
+
+	to_string_hex(h, buffer, 32);
 	return buffer;
 }
 
