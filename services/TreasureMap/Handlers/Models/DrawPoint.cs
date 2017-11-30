@@ -30,7 +30,7 @@ namespace TreasureMap.Handlers.Models
 			=> Math.Abs(ToInt(x1) - ToInt(x2));
 
 		private static int ToInt(string s)
-			=> (s[0] - ' ') * 255 + (s.Length < 2 ? 0 : s[1] - ' ');
+			=> (s[0] - ' ') * 94 + (s.Length < 2 ? 0 : s[1] - ' ');
 
 	}
 }
