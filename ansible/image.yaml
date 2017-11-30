@@ -19,7 +19,11 @@
       command: apt-get clean -y
       args:
         warn: no
+      tags:
+        - release
     - name: Remove trash files
       shell: rm -rf /root/.ansible /root/.ssh/authorized_keys /var/cache/debconf/* /var/lib/apt/lists/* /var/log/* /tmp/* /var/tmp/*
       args:
         warn: no
+      tags:
+        - release
