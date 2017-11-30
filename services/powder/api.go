@@ -137,7 +137,7 @@ func (api *API) GetProfile(c echo.Context) error {
 
     user := api.storage.GetUser(login)
 
-    for _, key := range []string{"fullname", "picture", "public"} {
+    for key := range user.Properties {
         result[key] = user.Properties[key]
     }
 
@@ -150,7 +150,7 @@ func (api *API) GetUsers(c echo.Context) error {
     api.storage.IterateUsers(10, func (user *User) {
         properties := make(map[string]string)
 
-        for _, key := range []string{"fullname", "picture", "public"} {
+        for _, key := range []string{"fullname", "picture", "public", "address"} {
             properties[key] = user.Properties[key]
         }
         properties["login"] = user.Username

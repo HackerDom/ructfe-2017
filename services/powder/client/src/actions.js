@@ -227,6 +227,7 @@ export function saveProfile() {
         let form = new FormData();
         form.append('fullname', state.changes.profile.fullname);
         form.append('picture', state.changes.profile.picture);
+        form.append('address', state.changes.profile.address);
 
         let token = state.user.data.token
 

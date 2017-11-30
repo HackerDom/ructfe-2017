@@ -42,7 +42,8 @@ const initialState = {
         },
         profile: {
             fullname: '',
-            picture: ''
+            picture: '',
+            address: '',
         },
         chat: {
         }
@@ -106,8 +107,9 @@ function changes(state = initialState.changes, action) {
         case SUCCESS_LOADING_PROFILE:
             return update(state, {
                 profile: {
-                    fullname: {$set: action.response.fullname},
+                    fullname: {$set: action.response.fullname || ""},
                     picture: {$set: action.response.picture},
+                    address: {$set: action.response.address || ""},
                 }
             })
         case FAILED_LOADING_PROFILE:
@@ -115,6 +117,7 @@ function changes(state = initialState.changes, action) {
                 profile: {
                     fullname: {$set: ''},
                     picture: {$set: ''},
+                    address: {$set: ''},
                 },
             })
         case APPLICATION_START:
@@ -122,6 +125,7 @@ function changes(state = initialState.changes, action) {
                 profile: {
                     fullname: {$set: ''},
                     picture: {$set: ''},
+                    address: {$set: ''},
                 },
                 auth: {
                     loginLogin: {$set: ''},
