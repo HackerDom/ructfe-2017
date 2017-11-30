@@ -10,14 +10,19 @@ signal.alarm(25 * 60)
 
 
 def get_local_ip():
-    ip_cmd = 'ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1'
-    for i in range(5):
-        f = os.popen(ip_cmd)
-        ip = f.read()
-        if ip != "":
-            return ip.strip()
-        sleep(4)
-    return randint(0, 1000000000)
+    try:
+        ip = open("/home/PirateCoin/ip.txt").read().strip()
+    except FileNotFoundError:
+        ip_cmd = 'ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1'
+        for i in range(5):
+          f = os.popen(ip_cmd)
+          ip = f.read()
+          if ip != "":
+              return ip.strip()
+          sleep(4)
+        return randint(0, 1000000000)
+    else:
+        return ip
 
 
 PATH_TO_GETH_IPC = "/root/node/geth.ipc"
