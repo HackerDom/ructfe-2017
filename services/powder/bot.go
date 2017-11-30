@@ -19,7 +19,7 @@ func NewBot(user *User) *Bot {
 }
 
 func SetupAutoReply(storage *Storage) {
-    storage.IterateUsers(0, func (user *User) {
+    storage.IterateUsers(0, "", func (user *User) {
         if user.AutoReply {
             StartBot(user, storage)
         }

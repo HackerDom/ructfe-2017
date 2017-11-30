@@ -85,13 +85,13 @@ func (storage *Storage) SaveUser(user *User) {
     }
 }
 
-func (storage *Storage) IterateUsers(limit int, fn func(user *User)) {
+func (storage *Storage) IterateUsers(limit int, re string, fn func(user *User)) {
     var users []User
     var err error
     if (limit > 0) {
-        err = storage.db.Select().OrderBy("CreatedAt").Reverse().Limit(limit).Find(&users)
+        err = storage.db.Select(q.Re("Username", re)).OrderBy("CreatedAt").Reverse().Limit(limit).Find(&users)
     } else {
-        err = storage.db.Select().OrderBy("CreatedAt").Reverse().Find(&users)
+        err = storage.db.Select(q.Re("Username", re)).OrderBy("CreatedAt").Reverse().Find(&users)
     }
 
     if err != nil {
