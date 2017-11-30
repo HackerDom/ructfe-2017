@@ -151,7 +151,7 @@ class Model:
             return "{}='{}'".format(field_name, field_value)
         else:
             if params[0] == 'contains':
-                return "{} LIKE '%{}%'".format(field, field_value)
+                return "{} LIKE '%{}%' ESCAPE '\\'".format(field, field_value)
             else:
                 raise ValueError("Unexpected options: {}".format(",".join(params)))
 

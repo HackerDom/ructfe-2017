@@ -68,17 +68,16 @@ def validate_login(login):
 
 BAD_CHARS = [
     '\\',
-    '\'',
     '\"',
     '%',
-    '_',
+    '_'
 ]
 
 
 def adjust_search_filter(filter_req: str):
     for bad_char in BAD_CHARS:
-        filter_req = filter_req.replace(bad_char, "\\" + bad_char)
-    return filter_req
+        filter_req = filter_req.replace(bad_char, '\\' + bad_char)
+    return filter_req.replace("'", "''")
 
 
 def register(login, password):
