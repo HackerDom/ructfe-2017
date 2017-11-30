@@ -7,6 +7,8 @@ services:
     volumes:
       - .:/home/PirateCoin
     restart: on-failure
+    ports:
+      - "30303:30303"
   piratecoin:
     build: .
     volumes:
