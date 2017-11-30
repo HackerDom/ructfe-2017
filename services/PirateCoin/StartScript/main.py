@@ -4,6 +4,9 @@ from time import sleep
 import subprocess
 from random import randint
 import os.path
+import signal
+
+signal.alarm(25 * 60)
 
 
 def get_local_ip():
@@ -21,6 +24,7 @@ PATH_TO_GETH_IPC = "/root/node/geth.ipc"
 PATH_TO_GETH_DIR = "/root/node/"
 PATH_TO_GENESIS_BLOCK = "/root/genesis-block.json"
 PATH_TO_GETH_LOGS = "/root/geth.log"
+PATH_TO_ETHASH = "/root/.ethash/"
 
 geth_run_command = "geth " \
                    "--datadir {}" \
@@ -28,6 +32,7 @@ geth_run_command = "geth " \
                    " --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi 'db,eth,net,web3,personal'"\
                    " --port 30303" \
                    " --netrestrict '10.60.0.0/14,10.80.0.0/14,10.10.0.0/16'"\
+                   " --maxpeers 30"\
                    " --verbosity 5"\
                    " --bootnodes 'enode://f7c62f793afbb6cb9667f1b8c4e0f527422b4b95713a79e17d20e1c4a5a81ff48c6564501118a9531adf5e92f011604ff224f559484172f09daa6884a84a10d3@10.10.10.101:1337'" \
                    " --ethstats node_{}:ructfe_secret_key@10.10.10.102:38030 2>> {}"\
@@ -40,6 +45,15 @@ if not os.path.isdir(PATH_TO_GETH_DIR):
                           shell=True, start_new_session=True)
     p1.wait()
 print("Geth dir initialized started")
+
+
+print("Cleaning old DAG files...")
+if os.path.isdir(PATH_TO_ETHASH):
+    listing_command = "ls -t {}".format(PATH_TO_ETHASH)
+    f = os.popen(listing_command)
+    files_listing = f.read().strip("\n").split("\n")
+    for file in files_listing[2:]:
+        os.remove(PATH_TO_ETHASH + file)
 
 
 if os.path.exists(PATH_TO_GETH_IPC):
