@@ -20,7 +20,7 @@ def check_service_state(team_addr):  # todo implement it
         if int(result) < 60:
             return CheckerAnswers.MUMBLE(
                 "Couldn't use contract properly! ",
-                "{} ago".format(int(result)))
-        return CheckerAnswers.OK()
+                "{}s ago".format(int(result)))
     except ValueError:
         return CheckerAnswers.CHECKER_ERROR("", "Bad checker helper answer")
+    return CheckerAnswers.OK()
