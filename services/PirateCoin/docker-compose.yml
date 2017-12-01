@@ -1,4 +1,4 @@
-version: '3'
+version: '2.3'
 services:
   geth:
     build:
@@ -9,6 +9,8 @@ services:
     restart: on-failure
     ports:
       - "30303:30303"
+    mem_limit: 2g
+    mem_reservation: 1g
   piratecoin:
     build: .
     volumes:
@@ -16,5 +18,7 @@ services:
     depends_on:
       - geth
     restart: on-failure
+    mem_limit: 512m
+    mem_reservation: 128m
     ports:
       - "14473:14473"
