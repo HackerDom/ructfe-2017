@@ -260,7 +260,7 @@ class RequestHandler:
                 upload_by=user.login
             )
         else:
-            max_page = len(PrivateTorrentFile.filter(upload_by=user.login)) // LINES_FOR_QUERY
+            max_page = (PrivateTorrentFile.get_count(upload_by=user.login)) // LINES_FOR_QUERY
             files = PrivateTorrentFile.filter(
                 lower_bound=int(page_number) * LINES_FOR_QUERY,
                 count=LINES_FOR_QUERY,
