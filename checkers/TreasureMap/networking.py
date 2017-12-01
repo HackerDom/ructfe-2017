@@ -8,6 +8,9 @@ import string
 
 import UserAgents
 
+def get_cookie_string(cookies):
+	return '; '.join([str(cookie.key) + '=' + str(cookie.value) for cookie in cookies])
+
 async def check_status(response):
 	if response.status >= 500:
 		checker.down(error='status code is {}. Content: {}\n'.format(response.status, await response.text()))
@@ -52,13 +55,17 @@ class WSHelper:
 
 
 class State:
-	def __init__(self, hostname, port=None):
+	def __init__(self, hostname, port=None, name=''):
 		self.hostname = hostname
+		self.name = name
 		self.port = '' if port is None else ':' + str(port)
-		self.session = aiohttp.ClientSession(headers={
-			'Referer': self.get_url(''), 
-			'User-Agent': UserAgents.get()
-		})
+		cookie_jar = aiohttp.CookieJar(unsafe=True)
+		self.session = aiohttp.ClientSession(
+			cookie_jar=cookie_jar,
+			headers={
+				'Referer': self.get_url(''), 
+				'User-Agent': UserAgents.get(),
+			})
 	def __del__(self):
 		self.session.close()
 	def get_url(self, path='', proto='http'):
@@ -67,7 +74,7 @@ class State:
 	async def get(self, url):
 		url = self.get_url(url)
 		try:
-			checker.log(url)
+			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			async with self.session.get(url) as response:
 				await check_status(response)
 				return await response.text()
@@ -77,7 +84,7 @@ class State:
 	async def post(self, url, data={}, need_check_status=True):
 		url = self.get_url(url)
 		try:
-			checker.log(url)
+			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			async with self.session.post(url, json=data) as response:
 				if need_check_status:
 					await check_status(response)
@@ -114,6 +121,7 @@ class State:
 	def get_listener(self, url):
 		url = self.get_url(url, proto='ws')
 		try:
+			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			connection = self.session.ws_connect(url, origin=self.get_url(''))
 		except Exception as ex:
 			checker.down(exception=ex)

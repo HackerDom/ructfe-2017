@@ -49,10 +49,6 @@ FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
 
 async def check_one(username, sender, viewer, is_public):
 	point = await sender.put_point(is_public=True, user=username)
-	if is_public:
-		points = await viewer.get_public_points()
-	else:
-		points = await viewer.get_points()
 	point = await viewer.find(point['id'])
 	compare(point, p, FIELDS)
 
@@ -102,17 +98,20 @@ async def check_path(username, sender, another, aname):
 
 async def handler_check(hostname):
 
-	second = State(hostname, PORT)
-	first = State(hostname, PORT)
-	suser, spass = await second.register()
+	first = State(hostname, PORT, 'first')
 	fusername, fpassword = await first.register()
+	point_listener = first.get_points_listener()
+
+	second = State(hostname, PORT, 'second')
+	suser, spass = await second.register()
 	public_listener = second.get_public_listener()
-	point_listener = first.get_point_listener()
+
 	tasks = []
 
-	tasks.append(asyncio.ensure_future(check_one(username, state, public_listener, True)))
-	tasks.append(asyncio.ensure_future(check_one(username, state, point_listener, False)))
-	tasks.append(asyncio.ensure_future(check_path(username, state, viewer, auser)))
+
+	tasks.append(asyncio.ensure_future(check_one(fusername, first, public_listener, True)))
+	tasks.append(asyncio.ensure_future(check_one(fusername, first, point_listener, False)))
+	tasks.append(asyncio.ensure_future(check_path(fusername, first, second, suser)))
 	await asyncio.gather(*tasks)
 
 	checker.ok()
