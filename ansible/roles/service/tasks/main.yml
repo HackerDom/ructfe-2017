@@ -9,7 +9,7 @@
   synchronize:
     src: "{{ playbook_dir }}/../services/{{ service_name }}/"
     dest: "/home/{{ service_name }}/"
-  when: "binary is not defined"
+  when: "binary is not defined and no_sources is not defined"
 
 - name: Copy service
   synchronize:
