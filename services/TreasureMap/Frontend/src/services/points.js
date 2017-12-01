@@ -27,9 +27,6 @@ export const decodeCoordinates = coord => {
   return res * 2 - 1;
 };
 
-window.encodeCoordinates = encodeCoordinates;
-window.decodeCoordinates = decodeCoordinates;
-
 export const xyToCoordinates = ({ x, y }) => [
   decodeCoordinates(x) * 180,
   decodeCoordinates(y) * 90

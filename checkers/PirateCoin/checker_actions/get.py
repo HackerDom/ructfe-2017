@@ -3,7 +3,7 @@ import binascii
 
 from urllib.request import urlopen
 from urllib.parse import urlencode
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 from socket import socket
 
 from requests.exceptions import ConnectionError
@@ -46,6 +46,8 @@ def get_check_contract(team_addr, flag_id, flag):
             )
     except (URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
+    except HTTPError:
+        return CheckerAnswers.CHECKER_ERROR("", "Can't connect to ")
 
     try:
         team_coinbase = urlopen(

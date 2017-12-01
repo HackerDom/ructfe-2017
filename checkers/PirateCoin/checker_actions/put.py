@@ -1,7 +1,6 @@
 import json
 import socket
 
-from datetime import datetime
 from random import randint
 from urllib.request import urlopen
 from urllib.error import URLError
@@ -59,8 +58,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                         "contractAddr": contract_addr,
                         "sum": int(wei_per_transaction),
                         "vulnboxIp": team_addr
-                    })), timeout=TIMEOUT
-                               )\
+                    })), timeout=TIMEOUT)\
             .read().decode()
     except (URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")

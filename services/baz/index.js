@@ -447,7 +447,7 @@ function init() {
         disableShadow(ctx);
     };
     s.addShape(mixbtn);
-    var nameback = new Shape(parseInt(s.width / 2 - 150) - 20, 500, 400, 130, 'Name this recipe:', textBrush, '20px Arial');
+    var nameback = new Shape(parseInt(s.width / 2 - 150) - 20, 500, 400, 130, 'How should we call it?', textBrush, '20px Arial');
     nameback.draw = function(ctx) {
         if (s.dlgstate != 'save')
             return;

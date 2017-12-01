@@ -31,3 +31,4 @@
   with_items:
     - Pillow
     - web3
+    - aiohttp
