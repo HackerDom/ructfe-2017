@@ -1,5 +1,4 @@
 import "./index.css";
-// import WebSocket from "ws";
 import "mapbox-gl/dist/mapbox-gl.css";
 import map from "./map";
 
@@ -12,13 +11,14 @@ import { dataFetched, fetchData } from "./store/actions";
 import { fetchData as fetchDataService } from "./services/backend";
 import { addPointToMap } from "./services/map";
 
+window.updatePeriod = 60;
+
 const updateDataCycle = async () => {
   let res = await fetchDataService();
-  console.log(res);
-  if (res.length) {
+  if (res) {
     store.dispatch(dataFetched(res));
   }
-  setTimeout(updateDataCycle, 60000);
+  setTimeout(updateDataCycle, 1000 * updatePeriod);
 };
 
 updateDataCycle();
