@@ -42,8 +42,8 @@ async def get_point_with_flag(hostname, username, password, id):
 	state = State(hostname, PORT)
 	await state.login(id['username'], id['password'])
 	listener = state.get_points_listener()
-	points = await listener.find(id['id'])
-	return p
+	point = await listener.find(id['id'])
+	return point
 		
 FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
 
