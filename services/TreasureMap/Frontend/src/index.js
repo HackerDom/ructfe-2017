@@ -11,12 +11,14 @@ import { dataFetched, fetchData } from "./store/actions";
 import { fetchData as fetchDataService } from "./services/backend";
 import { addPointToMap } from "./services/map";
 
+window.updatePeriod = 60;
+
 const updateDataCycle = async () => {
   let res = await fetchDataService();
   if (res) {
     store.dispatch(dataFetched(res));
   }
-  setTimeout(updateDataCycle, 60000);
+  setTimeout(updateDataCycle, 1000 * updatePeriod);
 };
 
 updateDataCycle();

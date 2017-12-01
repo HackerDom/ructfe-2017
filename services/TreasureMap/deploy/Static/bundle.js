@@ -5797,6 +5797,8 @@ var _map2 = __webpack_require__(201);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+window.updatePeriod = 60;
+
 const updateDataCycle = async () => {
   let res = await (0, _backend.fetchData)();
 
@@ -5804,7 +5806,7 @@ const updateDataCycle = async () => {
     _store.default.dispatch((0, _actions.dataFetched)(res));
   }
 
-  setTimeout(updateDataCycle, 60000);
+  setTimeout(updateDataCycle, 1000 * updatePeriod);
 };
 
 updateDataCycle();
@@ -15414,34 +15416,42 @@ const addPointToMap = rawPoint => {
   if (_map.default.getSource(id)) {
     _map.default.getSource(id).setData(data);
   } else {
-    _map.default.addSource(id, {
-      type: "geojson",
-      data
-    }).addLayer({
-      id,
-      type: "symbol",
-      source: id,
-      layout: {
-        "icon-image": "{icon}-15",
-        "icon-allow-overlap": true,
-        "text-field": "{title}",
-        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-        "text-offset": [0, 0.6],
-        "text-anchor": "top"
-      }
-    }).on("click", id, e => {
-      // trigger PATH_POINT_SELECT here
-      (0, _redux.bindActionCreators)(_actions.pathPointSelect, _store.default.dispatch)({
-        type: "point",
-        id
-      });
+    const addLayers = () => {
+      _map.default.addSource(id, {
+        type: "geojson",
+        data
+      }).addLayer({
+        id,
+        type: "symbol",
+        source: id,
+        layout: {
+          "icon-image": "{icon}-15",
+          "icon-allow-overlap": true,
+          "text-field": "{title}",
+          "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+          "text-offset": [0, 0.6],
+          "text-anchor": "top"
+        }
+      }).on("click", id, e => {
+        // trigger PATH_POINT_SELECT here
+        (0, _redux.bindActionCreators)(_actions.pathPointSelect, _store.default.dispatch)({
+          type: "point",
+          id
+        });
 
-      if (e.features[0].properties.description) {
-        _map.default.popupIsOpen = true;
-        _map.default.clicked = 0;
-        new _mapboxGl.default.Popup().setLngLat(e.features[0].geometry.coordinates).setText(e.features[0].properties.description).addTo(_map.default).on("close", () => _map.default.popupIsOpen = false);
-      }
-    });
+        if (e.features[0].properties.description) {
+          _map.default.popupIsOpen = true;
+          _map.default.clicked = 0;
+          new _mapboxGl.default.Popup().setLngLat(e.features[0].geometry.coordinates).setText(e.features[0].properties.description).addTo(_map.default).on("close", () => _map.default.popupIsOpen = false);
+        }
+      });
+    };
+
+    if (_map.default.loaded()) {
+      addLayers();
+    } else {
+      _map.default.on("load", addLayers);
+    }
   }
 };
 
