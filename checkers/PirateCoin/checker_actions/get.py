@@ -1,4 +1,5 @@
 import json
+import binascii
 
 from datetime import datetime
 from urllib.request import urlopen
@@ -19,12 +20,15 @@ from config import \
 
 TIMEOUT = 7
 TRANSACTION_COOLDOWN = 60
+FREE_TRANSACTION_TEXT = binascii.hexlify(
+    b"Ethers for everybody, FREE, and no one will go away unsatisfied!")
 
 
 def get_check_contract(team_addr, flag_id, flag):
     contract_addr, wei_in_transaction, contract_creation_time \
         = flag_id.split(":")
 
+    "ETHERS FOR EVERYBODY, FREE, AND NO ONE WILL GO AWAY UNSATISFIED"
     w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
 
@@ -43,18 +47,21 @@ def get_check_contract(team_addr, flag_id, flag):
     w3.eth.sendTransaction({
         "to": team_coinbase,
         "from": ACCOUNT_ID,
-        "value": 1000000000000
+        "value": 1000000000000,
+        "data": FREE_TRANSACTION_TEXT
     })
 
-
-    """
     try:
-        response = urlopen(BLACK_MARKET_ADDR + "/checkFlag?{}".format(
-            urlencode(
-                {
-                    "flag": flag,
-                    "contractAddr": contract_addr
-                })), timeout=TIMEOUT).read().decode()
+        response = urlopen(
+            BLACK_MARKET_ADDR +
+            "/checkFlag_C6EDEE7179BD4E2887A5887901F23060?{}"
+            .format(
+                urlencode(
+                    {
+                        "flag": flag,
+                        "contractAddr": contract_addr
+                    })), timeout=TIMEOUT)\
+            .read().decode()
         if response == "stolen":
             return CheckerAnswers.CORRUPT(
                 "Unsynchronized balances in contract!",
@@ -62,7 +69,6 @@ def get_check_contract(team_addr, flag_id, flag):
             )
     except (URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
-    """
 
     if int(contract_creation_time) + TRANSACTION_COOLDOWN >= \
             int(datetime.now().timestamp()):
