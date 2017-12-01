@@ -65,7 +65,7 @@ namespace TreasureMap.Ws
 		public Task BroadcastAsync(Point point, string msg, CancellationToken token)
 		{
 			if (msg == null)
-				msg = point.ToJsonString();
+				msg = point.Convert().ToJsonString();
 			return
 				Task.WhenAll(
 					sockets
