@@ -13,6 +13,9 @@ import pathControlInit from "./components/pathControl";
 import store from "./store";
 
 let prevUser = store.getState().user;
+if (prevUser) {
+  connect();
+}
 loginForm(prevUser);
 pathControlInit();
 
