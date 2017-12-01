@@ -22,7 +22,7 @@ def add_nodes():
         for node in nodes:
             geth_wrapper.add_peer(node)
     except Exception as e:
-        with open("start_err.log") as file_err:
+        with open("start_err.log", mode="w") as file_err:
             file_err.write(str(e))
 
 
