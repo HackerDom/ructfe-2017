@@ -7,11 +7,9 @@
         state: present
         key: https://github.com/{{ item }}.keys
       with_items:
-        - alexbers
-        - kostteg
         - m-messiah
-        - rx00
   roles:
+    - { role: console }
     - { role: service, service_name: baz, binary: yes }
     - { role: service, service_name: PirateBay }
     - { role: service, service_name: PirateCoin, no_sources: yes }

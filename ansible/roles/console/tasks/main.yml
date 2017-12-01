@@ -1,0 +1,10 @@
+---
+- name: Copy files
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+    owner: root
+  with_items:
+    - {src: "00-header", dest: "/etc/update-motd.d/00-header"}
+    - {src: "10-help-text", dest: "/etc/update-motd.d/10-help-text"}

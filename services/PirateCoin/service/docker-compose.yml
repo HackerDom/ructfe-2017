@@ -9,6 +9,8 @@ services:
     restart: on-failure
     ports:
       - "30303:30303"
+    cpu_count: 1
+    cpu_percent: 50
     mem_limit: 2g
     mem_reservation: 1g
   piratecoin:
