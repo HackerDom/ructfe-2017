@@ -161,7 +161,7 @@ namespace BlackMarket
 		const string putFlagHttpPath = "/putFlag_C6EDEE7179BD4E2887A5887901F23060";
 		const string checkFlagHttpPath = "/checkFlag_C6EDEE7179BD4E2887A5887901F23060";
 		const string checkTransactionHttpPath = "/checkTransaction";
-		const string checkTeamHttpPath = "/checkTeam";
+		const string checkTeamHttpPath = "/checkTeam_C6EDEE7179BD4E2887A5887901F23060";
 
 		private const int port = 14474;
 
