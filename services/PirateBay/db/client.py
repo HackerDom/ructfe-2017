@@ -43,10 +43,16 @@ class FilterQuery:
 
 
 class GetCountQuery:
-    def __init__(self, tbl_name):
-        self.query = "SELECT COUNT(*) FROM {tbl_name};".format(
-            tbl_name=tbl_name,
-        )
+    def __init__(self, tbl_name, filter_fields=""):
+        if filter_fields:
+            self.query = "SELECT COUNT(*) FROM {tbl_name} WHERE {filter_fields};".format(
+                tbl_name=tbl_name,
+                filter_fields=' AND '.join(filter_fields),
+            )
+        else:
+            self.query = "SELECT COUNT(*) FROM {tbl_name};".format(
+                tbl_name=tbl_name,
+            )
 
 
 class DBClient(metaclass=Singleton):

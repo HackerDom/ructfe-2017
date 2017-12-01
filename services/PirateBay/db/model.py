@@ -120,9 +120,11 @@ class Model:
         type(self).create(**self.__dict__)
 
     @classmethod
-    def get_count(cls):
+    def get_count(cls, **fields):
+        filter_fields = [cls.format_field_filter(*field) for field in fields.items()]
         get_count_query = GetCountQuery(
             cls.table_name(),
+            filter_fields=filter_fields,
         ).query
         cursor = db_client.connection.cursor()
         cursor.execute(get_count_query)
