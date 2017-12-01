@@ -111,3 +111,4 @@ class Checker:
 
 def log(*message):
 	print(*message, file=sys.stderr)
+	sys.stderr.flush()

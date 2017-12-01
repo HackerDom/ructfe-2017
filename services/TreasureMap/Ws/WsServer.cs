@@ -94,6 +94,7 @@ namespace TreasureMap.Ws
 				sockets[ws] = conn;
 				Log.Info($"request for {ws.HttpRequest.RequestUri} registered");
 				await Task.WhenAll(conn.InitData.Select(point => TrySendAsync(ws, conn, point, token))).ConfigureAwait(false);
+				Log.Info($"initial data sended");
 			}
 			catch
 			{
@@ -149,7 +150,7 @@ namespace TreasureMap.Ws
 				{
 					NeedSend = point => point.User == login,
 					Lock = new AsyncLockSource(),
-					InitData = PointHolder.GetPublics()
+					InitData = PointHolder.GetPoints(login)
 				};
 			return null;
 		}
