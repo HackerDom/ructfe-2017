@@ -40,10 +40,10 @@ def compare(p1, p2, fields):
 
 async def get_point_with_flag(hostname, username, password, id):
 	state = State(hostname, PORT)
-	await state.login(id['username'], id['password'])
+	await state.login(username, password)
 	listener = state.get_points_listener()
-	points = await listener.find(id['id'])
-	return p
+	point = await listener.find(id)
+	return point
 		
 FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
 
@@ -117,7 +117,7 @@ async def handler_check(hostname):
 
 async def handler_get_1(hostname, id, flag):
 	id = json.loads(id)
-	p = get_point_with_flag(hostname, id['username'], id['password'], id['id'])
+	p = await get_point_with_flag(hostname, id['username'], id['password'], id['id'])
 	if p['message'] != flag:
 		checker.corrupt(message="Bad flag: expected {}, found {}".format(flag, p['message']))
 	checker.ok()
@@ -131,7 +131,7 @@ async def handler_put_1(hostname, id, flag):
 
 async def handler_get_2(hostname, id, flag):
 	id = json.loads(id)
-	p = get_point_with_flag(hostname, id['username'], id['password'], id['id'])
+	p = await get_point_with_flag(hostname, id['username'], id['password'], id['id'])
 	if p['x'] + p['y'] != flag:
 		checker.corrupt(message="Bad flag: expected {}, found {}".format(flag, p['message']))
 	checker.ok()

@@ -37,8 +37,8 @@ namespace BlackMarket
 			{
 				if(string.IsNullOrWhiteSpace(line))
 					continue;
-				var flagData = JsonHelper.ParseJson<FlagData>(line);
-				if(flagData.contractAddr == null)
+				var flagData = JsonHelper.TryParseJson<FlagData>(line);
+				if(flagData?.contractAddr == null)
 					continue;
 
 				InsertInternal(flagData);
