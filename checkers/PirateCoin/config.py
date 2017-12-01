@@ -1,7 +1,7 @@
 
 GETH_RPC_PATH = "10.10.10.101"
 ACCOUNT_ID = "0x85a3e0ffe7630de3bd772e5be27acdc57c11e566"
-ACCOUNT_PASSWORD = "qwer"
+ACCOUNT_PASSWORD = "rjvgjcnth"
 SERVICE_FIRST_CONTRACT_ADDR_URL = "http://{}/latestContract"
 SERVICE_COINBASE = "http://{}/coinbase"
 BLACK_MARKET_ADDR = "http://10.10.10.101"

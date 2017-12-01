@@ -1,5 +1,6 @@
 import json
 
+import sys
 from datetime import datetime
 from urllib.request import urlopen
 from urllib.parse import urlencode
@@ -34,7 +35,7 @@ def get_check_contract(team_addr, flag_id, flag):
     except ValueError:
         return
 
-    w3.eth.sendTransaction({"to": ""})
+    #w3.eth.sendTransaction({"to": ""})
 
 
     """
