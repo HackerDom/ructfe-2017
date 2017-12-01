@@ -20,7 +20,7 @@ namespace BlackMarket
 			{
 				stateManager = new StateManager("state.json");
 				transactionChecker = new TransactionChecker(bankContractAbiFilepath, bankAttackerContractAbiFilepath, Settings.ParityRpcUrl);
-				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, bankContractAbiFilepath, Settings.SourceAccount, Settings.Pass);
+				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, Settings.GethRpcUrl, bankContractAbiFilepath, Settings.GethPass);
 
 				var httpServer = new HttpServer(port);
 				httpServer
@@ -45,7 +45,7 @@ namespace BlackMarket
 
 			var lastIllegalPatchedDetectedDt = teamsChecker.GetLastIllegalPatchedDetectedDt(vulnboxIp);
 
-			await context.WriteStringAsync(((int)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
+			await context.WriteStringAsync(((long)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
 		}
 
 		private static async Task PutFlagCallback(HttpListenerContext context)

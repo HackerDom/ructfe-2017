@@ -38,7 +38,7 @@ namespace PirateCoin.http
 				try
 				{
 					var context = await listener.GetContextAsync().ConfigureAwait(false);
-					//log.Info(($"[{context.Request.RemoteEndPoint}] {context.Request.HttpMethod} {context.Request.Url.PathAndQuery}");
+					log.Info($"[{context.Request.RemoteEndPoint}] {context.Request.HttpMethod} {context.Request.Url.PathAndQuery}");
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 					Task.Run(() => TryProcessRequestAsync(context), token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -66,7 +66,7 @@ namespace PirateCoin.http
 				catch(HttpConnectionClosed) {}
 				catch(Exception e)
 				{
-					//log.Info(e);
+					log.Info(e);
 					var httpException = e as HttpException;
 					response.StatusCode = httpException?.Status ?? 500;
 					response.ContentType = "text/plain; charset=utf-8";
