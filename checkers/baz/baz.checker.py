@@ -189,8 +189,11 @@ def put(hostname, flag_id, flag, vuln):
 
     exit_code = OK
     try:
-        #TODO multiple selection attempts
-        response = requests.get('http://%s:4280/memorize?name=%s&what=%s' % (hostname, name, ','.join(recipe)))
+        for i in range(5):
+            name = select_name()
+            response = requests.get('http://%s:4280/memorize?name=%s&what=%s' % (hostname, name, ','.join(recipe)))
+            if response.status_code != 409:
+                break
         response.raise_for_status()
 
         response = requests.get('http://%s:4280/list?skip=0&take=31' % hostname)

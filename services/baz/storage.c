@@ -169,7 +169,7 @@ bool store_item_impl(slot *item)
 	return true;
 }
 
-char * store_item(const char *key, char *value)
+char * store_item(char *key, char *value)
 {
 	if (!key || !value)
 		return 0;
@@ -181,7 +181,7 @@ char * store_item(const char *key, char *value)
 	if (store_item_impl(&item))
 	{
 		write(logfd, &item, sizeof(item));
-		return value;
+		return key;
 	}
 
 	return 0;

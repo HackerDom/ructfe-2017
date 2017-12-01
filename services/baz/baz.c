@@ -113,6 +113,8 @@ bool to_string_hex(uint64 value, char *buffer, int64 buffer_length)
 
 uint64 strcmp(const char *str1, const char *str2)
 {
+	if (!str1 || !str2)
+		return !str1 && !str2;
 	while (*str1 && (*str1 == *str2))
 	{
 		str1++;
@@ -278,7 +280,6 @@ void process_request(int32 fd, char *request)
 	{
 		if (i >= (int64)sizeof(buf))
 		{
-			print("bad request\n");
 			handler = handler_badrequest;
 			break;
 		}
