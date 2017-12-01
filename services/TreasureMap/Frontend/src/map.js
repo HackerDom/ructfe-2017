@@ -12,7 +12,7 @@ const map = new mapboxgl.Map({
   container: document.querySelector(".map"),
   style: "mapbox://styles/mapbox/dark-v9",
   center: [60.6, 56.8],
-  zoom: 10
+  zoom: 1
 });
 
 map.doubleClickZoom.disable();
