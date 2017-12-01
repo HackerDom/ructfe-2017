@@ -8,6 +8,9 @@ import string
 
 import UserAgents
 
+def get_cookie_string(cookies):
+	return '; '.join([str(cookie.key) + '=' + str(cookie.value) for cookie in cookies])
+
 async def check_status(response):
 	if response.status >= 500:
 		checker.down(error='status code is {}. Content: {}\n'.format(response.status, await response.text()))
@@ -19,6 +22,7 @@ class WSHelper:
 		self.connection = connection
 		self.queue = asyncio.Queue()
 		self.wanted = set()
+		self.closed = False
 	def start(self):
 		asyncio.async(self.start_internal())
 	async def start_internal(self):
@@ -26,11 +30,12 @@ class WSHelper:
 			async for msg in ws:
 				if msg.type == aiohttp.WSMsgType.TEXT:
 					try:
-						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user']))
+						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
 					except Exception as ex:
-						checher.mumble(error='can\'t parse service responce', exception=ex)
-					await self.queue.put()
+						checker.mumble(error='can\'t parse service responce', exception=ex)
+					await self.queue.put(data)
 				elif msg.type == aiohttp.WSMsgType.CLOSED:
+					self.closed = True
 					break
 				else:
 					checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
@@ -45,6 +50,8 @@ class WSHelper:
 		self.connection.close()
 	async def find(self, id):
 		while True:
+			if self.queue.empty() and self.closed:
+				checker.mumble(error='point not found')
 			top = await self.queue.get()
 			if top['id'] == id:
 				self.connection.close()
@@ -52,13 +59,17 @@ class WSHelper:
 
 
 class State:
-	def __init__(self, hostname, port=None):
+	def __init__(self, hostname, port=None, name=''):
 		self.hostname = hostname
+		self.name = name
 		self.port = '' if port is None else ':' + str(port)
-		self.session = aiohttp.ClientSession(headers={
-			'Referer': self.get_url(''), 
-			'User-Agent': UserAgents.get()
-		})
+		cookie_jar = aiohttp.CookieJar(unsafe=True)
+		self.session = aiohttp.ClientSession(
+			cookie_jar=cookie_jar,
+			headers={
+				'Referer': self.get_url(''), 
+				'User-Agent': UserAgents.get(),
+			})
 	def __del__(self):
 		self.session.close()
 	def get_url(self, path='', proto='http'):
@@ -67,7 +78,7 @@ class State:
 	async def get(self, url):
 		url = self.get_url(url)
 		try:
-			checker.log(url)
+			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			async with self.session.get(url) as response:
 				await check_status(response)
 				return await response.text()
@@ -77,7 +88,7 @@ class State:
 	async def post(self, url, data={}, need_check_status=True):
 		url = self.get_url(url)
 		try:
-			checker.log(url)
+			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			async with self.session.post(url, json=data) as response:
 				if need_check_status:
 					await check_status(response)
@@ -114,6 +125,7 @@ class State:
 	def get_listener(self, url):
 		url = self.get_url(url, proto='ws')
 		try:
+			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			connection = self.session.ws_connect(url, origin=self.get_url(''))
 		except Exception as ex:
 			checker.down(exception=ex)
@@ -122,7 +134,7 @@ class State:
 		return helper
 
 	def get_public_listener(self):
-		return self.get_listener('/ws/public')
+		return self.get_listener('/ws/publics')
 
 	def get_points_listener(self):
 		return self.get_listener('/ws/points')

@@ -50,18 +50,23 @@ def get_value_or_rand_string(value, l, additional=''):
 def get_rand_string(l, additional=''):
 	return ''.join(random.choice(string.ascii_lowercase + additional) for _ in range(l + random.randint(-l//2, l//2))).strip()
 
-def parse_json(string, expected=[]):
+def parse_json(string, *expected):
 	try:
 		data = json.loads(string)
 	except Exception as ex:
 		mumble(error='can\'t parse string "{}" as json'.format(string), exception=ex)
-	errors = []
-	for field in expected:
-		if field not in data:
-			errors.append(field)
-	if len(errors) > 0:
-		mumble(error='not all expected fields have founded in json. {}'.format(str(errors)))
-	return data
+	if len(expected) == 0:
+		return data
+	for fields in expected:
+		errors = []
+		for field in fields:
+			if field not in data:
+				errors.append(field)
+		if len(errors) == 0:
+			return data
+	else:
+		if len(errors) > 0:
+			mumble(error='not all expected fields have founded in json. last expexted: {}'.format(str(errors)))
 
 class Checker:
 	def __init__(self, check, flag_handlers):

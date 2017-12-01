@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile-geth
     volumes:
-      - .:/home/PirateCoin
+      - ./geth:/home/PirateCoin
     restart: on-failure
     ports:
       - "30303:30303"
@@ -14,7 +14,7 @@ services:
   piratecoin:
     build: .
     volumes:
-      - .:/home/PirateCoin
+      - ./mono_service:/home/PirateCoin
     depends_on:
       - geth
     restart: on-failure

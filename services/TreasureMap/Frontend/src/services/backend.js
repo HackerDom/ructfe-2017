@@ -1,40 +1,82 @@
 import { stringify } from "querystring";
 import { normalize, schema } from "normalizr";
-
+import { logoutOk } from "../store/actions";
 const point = new schema.Entity("point");
 const points = new schema.Array(point);
+import store from "../store";
+const getParams = {
+  credentials: "include"
+};
 
-const _fetch = async url => {
-  return fetch(url, {
-    credentials: "includes"
+const $get = async url => {
+  return await fetch(url, getParams);
+};
+
+const $post = async (url, data) => {
+  return await fetch(url, {
+    ...getParams,
+    method: "post",
+    body: JSON.stringify(data)
   });
 };
 
 export const fetchData = async () => {
   try {
-    let [publics, privates] = await Promise.all([
-      _fetch("/api/publics"),
-      _fetch("/api/points")
+    let [publicsRes, privatesRes] = await Promise.all([
+      $get("/api/publics"),
+      $get("/api/points")
     ]);
-    let data = [...publics, ...privates];
-    return normalize(data, points).entities.point;
+    if (publicsRes.status === 403 || privatesRes.status === 403) {
+      store.dispatch(logoutOk());
+      return false;
+    }
+
+    if (publicsRes.ok && privatesRes.ok) {
+      let publics = (await publicsRes.json()) || [];
+      let privates = (await privatesRes.json()) || [];
+      let data = [...publics, ...privates];
+      return normalize(data, points).entities.point;
+    } else {
+      return false;
+    }
   } catch (e) {
-    return [];
+    return false;
   }
 };
 
 export const putNewPoint = async data => {
-  // типа айдишник
-  return Date.now().toString();
+  try {
+    let res = await $post("/api/add", data);
+    if (res.status === 403) {
+      store.dispatch(logoutOk());
+      return "";
+    }
+    return await res.text();
+  } catch (e) {
+    return "";
+  }
+};
+
+export const buildPath = async (start, finish, sub) => {
+  try {
+    let res = await $post("/api/path", { start, finish, sub });
+    if (res.status === 403) {
+      store.dispatch(logoutOk());
+      return false;
+    }
+    return await res.json();
+  } catch (e) {
+    return false;
+  }
 };
 
 export const login = async (user, password) => {
   try {
-    let res = await fetch("/api/login", {
-      body: JSON.stringify({ user, password }),
-      method: "POST",
-      credentials: "includes"
-    });
+    let res = await $post("/api/login", { user, password });
+    if (res.status === 403) {
+      store.dispatch(logoutOk());
+      return false;
+    }
     return !!res.ok;
   } catch (e) {
     return false;

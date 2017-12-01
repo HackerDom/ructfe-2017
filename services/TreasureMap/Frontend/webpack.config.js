@@ -1,37 +1,24 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 const path = require("path");
-
-module.exports = {
+const isProd = process.env.NODE_ENV === "production";
+let config = {
   entry: "./src/index.js",
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "../deploy/Static")
   },
   module: {
-    rules: [
+    loaders: [
       {
-        test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        test: /\.js?$/,
+        loader: "babel-loader",
+        exclude: /node_modules/,
+        include: [path.join(__dirname, "src")]
       },
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
-          options: {
-            presets: [
-              [
-                "@babel/preset-env",
-                {
-                  targets: {
-                    browsers: ["last 2 Chrome versions"]
-                  }
-                }
-              ],
-              "@babel/preset-stage-2"
-            ]
-          }
-        }
+        test: /\.css$/,
+        loaders: ["style-loader", "css-loader"]
       }
     ]
   },
@@ -42,3 +29,26 @@ module.exports = {
     })
   ]
 };
+
+if (isProd) {
+  config.plugins.push(
+    new webpack.NoErrorsPlugin(),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(true),
+    new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true,
+      minimize: true,
+      output: {
+        comments: false
+      },
+      compress: {
+        warnings: false,
+        drop_debugger: true,
+        dead_code: true,
+        unused: true
+      }
+    })
+  );
+}
+
+module.exports = config;

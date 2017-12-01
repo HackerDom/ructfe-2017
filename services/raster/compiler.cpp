@@ -86,6 +86,8 @@ int main( int argc, char* argv[] ) {
     //
     while( !infile.eof() ) {
         Instruction inst;
+        memset( &inst, 0, sizeof( Instruction ) );
+
         std::string opStr;
         infile >> opStr;
         if( opStr.compare( "/*" ) == 0 ) {

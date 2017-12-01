@@ -9,5 +9,5 @@ from web3.contract import ConciseContract
 from datetime import datetime
 
 
-def check_service_state(team_addr): # todo implement it
+def check_service_state(team_addr):  # todo implement it
     return CheckerAnswers.OK()

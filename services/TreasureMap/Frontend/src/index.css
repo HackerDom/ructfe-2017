@@ -4,7 +4,22 @@ body {
   width: 100%;
   padding: 0;
   margin: 0;
-  font-size: 14px;
+  font-size: 10px;
+}
+
+.webflow-style-input input {
+  border-style: none;
+  background: transparent;
+  outline: none;
+}
+
+.pathControll button {
+  border: 1px solid rgb(191, 210, 255);
+  line-height: 2rem;
+  min-width: 80px;
+  background: rgba(57, 63, 84, 0.8);
+  color: #bfd2ff;
+  margin: 5px;
 }
 
 .map {
@@ -17,4 +32,96 @@ body {
   position: absolute;
   top: 0;
   right: 0;
+  color: #bfd2ff;
+}
+
+.pathControll {
+  position: absolute;
+  bottom: 20px;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.webflow-style-input {
+  /*position: relative;*/
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: 2px;
+  padding: 1.4rem 2rem 1.6rem;
+  background: rgba(57, 63, 84, 0.8);
+}
+.webflow-style-input:after {
+  content: "";
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 999;
+  height: 2px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  background-position: 0% 0%;
+  background: -webkit-linear-gradient(
+    left,
+    #b294ff,
+    #57e6e6,
+    #feffb8,
+    #57e6e6,
+    #b294ff,
+    #57e6e6
+  );
+  background: linear-gradient(
+    to right,
+    #b294ff,
+    #57e6e6,
+    #feffb8,
+    #57e6e6,
+    #b294ff,
+    #57e6e6
+  );
+  background-size: 500% auto;
+  -webkit-animation: gradient 3s linear infinite;
+  animation: gradient 3s linear infinite;
+}
+
+.webflow-style-input input {
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  color: #bfd2ff;
+  vertical-align: middle;
+}
+.webflow-style-input input::-webkit-input-placeholder {
+  color: #7881a1;
+}
+
+.webflow-style-input input[type="submit"] {
+  border: 1px solid rgb(191, 210, 255);
+  line-height: 2rem;
+}
+
+.pathControll button:hover,
+.webflow-style-input input[type="submit"]:hover {
+  background: rgba(191, 210, 255, 0.3);
+  cursor: pointer;
+}
+
+.webflow-style-input button {
+  color: #7881a1;
+  font-size: 2.4rem;
+  line-height: 2.4rem;
+  vertical-align: middle;
+  -webkit-transition: color 0.25s;
+  transition: color 0.25s;
+}
+.webflow-style-input button:hover {
+  color: #bfd2ff;
 }

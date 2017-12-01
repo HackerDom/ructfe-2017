@@ -3,4 +3,4 @@ RUN apt-get update && apt-get install --no-install-recommends -y python3 && apt-
 ADD https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.7.3-4bb3c89d.tar.gz /opt/
 RUN tar -xvf /opt/geth-linux-amd64-1.7.3-4bb3c89d.tar.gz -C /usr/bin/ --strip-components 1 geth-linux-amd64-1.7.3-4bb3c89d/geth
 WORKDIR /home/PirateCoin/
-CMD ["python3", "StartScript/main.py"]
+CMD ["python3", "main.py"]
