@@ -52,11 +52,6 @@ namespace TreasureMap.Utils
 			return settings[key];
 		}
 
-		public string FindValue(string key)
-		{
-			return settings.GetOrDefault(key);
-		}
-
 		private SimpleSettings(string path, Dictionary<string, string> settings)
 		{
 			this.path = path;
