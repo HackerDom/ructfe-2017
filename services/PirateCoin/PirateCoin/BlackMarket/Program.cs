@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -20,12 +21,14 @@ namespace BlackMarket
 			{
 				stateManager = new StateManager("state.json");
 				transactionChecker = new TransactionChecker(bankContractAbiFilepath, bankAttackerContractAbiFilepath, Settings.ParityRpcUrl);
+				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, bankContractAbiFilepath, Settings.SourceAccount, Settings.Pass);
 
 				var httpServer = new HttpServer(port);
 				httpServer
 					.AddHandler(HttpMethod.Get.ToString(), putFlagHttpPath, PutFlagCallback)
 					.AddHandler(HttpMethod.Get.ToString(), checkFlagHttpPath, CheckFlagCallback)
 					.AddHandler(HttpMethod.Get.ToString(), checkTransactionHttpPath, CheckTransactionCallback)
+					.AddHandler(HttpMethod.Get.ToString(), checkTeamHttpPath, CheckTeamCallback)
 					.AcceptLoopAsync(CancellationToken.None)
 					.Wait();
 			}
@@ -35,16 +38,30 @@ namespace BlackMarket
 			}
 		}
 
+		private static async Task CheckTeamCallback(HttpListenerContext context)
+		{
+			var vulnboxIp = context.Request.QueryString["vulnboxIp"];
+			if(vulnboxIp == null)
+				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'vulnboxIp'");
+
+			if(!teamsChecker.teamsStatus.TryGetValue(vulnboxIp, out var secondsAfterLastMumble))
+				secondsAfterLastMumble = int.MaxValue;
+
+			await context.WriteStringAsync(secondsAfterLastMumble.ToString());
+		}
+
 		private static async Task PutFlagCallback(HttpListenerContext context)
 		{
 			var flag = context.Request.QueryString["flag"];
 			var contractAddr = context.Request.QueryString["contractAddr"]?.ToLowerInvariant();
 			var sumStr = context.Request.QueryString["sum"];
+			var vulnboxIp = context.Request.QueryString["vulnboxIp"];
 
-			if(flag == null || contractAddr == null || !decimal.TryParse(sumStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var sum))
-				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'flag', 'contractAddr', 'sum'");
+			if(flag == null || contractAddr == null || !decimal.TryParse(sumStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var sum) || vulnboxIp == null)
+				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'flag', 'contractAddr', 'sum', 'vulnboxIp'");
 
 			stateManager.Insert(new FlagData { contractAddr = contractAddr, flag = flag, sum = sum });
+			teamsChecker.UpdateLatestTeamContract(vulnboxIp, contractAddr);
 
 			await context.WriteStringAsync("Done");
 		}
@@ -145,12 +162,16 @@ namespace BlackMarket
 		const string putFlagHttpPath = "/putFlag_C6EDEE7179BD4E2887A5887901F23060";
 		const string checkFlagHttpPath = "/checkFlag_C6EDEE7179BD4E2887A5887901F23060";
 		const string checkTransactionHttpPath = "/checkTransaction";
+		const string checkTeamHttpPath = "/checkTeam";
 
 		private const int port = 14474;
 
 		private static StateManager stateManager;
 		private static TransactionChecker transactionChecker;
 
+		
+
 		private static readonly ILog log = LogManager.GetLogger(typeof(Program));
+		private static TeamsChecker teamsChecker;
 	}
 }
