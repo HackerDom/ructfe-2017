@@ -22,6 +22,7 @@ class WSHelper:
 		self.connection = connection
 		self.queue = asyncio.Queue()
 		self.wanted = set()
+		self.closed = False
 	def start(self):
 		asyncio.async(self.start_internal())
 	async def start_internal(self):
@@ -34,6 +35,7 @@ class WSHelper:
 						checker.mumble(error='can\'t parse service responce', exception=ex)
 					await self.queue.put(data)
 				elif msg.type == aiohttp.WSMsgType.CLOSED:
+					self.closed = True
 					break
 				else:
 					checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
@@ -48,6 +50,8 @@ class WSHelper:
 		self.connection.close()
 	async def find(self, id):
 		while True:
+			if self.queue.empty() and self.closed:
+				checker.mumble(error='point not found')
 			top = await self.queue.get()
 			if top['id'] == id:
 				self.connection.close()
