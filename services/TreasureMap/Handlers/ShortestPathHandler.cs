@@ -41,6 +41,7 @@ namespace TreasureMap.Handlers
 				.Select(PointHolder.GetPoint)
 				.WhereNotNull()
 				.Select(point => new DrawPoint {X = point.X, Y = point.Y})
+				.Distinct()
 				.ToList();
 
 			var points = PathFinder.Find(request.Start, inner, request.Finish);
