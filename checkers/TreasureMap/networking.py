@@ -26,19 +26,22 @@ class WSHelper:
 	def start(self):
 		asyncio.async(self.start_internal())
 	async def start_internal(self):
-		async with self.connection as ws:
-			async for msg in ws:
-				if msg.type == aiohttp.WSMsgType.TEXT:
-					try:
-						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
-					except Exception as ex:
-						checker.mumble(error='can\'t parse service responce', exception=ex)
-					await self.queue.put(data)
-				elif msg.type == aiohttp.WSMsgType.CLOSED:
-					self.closed = True
-					break
-				else:
-					checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
+		try
+			async with self.connection as ws:
+				async for msg in ws:
+					if msg.type == aiohttp.WSMsgType.TEXT:
+						try:
+							data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
+						except Exception as ex:
+							checker.mumble(error='can\'t parse service responce', exception=ex)
+						await self.queue.put(data)
+					elif msg.type == aiohttp.WSMsgType.CLOSED:
+						self.closed = True
+						break
+					else:
+						checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
+		except Exception as ex:
+			checker.down(error='something down', exception=ex)
 	def want(self, point):
 		self.wanted.add(json.dumps(data, sort_keys=True))
 	async def finish(self):
