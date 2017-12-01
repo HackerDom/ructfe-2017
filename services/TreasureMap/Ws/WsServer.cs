@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using TreasureMap.Db;
 using TreasureMap.Db.Models;
 using TreasureMap.Handlers.Helpers;
@@ -42,11 +43,11 @@ namespace TreasureMap.Ws
 			token.Register(() =>
 			{
 				listener.Dispose();
-				Console.Error.WriteLine("WebSocketServer stopped");
+				Log.Error("WebSocketServer stopped");
 			});
 
 			listener.Start();
-			Console.Error.WriteLine($"WebSocketServer started at '{endpoint}'");
+			Log.Info($"WebSocketServer started at '{endpoint}'");
 			while(!token.IsCancellationRequested)
 			{
 				try
@@ -84,12 +85,14 @@ namespace TreasureMap.Ws
 //			await Task.Delay(250, token).ConfigureAwait(false); //NOTE: ws4py issue workaround =\
 			try
 			{
+				Log.Info($"request for {ws.HttpRequest.RequestUri.AbsolutePath}");
 				var connection = CreateConnection(ws);
 				if (!connection.HasValue)
 					throw new UnauthorizedAccessException();
 				await ws.WriteStringAsync(HelloMessage, token).ConfigureAwait(false);
 				var conn = connection.Value;
 				sockets[ws] = conn;
+				Log.Info($"request for {ws.HttpRequest.RequestUri.AbsolutePath} registered");
 				conn.InitData.ForEach(point => TrySendAsync(ws, conn, point, token).Wait(token));
 			}
 			catch
@@ -155,5 +158,7 @@ namespace TreasureMap.Ws
 		private readonly ConcurrentDictionary<WebSocket, Connection> sockets = new ConcurrentDictionary<WebSocket, Connection>();
 		private readonly WebSocketListener listener;
 		private readonly IPEndPoint endpoint;
+
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
 	}
 }
