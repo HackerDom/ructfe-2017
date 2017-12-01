@@ -13,7 +13,7 @@ class TorrentFile(Model):
     announce = TextField(40)
     length = IntField()
     comment = TextField(100)
-    name = TextField(40)
+    name = TextField(100)
     uid = TextField(32)
     upload_by = TextField(50)
     content = TextField(long=True)
@@ -46,12 +46,12 @@ class TorrentFile(Model):
 
 
 class PrivateTorrentFile(TorrentFile):
-    announce = TextField(256)
+    announce = TextField(40)
     length = IntField()
-    comment = TextField(256)
-    name = TextField(256)
+    comment = TextField(100)
+    name = TextField(100)
     uid = TextField(32)
-    upload_by = TextField(256)
+    upload_by = TextField(50)
     content = TextField(long=True)
 
     def __str__(self):
