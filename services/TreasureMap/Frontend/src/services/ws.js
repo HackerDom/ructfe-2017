@@ -15,9 +15,9 @@ const onMsg = ({ data }) => {
   }
 };
 
-export default (connect = () => {
+export default () => {
   let pointsSocket = new WebSocket(`ws://${location.host}/ws/points`);
   let publicSocket = new WebSocket(`ws://${location.host}/ws/publics`);
   pointsSocket.onmessage = onMsg;
   publicSocket.onmessage = onMsg;
-});
+};
