@@ -93,7 +93,7 @@ namespace TreasureMap.Ws
 				var conn = connection.Value;
 				sockets[ws] = conn;
 				Log.Info($"request for {ws.HttpRequest.RequestUri} registered");
-				await Task.WhenAll(conn.InitData.Select(point => TrySendAsync(ws, conn, point, token))).ConfigureAwait(false);
+				await Task.WhenAll(conn.InitData.Invoke().Select(point => TrySendAsync(ws, conn, point, token))).ConfigureAwait(false);
 				Log.Info($"initial data sended");
 			}
 			catch
@@ -130,7 +130,7 @@ namespace TreasureMap.Ws
 		{
 			public Predicate<Point> NeedSend;
 			public AsyncLockSource Lock;
-			public IEnumerable<Point> InitData;
+			public Func<IEnumerable<Point>> InitData;
 		}
 
 		private static Connection? CreateConnection(WebSocket ws)
@@ -143,14 +143,14 @@ namespace TreasureMap.Ws
 				{
 					NeedSend = point => point.IsPublic,
 					Lock = new AsyncLockSource(),
-					InitData = PointHolder.GetPublics()
+					InitData = () => PointHolder.GetPublics()
 				};
 			if (ws.HttpRequest.RequestUri.OriginalString == "/ws/points")
 				return new Connection
 				{
 					NeedSend = point => point.User == login,
 					Lock = new AsyncLockSource(),
-					InitData = PointHolder.GetPoints(login)
+					InitData = () => PointHolder.GetPoints(login)
 				};
 			return null;
 		}
