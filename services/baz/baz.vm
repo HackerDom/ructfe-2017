@@ -38,7 +38,7 @@ handler memorize
 
 pusharg 0
 dup
-cmps YOURMOM
+cmps DUNNO
 brnull :normal
 
 pop

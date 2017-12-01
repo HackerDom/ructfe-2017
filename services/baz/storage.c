@@ -87,6 +87,8 @@ void delete_item(slot *item)
 		uint64 n = *key - 'A';
 		path[i++] = current;
 		current = nodes[current].trans[n] - 1;
+		if (current > MAXNODES)
+			return;
 	}
 
 	nodes[current].value = 0;
@@ -139,6 +141,8 @@ bool store_item_impl(slot *item)
 {
 	uint64 current = 0;
 
+	uint32 new_item = add_item(item);
+
 	char *key;
 	for (key = item->key; *key && key < item->value; key++)
 	{
@@ -149,7 +153,9 @@ bool store_item_impl(slot *item)
 		{
 			uint64 nd = allocate_node();
 			if (nd == -1)
+			{
 				return false;
+			}
 			nodes[current].trans[n] = nd + 1;
 		}
 		current = nodes[current].trans[n] - 1;
@@ -158,7 +164,7 @@ bool store_item_impl(slot *item)
 	if (nodes[current].value)
 		return false;
 
-	nodes[current].value = add_item(item) + 1;
+	nodes[current].value = new_item + 1;
 
 	return true;
 }
@@ -315,7 +321,7 @@ char * encode_flag(const char *recipe, char *buffer)
 		recipe++;
 	}
 
-	n = not(n);
+	//n = not(n);
 	n = xor(n, magic);
 	
 	uint64 length = 0;
