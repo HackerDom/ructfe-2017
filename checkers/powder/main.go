@@ -17,7 +17,10 @@ import (
 
 type Server struct {
     Host string
+    Port string
 }
+
+const ServerPort = "8080"
 
 type User struct {
     Login string
@@ -26,35 +29,35 @@ type User struct {
 }
 
 func (server *Server) SignUpUrl() string {
-    return fmt.Sprintf("%s/api/v1/auth/signup", server.Host)
+    return fmt.Sprintf("%s:%s/api/v1/auth/signup", server.Host, server.Port)
 }
 
 func (server *Server) LoginUrl() string {
-    return fmt.Sprintf("%s/api/v1/auth/login", server.Host)
+    return fmt.Sprintf("%s:%s/api/v1/auth/login", server.Host, server.Port)
 }
 
 func (server *Server) GetProfileUrl() string {
-    return fmt.Sprintf("%s/api/v1/user/profile", server.Host)
+    return fmt.Sprintf("%s:%s/api/v1/user/profile", server.Host, server.Port)
 }
 
 func (server *Server) SaveProfileUrl() string {
-    return fmt.Sprintf("%s/api/v1/user/profile", server.Host)
+    return fmt.Sprintf("%s:%s/api/v1/user/profile", server.Host, server.Port)
 }
 
 func (server *Server) GetUsersUrl(limit int, re string) string {
-    return fmt.Sprintf("%s/api/v1/users?limit=%d&re=%s", server.Host, limit, re)
+    return fmt.Sprintf("%s:%s/api/v1/users?limit=%d&re=%s", server.Host, server.Port, limit, re)
 }
 
 func (server *Server) AutoReplyUrl() string {
-    return fmt.Sprintf("%s/api/v1/autoreply", server.Host)
+    return fmt.Sprintf("%s:%s/api/v1/autoreply", server.Host, server.Port)
 }
 
 func (server *Server) SendMessageUrl() string {
-    return fmt.Sprintf("%s/api/v1/conversations", server.Host)
+    return fmt.Sprintf("%s:%s/api/v1/conversations", server.Host, server.Port)
 }
 
 func (server *Server) GetMessagesUrl(to string) string {
-    return fmt.Sprintf("%s/api/v1/conversations?to=%s", server.Host, to)
+    return fmt.Sprintf("%s:%s/api/v1/conversations?to=%s", server.Host, server.Port, to)
 }
 
 func (server *Server) SignUp(user *User) (*User, error, int) {
@@ -423,7 +426,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
         }
 
         answer := MessageToRank(messages[len(messages) - 1])
-        fmt.Println(lastAnswer, answer)
+        fmt.Fprintln(os.Stderr, lastAnswer, answer)
         if answer == 7 {
             return "", errors.New("Strange response"), MUMBLE
         }
@@ -453,7 +456,7 @@ func Check(args []string) int {
 
     hostname := args[0]
 
-    server := &Server{Host: fmt.Sprintf("http://%s", hostname)}
+    server := &Server{Host: fmt.Sprintf("http://%s", hostname), Port: ServerPort}
     alice := &User{Login: RandomString(5), Password: RandomString(5)}
     bob := &User{Login: RandomString(5), Password: RandomString(5)}
 
@@ -519,7 +522,7 @@ func Put(args []string) int {
     hostname, id, flag := args[0], args[1], args[2]
     password := RandomString(32)
 
-    server := &Server{Host: fmt.Sprintf("http://%s", hostname)}
+    server := &Server{Host: fmt.Sprintf("http://%s", hostname), Port: ServerPort}
     user := &User{Login: id, Password: password}
     user, err, code := server.SignUp(user)
 
@@ -559,7 +562,7 @@ func Get(args []string) int {
         password = splittedId[1]
     }
 
-    server := &Server{Host: fmt.Sprintf("http://%s", hostname)}
+    server := &Server{Host: fmt.Sprintf("http://%s", hostname), Port: ServerPort}
     user := &User{Login: id, Password: password}
 
     user, err, code := server.Login(user)
@@ -590,6 +593,10 @@ func main() {
         "CHECK": Check,
         "PUT": Put,
         "GET": Get,
+        "info": Info,
+        "check": Check,
+        "put": Put,
+        "get": Get,
     }
     mode := os.Args[1]
 
