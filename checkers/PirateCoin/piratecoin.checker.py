@@ -3,6 +3,7 @@
 import sys
 from urllib.error import URLError
 import traceback
+from random import randint
 from checker_actions import put, get, check
 
 from answer_codes import OK, MUMBLE, CORRUPT, DOWN, CHECKER_ERROR
@@ -62,6 +63,8 @@ def not_found(*args):
 
 
 if __name__ == '__main__':
+    if randint(0, 9) == 9:
+        close(OK, "rnd")
     try:
         COMMANDS.get(sys.argv[1].lower(), not_found)(*sys.argv[2:])
     except URLError as e:
