@@ -20,7 +20,7 @@ namespace BlackMarket
 			{
 				stateManager = new StateManager("state.json");
 				transactionChecker = new TransactionChecker(bankContractAbiFilepath, bankAttackerContractAbiFilepath, Settings.ParityRpcUrl);
-				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, bankContractAbiFilepath, Settings.SourceAccount, Settings.Pass);
+				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, Settings.GethRpcUrl, bankContractAbiFilepath, Settings.GethPass);
 
 				var httpServer = new HttpServer(port);
 				httpServer
