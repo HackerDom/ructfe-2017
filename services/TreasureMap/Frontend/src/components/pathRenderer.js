@@ -66,7 +66,7 @@ export default ({ startPoint, endPoint, path, sub }, pointsData) => {
       map.getSource("points").setData(points);
     }
   } else {
-    map.on("load", () => {
+    const addLayers = () => {
       map
         .addSource("lines", { type: "geojson", data: lines })
         .addLayer({
@@ -89,6 +89,11 @@ export default ({ startPoint, endPoint, path, sub }, pointsData) => {
             "icon-allow-overlap": true
           }
         });
-    });
+    };
+    if (map.loaded()) {
+      addLayers();
+    } else {
+      map.on("load", addLayers);
+    }
   }
 };

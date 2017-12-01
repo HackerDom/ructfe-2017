@@ -1269,12 +1269,14 @@ function denormalizeImmutable(schema, input, unvisit) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getCoordinatesFromPoint = exports.xyToCoordinates = exports.decodeCoordinates = exports.encodeCoordinates = void 0;
+exports.getCoordinatesFromPoint = exports.lngLatToXY = exports.xyToCoordinates = exports.decodeCoordinates = exports.encodeCoordinates = void 0;
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
+// из цифры в строчку
+// дели на 180 или 90 перед использованием
 const encodeCoordinates = coord => {
   coord = (coord + 1) / 2;
   let res = "";
@@ -1286,7 +1288,9 @@ const encodeCoordinates = coord => {
   }
 
   return res;
-};
+}; // из строчки в цифру
+// умножай на 180 или 90 после
+
 
 exports.encodeCoordinates = encodeCoordinates;
 
@@ -1294,20 +1298,32 @@ const decodeCoordinates = coord => {
   let res = 0;
 
   for (let i = coord.length - 1; i >= 0; --i) {
-    res = res / 94 + coord.charCodeAt(i) - 33;
+    res = (res + coord.charCodeAt(i) - 33) / 94;
   }
 
   return res * 2 - 1;
 };
 
 exports.decodeCoordinates = decodeCoordinates;
+window.encodeCoordinates = encodeCoordinates;
+window.decodeCoordinates = decodeCoordinates;
 
 const xyToCoordinates = ({
   x,
   y
-}) => [decodeCoordinates(parseFloat(x) / 180), decodeCoordinates(parseFloat(y) / 90)];
+}) => [decodeCoordinates(x) * 180, decodeCoordinates(y) * 90];
 
 exports.xyToCoordinates = xyToCoordinates;
+
+const lngLatToXY = ({
+  lng,
+  lat
+}) => ({
+  x: encodeCoordinates(lng / 180),
+  y: encodeCoordinates(lat / 90)
+});
+
+exports.lngLatToXY = lngLatToXY;
 
 const getCoordinatesFromPoint = (_ref) => {
   let {
@@ -1745,10 +1761,7 @@ map.on("click", e => {
       map.clicked = 0;
       (0, _redux.bindActionCreators)(_actions.pathPointSelect, _store.default.dispatch)({
         type: "coordinates",
-        coordinates: {
-          y: (0, _points.encodeCoordinates)(e.lngLat.lat),
-          x: (0, _points.encodeCoordinates)(e.lngLat.lng)
-        }
+        coordinates: (0, _points.lngLatToXY)(e.lngLat)
       });
     }
   }, 300);
@@ -1814,11 +1827,11 @@ const getParams = {
 };
 
 const $get = async url => {
-  return fetch(url, getParams);
+  return await fetch(url, getParams);
 };
 
 const $post = async (url, data) => {
-  return fetch(url, _extends({}, getParams, {
+  return await fetch(url, _extends({}, getParams, {
     method: "post",
     body: JSON.stringify(data)
   }));
@@ -1826,9 +1839,17 @@ const $post = async (url, data) => {
 
 const fetchData = async () => {
   try {
-    let [publics, privates] = await Promise.all([$get("/api/publics").json(), $get("/api/points").json()]);
-    let data = [...publics, ...privates];
-    return (0, _normalizr.normalize)(data, points).entities.point;
+    let [publicsRes, privatesRes] = await Promise.all([$get("/api/publics"), $get("/api/points")]);
+
+    if (publicsRes.ok && privatesRes.ok) {
+      let publics = publicsRes.json();
+      let privates = privatesRes.json();
+      let data = [...publics, ...privates];
+      console.log(data);
+      return (0, _normalizr.normalize)(data, points).entities.point;
+    } else {
+      return [];
+    }
   } catch (e) {
     return [];
   }
@@ -1838,7 +1859,8 @@ exports.fetchData = fetchData;
 
 const putNewPoint = async data => {
   try {
-    return await $post("/api/add", data).text();
+    let res = await $post("/api/add", data);
+    return await res.text();
   } catch (e) {
     return "";
   }
@@ -1848,11 +1870,12 @@ exports.putNewPoint = putNewPoint;
 
 const buildPath = async (start, finish, sub) => {
   try {
-    return await $post("/api/path", {
+    let res = await $post("/api/path", {
       start,
       finish,
       sub
-    }).json();
+    });
+    return await res.json();
   } catch (e) {
     return false;
   }
@@ -5778,6 +5801,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // import WebSocket from "ws";
 const updateDataCycle = async () => {
   let res = await (0, _backend.fetchData)();
+  console.log(res);
 
   if (res.length) {
     _store.default.dispatch((0, _actions.dataFetched)(res));
@@ -5840,7 +5864,7 @@ exports = module.exports = __webpack_require__(38)(undefined);
 
 
 // module
-exports.push([module.i, "html,\nbody {\n  height: 100%;\n  width: 100%;\n  padding: 0;\n  margin: 0;\n  font-size: 14px;\n}\n\n.map {\n  height: 100%;\n  width: 100%;\n  background: #343332;\n}\n\n.userForm {\n  position: absolute;\n  top: 0;\n  right: 0;\n}\n\n.pathControll {\n  position: absolute;\n  bottom: 20px;\n  right: 50%;\n  transform: translateX(-50%);\n}\n", ""]);
+exports.push([module.i, "html,\nbody {\n  height: 100%;\n  width: 100%;\n  padding: 0;\n  margin: 0;\n  font-size: 10px;\n}\n\ninput {\n  border-style: none;\n  background: transparent;\n  outline: none;\n}\n\n.pathControll button {\n  border: 1px solid rgb(191, 210, 255);\n  line-height: 2rem;\n  min-width: 80px;\n  background: rgba(57, 63, 84, 0.8);\n  color: #bfd2ff;\n  margin: 5px;\n}\n\n.map {\n  height: 100%;\n  width: 100%;\n  background: #343332;\n}\n\n.userForm {\n  position: absolute;\n  top: 0;\n  right: 0;\n}\n\n.pathControll {\n  position: absolute;\n  bottom: 20px;\n  right: 50%;\n  transform: translateX(50%);\n}\n\n.webflow-style-input {\n  /*position: relative;*/\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: row;\n  flex-direction: row;\n  width: 100%;\n  max-width: 400px;\n  margin: 0 auto;\n  border-radius: 2px;\n  padding: 1.4rem 2rem 1.6rem;\n  background: rgba(57, 63, 84, 0.8);\n}\n.webflow-style-input:after {\n  content: \"\";\n  position: absolute;\n  left: 0px;\n  right: 0px;\n  bottom: 0px;\n  z-index: 999;\n  height: 2px;\n  border-bottom-left-radius: 2px;\n  border-bottom-right-radius: 2px;\n  background-position: 0% 0%;\n  background: -webkit-linear-gradient(\n    left,\n    #b294ff,\n    #57e6e6,\n    #feffb8,\n    #57e6e6,\n    #b294ff,\n    #57e6e6\n  );\n  background: linear-gradient(\n    to right,\n    #b294ff,\n    #57e6e6,\n    #feffb8,\n    #57e6e6,\n    #b294ff,\n    #57e6e6\n  );\n  background-size: 500% auto;\n  -webkit-animation: gradient 3s linear infinite;\n  animation: gradient 3s linear infinite;\n}\n\n.webflow-style-input input {\n  -webkit-box-flex: 1;\n  -ms-flex-positive: 1;\n  flex-grow: 1;\n  color: #bfd2ff;\n  vertical-align: middle;\n}\n.webflow-style-input input::-webkit-input-placeholder {\n  color: #7881a1;\n}\n\n.webflow-style-input input[type=\"submit\"] {\n  border: 1px solid rgb(191, 210, 255);\n  line-height: 2rem;\n}\n\n.pathControll button:hover,\n.webflow-style-input input[type=\"submit\"]:hover {\n  background: rgba(191, 210, 255, 0.3);\n  cursor: pointer;\n}\n\n.webflow-style-input button {\n  color: #7881a1;\n  font-size: 2.4rem;\n  line-height: 2.4rem;\n  vertical-align: middle;\n  -webkit-transition: color 0.25s;\n  transition: color 0.25s;\n}\n.webflow-style-input button:hover {\n  color: #bfd2ff;\n}\n", ""]);
 
 // exports
 
@@ -6050,8 +6074,10 @@ const getSubmit = () => {
 var _default = (lat, lng, popup) => {
   const form = document.createElement("form");
   form.action = "#";
-  form.appendChild(getFormLine("y", (0, _points.encodeCoordinates)(parseFloat(lat) / 180)));
-  form.appendChild(getFormLine("x", (0, _points.encodeCoordinates)(parseFloat(lng) / 180)));
+  form.appendChild(getFormLine("y", (0, _points.encodeCoordinates)(parseFloat(lat) / 90))); // form.appendChild(getFormLine("oy", lat));
+
+  form.appendChild(getFormLine("x", (0, _points.encodeCoordinates)(parseFloat(lng) / 180))); // form.appendChild(getFormLine("ox", lng));
+
   form.appendChild(getFormLine("message"));
   form.appendChild(getCheckbox());
   form.appendChild(getSubmit());
@@ -9189,7 +9215,7 @@ var _default = ({
       _map.default.getSource("points").setData(points);
     }
   } else {
-    _map.default.on("load", () => {
+    const addLayers = () => {
       _map.default.addSource("lines", {
         type: "geojson",
         data: lines
@@ -9214,7 +9240,13 @@ var _default = ({
           "icon-allow-overlap": true
         }
       });
-    });
+    };
+
+    if (_map.default.loaded()) {
+      addLayers();
+    } else {
+      _map.default.on("load", addLayers);
+    }
   }
 };
 

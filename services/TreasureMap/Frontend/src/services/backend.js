@@ -9,11 +9,11 @@ const getParams = {
 };
 
 const $get = async url => {
-  return fetch(url, getParams);
+  return await fetch(url, getParams);
 };
 
 const $post = async (url, data) => {
-  return fetch(url, {
+  return await fetch(url, {
     ...getParams,
     method: "post",
     body: JSON.stringify(data)
@@ -22,12 +22,19 @@ const $post = async (url, data) => {
 
 export const fetchData = async () => {
   try {
-    let [publics, privates] = await Promise.all([
-      $get("/api/publics").json(),
-      $get("/api/points").json()
+    let [publicsRes, privatesRes] = await Promise.all([
+      $get("/api/publics"),
+      $get("/api/points")
     ]);
-    let data = [...publics, ...privates];
-    return normalize(data, points).entities.point;
+    if (publicsRes.ok && privatesRes.ok) {
+      let publics = publicsRes.json();
+      let privates = privatesRes.json();
+      let data = [...publics, ...privates];
+      console.log(data);
+      return normalize(data, points).entities.point;
+    } else {
+      return [];
+    }
   } catch (e) {
     return [];
   }
@@ -35,7 +42,8 @@ export const fetchData = async () => {
 
 export const putNewPoint = async data => {
   try {
-    return await $post("/api/add", data).text();
+    let res = await $post("/api/add", data);
+    return await res.text();
   } catch (e) {
     return "";
   }
@@ -43,7 +51,8 @@ export const putNewPoint = async data => {
 
 export const buildPath = async (start, finish, sub) => {
   try {
-    return await $post("/api/path", { start, finish, sub }).json();
+    let res = await $post("/api/path", { start, finish, sub });
+    return await res.json();
   } catch (e) {
     return false;
   }
