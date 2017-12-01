@@ -47,18 +47,21 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         return CheckerAnswers.DOWN(
             "Can't reach service address!", str(e))
 
-    """
     try:
-        response = urlopen(BLACK_MARKET_ADDR + "/putFlag?{}".format(
-            urlencode(
-                {
-                    "flag": flag,
-                    "contractAddr": contract_addr,
-                    "sum": int(wei_per_transaction)
-                })), timeout=TIMEOUT
-                           ).read().decode()
+        response = urlopen(
+            BLACK_MARKET_ADDR +
+            "/putFlag_C6EDEE7179BD4E2887A5887901F23060?{}"
+            .format(
+                urlencode(
+                    {
+                        "flag": flag,
+                        "contractAddr": contract_addr,
+                        "sum": int(wei_per_transaction)
+                    })), timeout=TIMEOUT
+                               )\
+            .read().decode()
     except (URLError, socket.timeout):
-        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")"""
+        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
 
     w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
