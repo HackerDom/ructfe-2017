@@ -328,6 +328,13 @@ struct Shader : public NonMovable
 
         if( _header->instructionsNum > 1024 )
             return false;
+		
+		Instruction* instructions = ( Instruction* )( shader + sizeof( Header ) );
+		for( u32 ip = 0, iter = 0; ip < _header->instructionsNum; ip++ ) {
+			Instruction& i = instructions[ ip ];
+			if( i.op < 0 || i.op >= OP_COUNT ) 
+				return false;
+		}
 
         return true;
     }

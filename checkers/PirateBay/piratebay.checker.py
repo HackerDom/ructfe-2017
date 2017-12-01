@@ -2,6 +2,7 @@
 import os
 import re
 import traceback
+from random import random
 from sys import argv, stderr
 import requests
 import sys
@@ -10,10 +11,13 @@ from requests.exceptions import ConnectionError, HTTPError
 from generators import generate_login, generate_password, generate_torrent_dict, generate_name, generate_headers
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
-REGISTER_URL_TEMPLATE = "http://{hostname}/signup?password={password}&login={login}"
-UPLOAD_URL_TEMPLATE = "http://{hostname}/upload_private"
-AUTH_URL_TEMPLATE = "http://{hostname}/signin?login={login}&password={password}"
-PRIVATE_STORAGE_URL_TEMPLATE = "http://{hostname}/private_storage"
+
+
+REGISTER_URL_TEMPLATE = "http://{hostname}:{port}/signup?password={password}&login={login}"
+UPLOAD_URL_TEMPLATE = "http://{hostname}:{port}/upload_private"
+AUTH_URL_TEMPLATE = "http://{hostname}:{port}/signin?login={login}&password={password}"
+PRIVATE_STORAGE_URL_TEMPLATE = "http://{hostname}:{port}/private_storage"
+PORT = 8081
 
 
 def print_to_stderr(*args):
@@ -23,6 +27,7 @@ def print_to_stderr(*args):
 def auth(hostname, login, password):
     auth_url = AUTH_URL_TEMPLATE.format(
         hostname=hostname,
+        port=PORT,
         login=login,
         password=password,
     )
@@ -52,23 +57,27 @@ def put(hostname, flag_id, flag, vuln):
     password = generate_password()
     name = generate_name()
     exit_code = OK
+    filename = 'buffer_{}'.format(str(random())[2:])
     try:
         register_request = requests.get(REGISTER_URL_TEMPLATE.format(
             hostname=hostname,
+            port=PORT,
             password=password,
             login=login,
+            timeout=15,
         ), headers=generate_headers())
         cookies = auth(hostname, login, password)
         register_request.raise_for_status()
-        with open("buffer", "wb") as file:
+        with open(filename, "wb") as file:
             file.write(generate_torrent_dict(name, flag, login))
-        with open('buffer', 'rb') as file:
+        with open(filename, 'rb') as file:
             files = {'upload_file': file}
             upload_request = requests.post(
-                UPLOAD_URL_TEMPLATE.format(hostname=hostname),
+                UPLOAD_URL_TEMPLATE.format(hostname=hostname, port=PORT),
                 cookies=cookies,
                 files=files,
                 headers=generate_headers(),
+                timeout=15,
             )
             upload_request.raise_for_status()
     except ConnectionError as error:
@@ -78,8 +87,8 @@ def put(hostname, flag_id, flag, vuln):
         print_to_stderr("HTTP Error: hostname: {}, error: {}".format(hostname, error))
         exit_code = MUMBLE
     finally:
-        if os.path.exists("buffer"):
-            os.remove("buffer")
+        if os.path.exists(filename):
+            os.remove(filename)
     if exit_code == OK:
         print("{},{},{}".format(login, password, name))
     exit(exit_code)
@@ -90,17 +99,20 @@ def get(hostname, flag_id, flag, _):
     try:
         cookies = auth(hostname, login, password)
         content = requests.get(
-            PRIVATE_STORAGE_URL_TEMPLATE.format(hostname=hostname),
+            PRIVATE_STORAGE_URL_TEMPLATE.format(hostname=hostname, port=PORT),
             cookies=cookies,
             headers=generate_headers(),
         ).content.decode()
         flag_pattern = re.compile("<td>{}</td>.*?<td>(.*?)</td>".format(name), re.DOTALL)
         matching = flag_pattern.search(content)
         if matching is None:
+            print_to_stderr("No matching with flag pattern, hostname: {}".format(hostname))
             exit(CORRUPT)
         if len(matching.groups()) == 0:
+            print_to_stderr("Empty matching with flag pattern, hostname: {}".format(hostname))
             exit(CORRUPT)
         if matching.group(1) != flag:
+            print_to_stderr("Mismatch with exact flag={}, hostname: {}".format(flag, hostname))
             exit(CORRUPT)
     except (ConnectionError, ConnectionRefusedError) as error:
         print_to_stderr("Connection error: hostname: {}, error: {}".format(hostname, error))

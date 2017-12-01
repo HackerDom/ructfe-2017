@@ -3,35 +3,23 @@ import socket
 
 from datetime import datetime
 from random import randint
-from urllib.request import Request, urlopen
+from urllib.request import urlopen
 from urllib.error import URLError
 from urllib.parse import urlencode
 
 from web3 import RPCProvider, Web3
 from web3.contract import ConciseContract
 
-from user_agents import get_useragent
 from answer_codes import CheckerAnswers
+from utils import create_request_object
 from config import \
     GETH_RPC_PATH, ACCOUNT_PASSWORD, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
-### TESTING ###
-from utils import parse_team_addr
-### /TESTING ###
-
 TIMEOUT = 7
 
 
-def create_request_object(team_addr):
-    return Request(team_addr, headers={
-        'User-Agent': get_useragent(),
-        # 'Content-type': 'application/json'
-    })
-
-
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    team_addr = parse_team_addr(team_addr)
     wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
     gas_per_transaction = 400000
 

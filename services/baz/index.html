@@ -1,0 +1,352 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Baz Bar</title>
+  <style type="text/css">
+    html { 
+        background: url('https://static1.squarespace.com/static/54ce1e83e4b023725201be38/t/56927073d8af10b210edebff/1452437640627/') no-repeat center center fixed; 
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas1" width="1000" height="1000"></canvas>
+  <script>
+function Shape(x, y, w, h, text, fill, font, selectable) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.w = w || 0;
+  this.h = h || 0;
+  this.text = text;
+  this.fill = fill || '#AAAAAA';
+  this.font = font || '30px Arial';
+  this.selectable = selectable;
+  this.selected = false;
+}
+
+// Draws this shape to a given context
+Shape.prototype.draw = function(ctx) {
+  ctx.font = this.font;
+  ctx.fillStyle = this.selected ? 'red' : this.fill;
+  if (this.text)
+  {
+    ctx.shadowColor = 'black';
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.shadowBlur = 5;
+    ctx.fillText(this.text, this.x, this.y  + this.h);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
+  else
+  {
+    ctx.fillRect(this.x, this.y, this.w, this.h);
+  }
+  //ctx.fillStyle = 'rgba(255, 200, 200, .2)'
+  //ctx.fillRect(this.x, this.y, this.w, this.h);
+}
+
+// Determine if a point is inside the shape's bounds
+Shape.prototype.contains = function(mx, my) {
+  // All we have to do is make sure the Mouse X,Y fall in the area between
+  // the shape's X and (X + Width) and its Y and (Y + Height)
+  return  (this.x <= mx) && (this.x + this.w >= mx) &&
+          (this.y <= my) && (this.y + this.h >= my);
+}
+
+function CanvasState(canvas) {
+  // **** First some setup! ****
+  
+  this.canvas = canvas;
+  this.width = canvas.width;
+  this.height = canvas.height;
+  this.ctx = canvas.getContext('2d');
+  // This complicates things a little but but fixes mouse co-ordinate problems
+  // when there's a border or padding. See getMouse for more detail
+  var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+  if (document.defaultView && document.defaultView.getComputedStyle) {
+    this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10)      || 0;
+    this.stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10)       || 0;
+    this.styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10)  || 0;
+    this.styleBorderTop   = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)   || 0;
+  }
+  // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
+  // They will mess up mouse coordinates and this fixes that
+  var html = document.body.parentNode;
+  this.htmlTop = html.offsetTop;
+  this.htmlLeft = html.offsetLeft;
+
+  // **** Keep track of state! ****
+  
+  this.valid = false; // when set to false, the canvas will redraw everything
+  this.shapes = []; 
+  var myState = this;
+  
+  //fixes a problem where double clicking causes text to get selected on the canvas
+  canvas.addEventListener('selectstart', function(e) { e.preventDefault(); return false; }, false);
+  // Up, down, and move are for dragging
+
+  // double click for making new shapes
+  canvas.addEventListener('click', function(e) {
+    var mouse = myState.getMouse(e);
+    var mx = mouse.x;
+    var my = mouse.y;
+    var shapes = myState.shapes;
+    var l = shapes.length;
+    for (var i = l-1; i >= 0; i--) {
+      if (shapes[i].contains(mx, my) && shapes[i].selectable) {
+        shapes[i].selected ^= 1;
+        myState.valid = false;
+        return;
+      }
+    }
+  }, true);
+  
+  // **** Options! ****
+  
+  this.interval = 30;
+  setInterval(function() { myState.draw(); }, myState.interval);
+}
+
+CanvasState.prototype.addShape = function(shape) {
+  this.shapes.push(shape);
+  this.valid = false;
+}
+
+CanvasState.prototype.clear = function() {
+  this.ctx.clearRect(0, 0, this.width, this.height);
+}
+
+// While draw is called as often as the INTERVAL variable demands,
+// It only ever does something if the canvas gets invalidated by our code
+CanvasState.prototype.draw = function() {
+  // if our state is invalid, redraw and validate!
+  if (!this.valid) {
+    var ctx = this.ctx;
+    var shapes = this.shapes;
+    this.clear();
+    
+    // ** Add stuff you want drawn in the background all the time here **
+    
+    // draw all shapes
+    var l = shapes.length;
+    for (var i = 0; i < l; i++) {
+      var shape = shapes[i];
+      // We can skip the drawing of elements that have moved off the screen:
+      if (shape.x > this.width || shape.y > this.height ||
+          shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
+      shapes[i].draw(ctx);
+    }
+
+    drawGlass(this, ctx);
+    
+    // ** Add stuff you want drawn on top all the time here **
+    
+    this.valid = true;
+  }
+}
+
+function drawLowerEllipseRtl(ctx, centerX, centerY, width, height)
+{
+  ctx.moveTo(centerX + width/2, centerY); // A1
+  
+  ctx.bezierCurveTo(
+    centerX + width/2, centerY + height/2, // C1
+    centerX - width/2, centerY + height/2, // C2
+    centerX - width/2, centerY); // A2
+}
+
+function drawLowerEllipse(ctx, centerX, centerY, width, height)
+{
+  ctx.moveTo(centerX - width/2, centerY); // A1
+  
+  ctx.bezierCurveTo(
+    centerX - width/2, centerY + height/2, // C1
+    centerX + width/2, centerY + height/2, // C2
+    centerX + width/2, centerY); // A2
+}
+
+function drawUpperEllipse(ctx, centerX, centerY, width, height)
+{
+  ctx.moveTo(centerX - width/2, centerY); // A1
+  
+  ctx.bezierCurveTo(
+    centerX - width/2, centerY - height/2, // C1
+    centerX + width/2, centerY - height/2, // C2
+    centerX + width/2, centerY); // A2
+}
+
+function drawGlass(s, ctx)
+{
+  var centerX = parseInt(s.width / 2);
+  var centerY = s.height - 350;
+  var width = 300;
+  var height = 50;
+
+  ctx.beginPath();
+  drawUpperEllipse(ctx, parseInt(s.width / 2), s.height - 350, 225, 50);
+  ctx.lineTo(parseInt(s.width / 2) + 75, s.height - 50);
+  drawLowerEllipseRtl(ctx, parseInt(s.width / 2), s.height - 50, 150, 50);
+  ctx.lineTo(parseInt(s.width / 2) - 113, s.height - 350);
+  
+  ctx.fillStyle = 'rgba(250, 250, 250, 0.05)';
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(250, 250, 250, 0.2)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  drawLowerEllipseRtl(ctx, parseInt(s.width / 2), s.height - 350, 225, 50);
+  ctx.lineTo(parseInt(s.width / 2) - 75, s.height - 50);
+  drawUpperEllipse(ctx, parseInt(s.width / 2), s.height - 50, 150, 50);
+  ctx.lineTo(parseInt(s.width / 2) + 113, s.height - 350);
+  
+  //ctx.fillStyle = 'rgba(250, 250, 250, 0.15)';
+  //ctx.fill();
+
+  ctx.strokeStyle = 'rgba(250, 250, 250, 0.2)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  drawLowerEllipse(ctx, parseInt(s.width / 2), s.height - 350, 225, 50);
+  ctx.lineTo(parseInt(s.width / 2) - 75, s.height - 50);
+  drawLowerEllipseRtl(ctx, parseInt(s.width / 2), s.height - 50, 150, 50);
+  ctx.lineTo(parseInt(s.width / 2) + 113, s.height - 350);
+  
+  ctx.fillStyle = 'rgba(250, 250, 250, 0.15)';
+  ctx.fill();
+}
+
+// Creates an object with x and y defined, set to the mouse position relative to the state's canvas
+// If you wanna be super-correct this can be tricky, we have to worry about padding and borders
+CanvasState.prototype.getMouse = function(e) {
+  var element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
+  
+  // Compute the total offset
+  if (element.offsetParent !== undefined) {
+    do {
+      offsetX += element.offsetLeft;
+      offsetY += element.offsetTop;
+    } while ((element = element.offsetParent));
+  }
+
+  // Add padding and border style widths to offset
+  // Also add the <html> offsets in case there's a position:fixed bar
+  offsetX += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
+  offsetY += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
+
+  mx = e.pageX - offsetX;
+  my = e.pageY - offsetY;
+  
+  // We return a simple javascript object (a hash) with x and y defined
+  return {x: mx, y: my};
+}
+
+// If you dont want to use <body onLoad='init()'>
+// You could uncomment this init() reference and place the script reference inside the body tag
+function loadData(url, handler) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      handler(this.status, this.responseText);
+    }
+  };
+  xhttp.open("GET", url, true);
+  xhttp.send();
+}
+
+spirits = [
+"Ale",
+"Porter",
+"Stout",
+"Lager",
+"Cider",
+"Mead",
+"Wine",
+"Port",
+"Sherry",
+"Vermouth",
+"Vinsanto",
+"Sangria",
+"Champagne",
+"Sake",
+"Brandy",
+"Cognac",
+"Armagnac",
+"Schnapps",
+"Gin",
+"Horilka",
+"Metaxa",
+"Rakia",
+"Rum",
+"Shochu",
+"Soju",
+"Tequila",
+"Vodka",
+"Bourbon",
+"Whiskey",
+"Absinthe",
+"Juice",
+"Cola",
+"Water"
+];
+
+  function init() {
+    console.log(document.getElementById('canvas1'));
+    var s = new CanvasState(document.getElementById('canvas1'));
+
+    var textBrush = 'rgba(250,250,250,0.9)';
+    var backBrush = 'rgba(0,0,0,0.4)';
+
+    s.addShape(new Shape(80, 20, 380, 650, null, backBrush));
+    s.addShape(new Shape(s.width - 450, 20, 380, 650, null, backBrush));
+
+    loadData('list?skip=0&take=10', function (status, text) {
+      if (status != 200)
+        return;
+      var lines = text.split('\n');
+      console.log(lines)
+      for (var i = 0; i < lines.length; i++)
+      {
+        s.addShape(new Shape(s.width - 400, 100 + 30 * i, 150, 20, lines[i], textBrush, '20px Arial', true));
+      }
+    });
+    for (var i = 0; i < parseInt(spirits.length / 2); i++)
+    {
+      s.addShape(new Shape(150, 100 + 30 * i, 150, 20, spirits[i], textBrush, '20px Arial', true));
+    }
+    for (var i = parseInt(spirits.length / 2); i < spirits.length; i++)
+    {
+      console.log(i)
+      s.addShape(new Shape(310, 100 + 30 * (i - parseInt(spirits.length / 2)), 150, 20, spirits[i], textBrush, '20px Arial', true));
+    }
+
+    s.addShape(new Shape(180, 50, 150, 30, 'Mix yourself', textBrush, '35px Arial'));
+    s.addShape(new Shape(s.width - 350, 50, 150, 30, 'Order existing', textBrush, '35px Arial'));
+  }
+
+  (function() {
+    var canvas = document.getElementById('canvas1');
+
+    window.addEventListener('resize', resizeCanvas, false);
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      init();
+    }
+    resizeCanvas();
+  })();
+  </script>
+</body>
+</html>
+

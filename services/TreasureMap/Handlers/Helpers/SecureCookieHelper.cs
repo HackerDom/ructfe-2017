@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using TreasureMap.Crypto;
 using TreasureMap.Http;
+using vtortola.WebSockets;
 
 namespace TreasureMap.Handlers.Helpers
 {
@@ -15,6 +16,18 @@ namespace TreasureMap.Handlers.Helpers
 		{
 			var login = context.Request.Cookies[LoginField]?.Value;
 			var sign = context.Request.Cookies[LoginField + ".sig"]?.Value;
+			return GetLogin(login, sign);
+		}
+
+		public static string GetLogin(this WebSocketHttpRequest request)
+		{
+			var login = request.Cookies?[LoginField]?.Value;
+			var sign = request.Cookies?[LoginField + ".sig"]?.Value;
+			return GetLogin(login, sign);
+		}
+
+		private static string GetLogin(string login, string sign)
+		{
 			var cookie = GetCookieString(LoginField, login);
 			if (login == null || sign != GetSign(cookie))
 				return null;

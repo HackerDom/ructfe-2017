@@ -142,7 +142,7 @@ def add_ship( addr, bin_file ):
 	pos_z = int( random.uniform( -2000000, 2000000 ) );
 	rot_y = 0#random.uniform( 0, 3.1415926 );
 	
-	url = 'http://%s/add_ship?pos_x=%f&pos_z=%f&rot_y=%f' % ( addr, pos_x, pos_z, rot_y )
+	url = 'http://%s:8080/add_ship?pos_x=%f&pos_z=%f&rot_y=%f' % ( addr, pos_x, pos_z, rot_y )
 	files = { 'flag_shader': open( bin_file, 'rb' ).read() }
 	headers = { 'User-Agent' : UserAgents.get() }
 	try:
@@ -171,7 +171,7 @@ def draw( addr, pos_json ):
 	aimpos_y = pos_y
 	aimpos_z = params[ 'z' ]
 
-	url = 'http://%s/draw?pos_x=%f&pos_y=%f&pos_z=%f&aimpos_x=%f&aimpos_y=%f&aimpos_z=%f' % ( addr, pos_x, pos_y, pos_z, aimpos_x, aimpos_y, aimpos_z )
+	url = 'http://%s:8080/draw?pos_x=%f&pos_y=%f&pos_z=%f&aimpos_x=%f&aimpos_y=%f&aimpos_z=%f' % ( addr, pos_x, pos_y, pos_z, aimpos_x, aimpos_y, aimpos_z )
 	#print( url )
 	try:
 		headers = { 'User-Agent' : UserAgents.get() }

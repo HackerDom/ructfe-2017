@@ -14,6 +14,11 @@
     path: "{{cs_dir}}/checkers/PirateCoin/piratecoin.checker.py"
     mode: "u+x"
 
+- name: checker permissions 2
+  file:
+    path: "{{cs_dir}}/checkers/TreasureMap/checker.py"
+    mode: "u+x"
+
 - name: system requirements
   apt: name={{item}} state=latest update_cache=yes
   with_items:
