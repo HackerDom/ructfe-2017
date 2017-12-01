@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ip route get 1 | awk '{print $NF;exit}' > ip.txt
+ip route get 1 | awk '{print $NF;exit}' > geth/ip.txt

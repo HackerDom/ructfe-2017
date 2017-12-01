@@ -109,7 +109,6 @@
     <Compile Include="Utils\AsyncLockSource.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\EnumerableExtentions.cs" />
-    <Compile Include="Utils\FuncUtils.cs" />
     <Compile Include="Utils\JsonHelper.cs" />
     <Compile Include="Utils\ReflectionUtils.cs" />
     <Compile Include="Utils\RuntimeHelper.cs" />

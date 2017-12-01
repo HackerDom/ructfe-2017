@@ -29,20 +29,6 @@ namespace TreasureMap.Http
 			}
 		}
 
-		public static void Close(this HttpListenerContext context, int status)
-		{
-			try
-			{
-				context.Response.StatusCode = status;
-				context.Response.KeepAlive = false;
-				context.Response.Close();
-			}
-			catch
-			{
-				// ignored
-			}
-		}
-
 		private static readonly Action<HttpListenerContext> Abort;
 	}
 }

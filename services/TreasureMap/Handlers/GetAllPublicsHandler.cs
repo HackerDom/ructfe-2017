@@ -17,6 +17,6 @@ namespace TreasureMap.Handlers
 		public override string Path => "/api/publics";
 
 		protected override Task HandleInternal(HttpListenerContext context, string login)
-			=> context.Response.WriteObjectAsync(PointHolder.GetPublics().Select(PointConverter.Convert));
+			=> context.Response.WriteObjectAsync(PointHolder.GetPublics().Select(PointConverter.Convert).ToList());
 	}
 }

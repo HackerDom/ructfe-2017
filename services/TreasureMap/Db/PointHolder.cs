@@ -15,9 +15,9 @@ namespace TreasureMap.Db
 		private static readonly ConcurrentDictionary<string, Point> DataBase = new ConcurrentDictionary<string, Point>();
 		private static readonly ConcurrentBag<string> Publics = new ConcurrentBag<string>();
 		private static readonly ConcurrentDictionary<string, HashSet<string>> PerUser = new ConcurrentDictionary<string, HashSet<string>>();
-		private static Action<Point> onAdd;
+		private static Action<Point, string> onAdd;
 
-		public static void Init(string path, int sleep, int ttl, Action<Point> _onAdd)
+		public static void Init(string path, int sleep, int ttl, Action<Point, string> _onAdd)
 		{
 			var deadline = DateTime.UtcNow.AddMilliseconds(-ttl);
 			DataLoader.Load<Point>(path, point =>
@@ -46,7 +46,7 @@ namespace TreasureMap.Db
 
 			AddIntenal(point);
 
-			onAdd(point);
+			onAdd(point, null);
 
 			return point.Id;
 		}
@@ -59,11 +59,6 @@ namespace TreasureMap.Db
 				Publics.Add(point.Id);
 
 			PerUser.AddOrUpdateLocked(point.User, point.Id);
-		}
-
-		public static IEnumerable<Point> GetAll()
-		{
-			return DataBase.Select(pair => pair.Value);
 		}
 
 		public static IEnumerable<Point> GetPublics()
@@ -88,7 +83,13 @@ namespace TreasureMap.Db
 				try
 				{
 					var deadline = DateTime.UtcNow.AddMilliseconds(-ttl);
-					DataBase.Where(pair => pair.Value.Dt < deadline).ForEach(pair => DataBase.TryRemove(pair.Key, out Point _));
+					DataBase.Where(pair => pair.Value.Dt < deadline).ForEach(pair =>
+					{
+						if (!DataBase.TryRemove(pair.Key, out Point p))
+							return;
+						var deleted = new Point {Id = p.Id};
+						onAdd(p, deleted.ToJsonString());
+					});
 				}
 				catch
 				{

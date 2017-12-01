@@ -6,9 +6,7 @@ using log4net;
 using log4net.Config;
 using TreasureMap.Crypto;
 using TreasureMap.Db;
-using TreasureMap.Db.Models;
 using TreasureMap.Handlers;
-using TreasureMap.Handlers.Helpers;
 using TreasureMap.Http;
 using TreasureMap.Utils;
 using TreasureMap.Ws;
@@ -34,7 +32,7 @@ namespace TreasureMap
 
 				SecretHolder.Init(settings.GetValue("secret"));
 				CredentialsHolder.Init(settings.GetValue("credentials"), sleepPeriod);
-				PointHolder.Init(settings.GetValue("points"), sleepPeriod, ttl, point => wsServer.BroadcastAsync(point, CancellationToken.None));
+				PointHolder.Init(settings.GetValue("points"), sleepPeriod, ttl, (point, msg) => wsServer.BroadcastAsync(point, msg, CancellationToken.None));
 
 				Task
 					.WhenAll(

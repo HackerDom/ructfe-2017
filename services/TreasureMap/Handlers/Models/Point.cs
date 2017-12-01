@@ -11,8 +11,5 @@ namespace TreasureMap.Handlers.Models
 		[DataMember(Name = "message")] public string Message;
 		[DataMember(Name = "user", EmitDefaultValue = false)] public string User;
 		[DataMember(Name = "public")] public bool? IsPublic;
-
-		[IgnoreDataMember]
-		public bool IsSignificant => X != null || Y != null || Message != null || IsPublic != null;
 	}
 }
