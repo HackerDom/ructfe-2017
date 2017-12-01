@@ -32,6 +32,5 @@ def get_sha512(data: bytes):
     return sha512(data).digest()
 
 
-def get_base_of_hash(data: str):
-    return b64encode(get_sha512(data.encode())).decode()
-
+def get_base_of_passw(data: str):
+    return b64encode(data.encode()).decode()

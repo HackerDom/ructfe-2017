@@ -372,11 +372,13 @@ AddShipProcessor::~AddShipProcessor() {
 void AddShipProcessor::FinalizeRequest() {
     if( !m_isHeadersValid ) {
         Complete( HttpResponse( MHD_HTTP_BAD_REQUEST ) );
+		printf( "Invalid query\n" );
         return;
     }
 
     if( !Shader::IsValidPixelShader( m_flagShader ) ) {
         Complete( HttpResponse( MHD_HTTP_BAD_REQUEST ) );
+		printf( "Invalid shader\n" );
         return;
     }
 
@@ -388,8 +390,11 @@ void AddShipProcessor::FinalizeRequest() {
         memset( uuidStr, 0, 64 );
         uuid_unparse( id.bytes, uuidStr );
         Complete( HttpResponse( MHD_HTTP_OK, uuidStr, strlen( uuidStr ), Headers() ) );
-     } else
+		printf( "Ship added\n" );
+     } else {
         Complete( HttpResponse(MHD_HTTP_BAD_REQUEST) );
+		printf( "Failed to add ship \n" );
+	 }
 }
 
 

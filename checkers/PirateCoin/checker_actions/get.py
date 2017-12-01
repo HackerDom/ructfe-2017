@@ -1,5 +1,6 @@
 import json
 
+import sys
 from datetime import datetime
 from urllib.request import urlopen
 from urllib.parse import urlencode
@@ -10,13 +11,14 @@ from web3 import RPCProvider, Web3
 from web3.contract import ConciseContract
 from web3.exceptions import BadFunctionCallOutput
 
+from utils import create_request_object
 from answer_codes import CheckerAnswers
 from config import \
     GETH_RPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD,\
     BLACK_MARKET_ADDR, SERVICE_COINBASE
 
 
-TIMEOUT = 8
+TIMEOUT = 7
 TRANSACTION_COOLDOWN = 60
 
 
@@ -28,13 +30,22 @@ def get_check_contract(team_addr, flag_id, flag):
     w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
 
     try:
-        response = urlopen(SERVICE_COINBASE.format(team_addr), timeout=5)
+        team_coinbase = urlopen(
+            create_request_object(
+                SERVICE_COINBASE.format(team_addr)),
+            timeout=TIMEOUT
+        ).read().decode()
+        int(team_coinbase, 16)
     except (URLError, socket.timeout):
         return CheckerAnswers.DOWN("Can't reach team web server", "")
     except ValueError:
-        return
+        return CheckerAnswers.MUMBLE("Can't parse team coinbase!", "")
 
-    w3.eth.sendTransaction({"to": ""})
+    w3.eth.sendTransaction({
+        "to": team_coinbase,
+        "from": ACCOUNT_ID,
+        "value": 1000000000000
+    })
 
 
     """

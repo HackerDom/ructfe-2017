@@ -18,7 +18,7 @@
     dest: "/home/{{ service_name }}/"
     mode: 0755
   with_items:
-    - baz
+    - "{{ service_name }}"
     - Dockerfile
     - docker-compose.yml
 

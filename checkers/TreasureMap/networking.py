@@ -26,24 +26,30 @@ class WSHelper:
 			async for msg in ws:
 				if msg.type == aiohttp.WSMsgType.TEXT:
 					try:
-						data = msg.json(loads = lambda s : checker.parse_json(s, ['url', 'owner']))
+						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user']))
 					except Exception as ex:
 						checher.mumble(error='can\'t parse service responce', exception=ex)
-					await self.queue.put((data['url'], data['owner']))
+					await self.queue.put()
 				elif msg.type == aiohttp.WSMsgType.CLOSED:
 					break
 				else:
 					checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
-	def want(self, url, owner):
-		self.wanted.add((url, owner))
-	def want_many(self, wanted):
-		self.wanted |= wanted
+	def want(self, point):
+		self.wanted.add(json.dumps(data, sort_keys=True))
 	async def finish(self):
 		while len(self.wanted) > 0:
 			top = await self.queue.get()
+			top = json.dumps(top, sort_keys=True)
 			if top in self.wanted:
 				self.wanted.remove(top)
 		self.connection.close()
+	async def find(self, id):
+		while True:
+			top = await self.queue.get()
+			if top['id'] == id:
+				self.connection.close()
+				return top
+
 
 class State:
 	def __init__(self, hostname, port=None):
@@ -105,8 +111,8 @@ class State:
 	async def get_points(self):
 		return checker.parse_json(await self.get('/api/points'))
 
-	def get_listener(self):
-		url = self.get_url('publics', proto='ws')
+	def get_listener(self, url):
+		url = self.get_url(url, proto='ws')
 		try:
 			connection = self.session.ws_connect(url, origin=self.get_url(''))
 		except Exception as ex:
@@ -114,6 +120,12 @@ class State:
 		helper = WSHelper(connection)
 		helper.start()
 		return helper
+
+	def get_public_listener(self):
+		return self.get_listener('/ws/public')
+
+	def get_points_listener(self):
+		return self.get_listener('/ws/points')
 
 	async def put_point(self, x = None, y = None, message = None, is_public = None, user = None):
 		point = {
