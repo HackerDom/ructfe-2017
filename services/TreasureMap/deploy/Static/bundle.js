@@ -1845,13 +1845,12 @@ const fetchData = async () => {
       let publics = publicsRes.json();
       let privates = privatesRes.json();
       let data = [...publics, ...privates];
-      console.log(data);
       return (0, _normalizr.normalize)(data, points).entities.point;
     } else {
-      return [];
+      return false;
     }
   } catch (e) {
-    return [];
+    return false;
   }
 };
 
@@ -5803,7 +5802,7 @@ const updateDataCycle = async () => {
   let res = await (0, _backend.fetchData)();
   console.log(res);
 
-  if (res.length) {
+  if (res) {
     _store.default.dispatch((0, _actions.dataFetched)(res));
   }
 

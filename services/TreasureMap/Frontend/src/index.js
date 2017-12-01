@@ -14,8 +14,7 @@ import { addPointToMap } from "./services/map";
 
 const updateDataCycle = async () => {
   let res = await fetchDataService();
-  console.log(res);
-  if (res.length) {
+  if (res) {
     store.dispatch(dataFetched(res));
   }
   setTimeout(updateDataCycle, 60000);

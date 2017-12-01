@@ -30,13 +30,12 @@ export const fetchData = async () => {
       let publics = publicsRes.json();
       let privates = privatesRes.json();
       let data = [...publics, ...privates];
-      console.log(data);
       return normalize(data, points).entities.point;
     } else {
-      return [];
+      return false;
     }
   } catch (e) {
-    return [];
+    return false;
   }
 };
 
