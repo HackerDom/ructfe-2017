@@ -8,6 +8,7 @@ let config = {
     filename: "bundle.js",
     path: path.resolve(__dirname, "../deploy/Static")
   },
+  cache: true,
   module: {
     loaders: [
       {

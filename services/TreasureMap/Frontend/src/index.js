@@ -1,9 +1,10 @@
 import "babel-core/register";
 import "babel-polyfill";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 import "./index.css";
-import "mapbox-gl/dist/mapbox-gl.css";
-import map from "./map";
+import "./map";
+import "./services/ws";
 
 import loginForm from "./components/updateLoginForm";
 import path from "./components/pathRenderer";
@@ -14,22 +15,15 @@ import store from "./store";
 import { dataFetched } from "./store/actions";
 import { fetchData as fetchDataService } from "./services/backend";
 
-window.updatePeriod = 60;
+// export const fetchData = async () => {
+//   let res = await fetchDataService();
+//   if (res) {
+//     store.dispatch(dataFetched(res));
+//   }
+//   return true;
+// };
 
-export const fetchData = async () => {
-  let res = await fetchDataService();
-  if (res) {
-    store.dispatch(dataFetched(res));
-  }
-  return true;
-};
-
-const updateDataCycle = async () => {
-  await fetchData();
-  setTimeout(updateDataCycle, 1000 * updatePeriod);
-};
-
-updateDataCycle();
+// fetchData();
 let prevUser = store.getState().user;
 loginForm(prevUser);
 pathControlInit();
@@ -37,11 +31,8 @@ pathControlInit();
 store.subscribe(() => {
   const state = store.getState();
   renderPoint(state.points);
-  // Object.entries(state.points).map(([_, point]) => {
-  //   addPointToMap(point);
-  // });
   if (prevUser !== state.user) {
-    fetchData();
+    // fetchData();
     prevUser = state.user;
   }
   loginForm(state.user);

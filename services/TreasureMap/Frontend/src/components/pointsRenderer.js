@@ -5,7 +5,97 @@ import { pathPointSelect } from "../store/actions";
 import store from "../store";
 import * as mapboxgl from "mapbox-gl";
 
-// const isSameCoordinates = (a, b) => a.x === b.x && a.y === b.y;
+let hiddenData;
+
+const addLayers = () => {
+  map
+    .addSource("allPoints", {
+      type: "geojson",
+      data: hiddenData ? hiddenData : featureCollection([point([0, 0])]),
+      cluster: true,
+      clusterMaxZoom: 14,
+      clusterRadius: 50
+    })
+    .addLayer({
+      id: "allPoints",
+      type: "symbol",
+      data: featureCollection([point([0, 0])]),
+      source: "allPoints",
+      filter: ["!has", "point_count"],
+      layout: {
+        "icon-image": "{icon}-15",
+        "icon-allow-overlap": true
+      }
+    })
+    .addLayer({
+      id: "allPointsCluster",
+      type: "circle",
+      source: "allPoints",
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-opacity": 0.5,
+        "circle-color": {
+          property: "point_count",
+          type: "interval",
+          stops: [
+            [0, "#b294ff"],
+            [5, "#57e6e6"],
+            [10, "#51bbd6"],
+            [20, "#f1f075"],
+            [50, "#f28cb1"]
+          ]
+        },
+        "circle-radius": {
+          property: "point_count",
+          type: "interval",
+          stops: [[0, 20], [5, 25], [10, 30], [20, 35], [50, 40]]
+        }
+      }
+    })
+    .addLayer({
+      id: "cluster-count",
+      type: "symbol",
+      source: "allPoints",
+      filter: ["has", "point_count"],
+      layout: {
+        "icon-image": "castle-15",
+        "icon-allow-overlap": true,
+        "icon-offset": [6, 0],
+        "text-offset": [-0.6, 0],
+        "icon-anchor": "center",
+        "text-anchor": "center",
+        "text-field": "{point_count_abbreviated}",
+        "text-font": ["Arial Unicode MS Bold"],
+
+        "text-size": 12
+      },
+      paint: {
+        "text-color": "white"
+      }
+    });
+  map.on("click", "allPoints", e => {
+    store.dispatch(
+      pathPointSelect({
+        type: "point",
+        id: e.features[0].properties.id
+      })
+    );
+    if (e.features[0].properties.description) {
+      map.popupIsOpen = true;
+      map.clicked = 0;
+      new mapboxgl.Popup()
+        .setLngLat(e.features[0].geometry.coordinates)
+        .setText(e.features[0].properties.description)
+        .addTo(map)
+        .on("close", () => (map.popupIsOpen = false));
+    }
+  });
+};
+if (map.loaded()) {
+  addLayers();
+} else {
+  map.on("load", addLayers);
+}
 
 const getPointView = _ => ({
   ...point(xyToCoordinates(_)),
@@ -30,99 +120,9 @@ export default points => {
       })
       .filter(existFilter)
   );
-
   if (map.getSource("allPoints")) {
     map.getSource("allPoints").setData(data);
   } else {
-    window.getMap = () => map;
-    const addLayers = () => {
-      map
-        .addSource("allPoints", {
-          type: "geojson",
-          data,
-          cluster: true,
-          clusterMaxZoom: 14,
-          clusterRadius: 50
-        })
-
-        .addLayer({
-          id: "allPoints",
-          type: "symbol",
-          source: "allPoints",
-          filter: ["!has", "point_count"],
-          layout: {
-            "icon-image": "{icon}-15",
-            "icon-allow-overlap": true
-          }
-        })
-        .addLayer({
-          id: "allPointsCluster",
-          type: "circle",
-          source: "allPoints",
-          filter: ["has", "point_count"],
-          paint: {
-            "circle-opacity": 0.5,
-            "circle-color": {
-              property: "point_count",
-              type: "interval",
-              stops: [
-                [0, "#b294ff"],
-                [10, "#57e6e6"],
-                [30, "#51bbd6"],
-                [50, "#f1f075"],
-                [100, "#f28cb1"]
-              ]
-            },
-            "circle-radius": {
-              property: "point_count",
-              type: "interval",
-              stops: [[0, 20], [10, 25], [30, 30], [50, 35], [100, 40]]
-            }
-          }
-        })
-        .addLayer({
-          id: "cluster-count",
-          type: "symbol",
-          source: "allPoints",
-          filter: ["has", "point_count"],
-          layout: {
-            "icon-image": "castle-15",
-            "icon-allow-overlap": true,
-            "icon-offset": [6, 0],
-            "text-offset": [-0.6, 0],
-            "icon-anchor": "center",
-            "text-anchor": "center",
-            "text-field": "{point_count_abbreviated}",
-            "text-font": ["Arial Unicode MS Bold"],
-
-            "text-size": 12
-          },
-          paint: {
-            "text-color": "white"
-          }
-        });
-      map.on("click", "allPoints", e => {
-        store.dispatch(
-          pathPointSelect({
-            type: "point",
-            id: e.features[0].properties.id
-          })
-        );
-        if (e.features[0].properties.description) {
-          map.popupIsOpen = true;
-          map.clicked = 0;
-          new mapboxgl.Popup()
-            .setLngLat(e.features[0].geometry.coordinates)
-            .setText(e.features[0].properties.description)
-            .addTo(map)
-            .on("close", () => (map.popupIsOpen = false));
-        }
-      });
-    };
-    if (map.loaded()) {
-      addLayers();
-    } else {
-      map.on("load", addLayers);
-    }
+    hiddenData = data;
   }
 };
