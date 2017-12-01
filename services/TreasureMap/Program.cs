@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
 using TreasureMap.Crypto;
 using TreasureMap.Db;
+using TreasureMap.Db.Models;
 using TreasureMap.Handlers;
+using TreasureMap.Handlers.Helpers;
 using TreasureMap.Http;
 using TreasureMap.Utils;
+using TreasureMap.Ws;
 
 namespace TreasureMap
 {
@@ -25,21 +29,19 @@ namespace TreasureMap
 				var sleepPeriod = int.Parse(settings.GetValue("sleep"));
 				var ttl = int.Parse(settings.GetValue("ttl"));
 
-				SecretHolder.Init(settings.GetValue("secret")); 
+				var server = PrepareServer(settings);
+				var wsServer = PrepareWsServer(settings);
+
+				SecretHolder.Init(settings.GetValue("secret"));
 				CredentialsHolder.Init(settings.GetValue("credentials"), sleepPeriod);
-				PointHolder.Init(settings.GetValue("points"), sleepPeriod, ttl);
+				PointHolder.Init(settings.GetValue("points"), sleepPeriod, ttl, point => wsServer.BroadcastAsync(point, CancellationToken.None));
 
-				var port = int.Parse(settings.GetValue("port"));
-				var server = new HttpServer(port);
-
-				server
-					.AddHandler(LoginHandler.Instance)
-					.AddHandler(AddPointHandler.Instance)
-					.AddHandler(GetAllPublicsHandler.Instance)
-					.AddHandler(GetPointsHandler.Instance)
-					.AddHandler(ShortestPathHandler.Instance);
-
-				server.AcceptLoopAsync(new CancellationToken()).Wait();
+				Task
+					.WhenAll(
+						server.AcceptLoopAsync(CancellationToken.None),
+						wsServer.AcceptLoopAsync(CancellationToken.None)
+					)
+					.Wait();
 			}
 			catch (Exception ex)
 			{
@@ -47,6 +49,28 @@ namespace TreasureMap
 				Log.Fatal("Unexpected exception", ex);
 				Environment.Exit(ex.HResult == 0 ? ex.HResult : -1);
 			}
+		}
+
+		private static HttpServer PrepareServer(SimpleSettings settings)
+		{
+			var port = int.Parse(settings.GetValue("port"));
+
+			var server = new HttpServer(port);
+
+			server
+				.AddHandler(LoginHandler.Instance)
+				.AddHandler(AddPointHandler.Instance)
+				.AddHandler(GetAllPublicsHandler.Instance)
+				.AddHandler(GetPointsHandler.Instance)
+				.AddHandler(ShortestPathHandler.Instance);
+
+			return server;
+		}
+
+		private static WsServer PrepareWsServer(SimpleSettings settings)
+		{
+			var port = int.Parse(settings.GetValue("ws-port"));
+			return new WsServer(port);
 		}
 
 		private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
