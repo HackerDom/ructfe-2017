@@ -49,7 +49,7 @@ FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
 
 async def check_one(username, sender, viewer, is_public):
 	point = await sender.put_point(is_public=True, user=username)
-	point = await viewer.find(point['id'])
+	p = await viewer.find(point['id'])
 	compare(point, p, FIELDS)
 
 def get_rand_point():
