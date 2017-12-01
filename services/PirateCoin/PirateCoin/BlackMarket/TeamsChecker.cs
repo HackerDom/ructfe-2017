@@ -21,6 +21,9 @@ namespace BlackMarket
 			this.gethRpcUrl = gethRpcUrl;
 			this.bankContractAbi = File.ReadAllText(bankContractAbiFilepath);
 			this.gethPass = GethPass;
+
+			CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
+			log.Info($"Got Geth coinbase {CoinbaseAddress}");
 		}
 
 		private Web3 ConnectToGethNode()
@@ -29,8 +32,6 @@ namespace BlackMarket
 			{
 				try
 				{
-					CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
-
 					var senderAccount = new ManagedAccount(CoinbaseAddress, gethPass);
 					return new Web3(senderAccount, gethRpcUrl);
 				}
@@ -51,11 +52,11 @@ namespace BlackMarket
 				new Thread(() =>
 				{
 					var random = new Random().Next(30);
-					log.Info($"New team {vulnboxIp} checking started. Sleeping {random} sec before start");
+					log.Info($"New team '{vulnboxIp}' checking started. Waiting {random}sec before start");
 					Thread.Sleep(TimeSpan.FromSeconds(random));
 
 					var web3 = ConnectToGethNode();
-					log.Info($"Successfully connected to parity node {parityRpcUrl} via RPC");
+					log.Info($"Successfully connected to parity node '{parityRpcUrl}' via RPC");
 
 					var lastContractCheckStartTime = DateTime.MinValue;
 					while(true)
@@ -63,24 +64,24 @@ namespace BlackMarket
 						var secondsToSleep = Math.Max(0, contractDeployPeriod.Subtract(DateTime.UtcNow.Subtract(lastContractCheckStartTime)).TotalSeconds);
 						if(secondsToSleep > 0)
 						{
-							log.Info($"Waiting {secondsToSleep} sec. before checking vulnbox {vulnboxIp}");
+							log.Info($"Waiting {secondsToSleep}sec. before checking vulnbox '{vulnboxIp}");
 							Thread.Sleep(TimeSpan.FromSeconds(secondsToSleep));
 						}
 						lastContractCheckStartTime = DateTime.UtcNow;
 
 						try
 						{
-							log.Info($"Checking vulnbox {vulnboxIp} contract {contractAddr}");
+							log.Info($"Checking vulnbox '{vulnboxIp}' contract '{contractAddr}'");
 
 							var contract = web3.Eth.GetContract(bankContractAbi, contractAddr);
 
 							var transactionPolling = web3.TransactionManager.TransactionReceiptService;
 
 							var transactionSendReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("addToBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, contactTransactAmount)).Result;
-							log.Info($"Sent {contactTransactAmount} wei to team {vulnboxIp} contract {contractAddr}, transaction {transactionSendReceipt.TransactionHash} in block {transactionSendReceipt.BlockNumber.Value}");
+							log.Info($"Sent {contactTransactAmount} wei to team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionSendReceipt.TransactionHash}' in block {transactionSendReceipt.BlockNumber.Value}");
 
 							var transactionWithdrawReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, new HexBigInteger(0))).Result;
-							log.Info($"Sent withdraw receipt from team {vulnboxIp} contract {contractAddr}, transaction {transactionWithdrawReceipt.TransactionHash} in block {transactionWithdrawReceipt.BlockNumber.Value}");
+							log.Info($"Sent withdraw receipt from team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' in block {transactionWithdrawReceipt.BlockNumber.Value}");
 
 							//NOTE to have parity synchronized with blockchain
 							Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -104,17 +105,17 @@ namespace BlackMarket
 							bool illegallyPatched = false;
 							if(totalSumReturned < contactTransactAmount)
 							{
-								log.Info($"Witdrawal team {vulnboxIp} contract {contractAddr} transaction {transactionWithdrawReceipt.TransactionHash} tracing returned {totalSumReturned} < we sent {contactTransactAmount}. Considering vulnbox illegaly patched");
+								log.Info($"Witdrawal team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' tracing returned {totalSumReturned} < we sent {contactTransactAmount}. Considering vulnbox illegaly patched");
 								teamsStatus[vulnboxIp] = DateTime.UtcNow;
 								illegallyPatched = true;
 							}
 
 							var msg = illegallyPatched ? "ILLEGAL PATCH" : "OK";
-							log.Warn($"Checked team {vulnboxIp} contract {contractAddr} -> {msg}");
+							log.Warn($"Checked team '{vulnboxIp}' contract '{contractAddr}' -> {msg}");
 						}
 						catch(Exception e)
 						{
-							log.Error($"Unexpected error while checking vulnbox {vulnboxIp}", e);
+							log.Error($"Unexpected error while checking vulnbox '{vulnboxIp}' contract '{contractAddr}'", e);
 							Thread.Sleep(TimeSpan.FromSeconds(1));
 						}
 					}
