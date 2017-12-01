@@ -25,7 +25,7 @@ const getCheckbox = () => {
   const input = document.createElement("input");
   input.type = "checkbox";
   input.name = "public";
-  text.textContent = "isPublic: ";
+  text.textContent = "public: ";
   wrapper.appendChild(text);
   wrapper.appendChild(input);
   return wrapper;
@@ -41,8 +41,8 @@ export default (lat, lng, popup) => {
   const form = document.createElement("form");
   form.action = "#";
 
-  form.appendChild(getFormLine("y", encodeCoordinates(lat)));
-  form.appendChild(getFormLine("x", encodeCoordinates(lng)));
+  form.appendChild(getFormLine("y", encodeCoordinates(parseFloat(lat) / 180)));
+  form.appendChild(getFormLine("x", encodeCoordinates(parseFloat(lng) / 180)));
   form.appendChild(getFormLine("message"));
   form.appendChild(getCheckbox());
   form.appendChild(getSubmit());
