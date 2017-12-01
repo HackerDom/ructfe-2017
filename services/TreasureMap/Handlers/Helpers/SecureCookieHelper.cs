@@ -42,7 +42,7 @@ namespace TreasureMap.Handlers.Helpers
 		}
 
 		private static string GetCookieString(string name, string value)
-			=> $"{name}={value}; path=/; HttpOnly";
+			=> $"{name}={value}; path=/";
 
 		private static string GetSign(string data)
 		{
