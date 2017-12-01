@@ -40,9 +40,9 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     except KeyError as e:
         return CheckerAnswers.MUMBLE(
             "Incorrect json-api schema response", str(e))
-    except socket.timeout:
+    except socket.timeout as e:
         return CheckerAnswers.MUMBLE(
-            "Service response timed out!", "")
+            "Service response timed out!", str(e))
     except URLError as e:
         return CheckerAnswers.DOWN(
             "Can't reach service address!", str(e))
@@ -60,8 +60,9 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                         "vulnboxIp": team_addr
                     })), timeout=TIMEOUT)\
             .read().decode()
-    except (URLError, socket.timeout):
-        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
+    except (URLError, socket.timeout) as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "Black Market is down! ({})".format(e))
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
@@ -80,9 +81,9 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                 "value": wei_per_transaction}
         )
 
-    except ConnectionError:
+    except ConnectionError as e:
         return CheckerAnswers.CHECKER_ERROR(
-            "", "can't connect to checker rpc!")
+            "", "can't connect to checker rpc! {}".format(e))
 
     # flag_id = contract:wei:transaction_timestamp
     return CheckerAnswers.OK(flag_id="{}".format(contract_addr))
