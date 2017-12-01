@@ -45,7 +45,7 @@ namespace BlackMarket
 
 			var lastIllegalPatchedDetectedDt = teamsChecker.GetLastIllegalPatchedDetectedDt(vulnboxIp);
 
-			await context.WriteStringAsync(((int)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
+			await context.WriteStringAsync(((long)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
 		}
 
 		private static async Task PutFlagCallback(HttpListenerContext context)
