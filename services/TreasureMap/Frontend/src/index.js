@@ -7,12 +7,12 @@ import map from "./map";
 
 import loginForm from "./components/updateLoginForm";
 import path from "./components/pathRenderer";
+import renderPoint from "./components/pointsRenderer";
 import pathControlInit from "./components/pathControl";
 import store from "./store";
 
 import { dataFetched } from "./store/actions";
 import { fetchData as fetchDataService } from "./services/backend";
-import { addPointToMap } from "./services/map";
 
 window.updatePeriod = 60;
 
@@ -36,9 +36,10 @@ pathControlInit();
 
 store.subscribe(() => {
   const state = store.getState();
-  Object.entries(state.points).map(([_, point]) => {
-    addPointToMap(point);
-  });
+  renderPoint(state.points);
+  // Object.entries(state.points).map(([_, point]) => {
+  //   addPointToMap(point);
+  // });
   if (prevUser !== state.user) {
     fetchData();
     prevUser = state.user;

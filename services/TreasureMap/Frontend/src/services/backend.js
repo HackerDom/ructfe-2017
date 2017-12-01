@@ -51,7 +51,11 @@ export const putNewPoint = async data => {
       store.dispatch(logoutOk());
       return "";
     }
-    return await res.text();
+    if (res.ok) {
+      return await res.text();
+    } else {
+      return Date.now();
+    }
   } catch (e) {
     return "";
   }
