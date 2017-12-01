@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -168,8 +167,6 @@ namespace BlackMarket
 
 		private static StateManager stateManager;
 		private static TransactionChecker transactionChecker;
-
-		
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(Program));
 		private static TeamsChecker teamsChecker;

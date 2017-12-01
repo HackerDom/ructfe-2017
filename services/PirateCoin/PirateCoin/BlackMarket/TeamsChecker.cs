@@ -39,9 +39,11 @@ namespace BlackMarket
 
 		public void UpdateLatestTeamContract(string vulnboxIp, string contractAddr)
 		{
+			var alreadyChecking = teamsContracts.ContainsKey(vulnboxIp);
 			teamsContracts[vulnboxIp] = contractAddr;
 
-			var worker = new Thread(() =>
+			if(!alreadyChecking)
+				new Thread(() =>
 				{
 					var web3 = ConnectToParityNode();
 					log.Info($"Successfully connected to parity node {parityRpcUrl} via RPC");
@@ -63,11 +65,13 @@ namespace BlackMarket
 
 							var contract = web3.Eth.GetContract(bankContractAbi, contractAddr);
 
-							var resultAdd = contract.GetFunction("addToBalance").SendTransactionAsync(account, contactCallGas, contactTransactAmount).Result;
-							var resultWithdraw = contract.GetFunction("withdrawBalance").SendTransactionAsync(account, contactCallGas, new HexBigInteger("1")).Result;
+							var transactionPolling = web3.TransactionManager.TransactionReceiptService;
 
-							Console.WriteLine(resultAdd);
-							Console.WriteLine(resultWithdraw);
+							var transactionSendReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("addToBalance").SendTransactionAsync(account, contactCallGas, contactTransactAmount)).Result;
+							log.Info($"Sent money to contract {contractAddr}, transaction {transactionSendReceipt.TransactionHash} in block {transactionSendReceipt.BlockNumber}");
+
+							var transactionAddWithdraw = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(account, contactCallGas, new HexBigInteger("1"))).Result;
+							log.Info($"Sent withdraw receipt from contract {contractAddr}, transaction {transactionAddWithdraw.TransactionHash} in block {transactionAddWithdraw.BlockNumber}");
 						}
 						catch(Exception e)
 						{
@@ -75,8 +79,7 @@ namespace BlackMarket
 							Thread.Sleep(TimeSpan.FromSeconds(1));
 						}
 					}
-				}){ IsBackground = true };
-			worker.Start();
+				}){ IsBackground = true }.Start();
 		}
 
 		private readonly TimeSpan contractDeployPeriod = TimeSpan.FromSeconds(60);
