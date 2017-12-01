@@ -20,8 +20,9 @@ from config import \
 
 TIMEOUT = 7
 TRANSACTION_COOLDOWN = 60
-FREE_TRANSACTION_TEXT = binascii.hexlify(
-    b"Ethers for everybody, FREE, and no one will go away unsatisfied!")
+FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
+    b"Ethers for everybody, FREE, and no one will go away unsatisfied!")\
+    .decode()
 
 
 def get_check_contract(team_addr, flag_id, flag):
