@@ -7,6 +7,8 @@ let withHandler = false;
 
 export default user => {
   let wrapper = document.querySelector(".userForm");
+  let userWrapper = wrapper.querySelector(".user");
+  let loginFormWrapper = wrapper.querySelector(".login");
   if (!withHandler) {
     wrapper.addEventListener("submit", async e => {
       const { user, password } = serialize(e.target, {
@@ -21,8 +23,12 @@ export default user => {
   }
 
   if (user) {
-    wrapper.innerText = `Hi, ${user}`;
+    loginFormWrapper.hidden = true;
+    userWrapper.hidden = false;
+    userWrapper.textContent = `Hi, ${user}`;
   } else {
+    loginFormWrapper.hidden = false;
+    userWrapper.hidden = true;
     return wrapper;
   }
 };
