@@ -1,47 +1,56 @@
 from geth_api.commands import GethController
-from json import dump
+from json import dump, loads
 from time import sleep
 import subprocess
 from random import randint
+from urllib.request import urlopen
 import os.path
 import signal
 
-signal.alarm(25 * 60)
+
+TEAM_IP_FILE = "/home/PirateCoin/ip.txt"
 
 
 def get_local_ip():
     try:
-        ip = open("/home/PirateCoin/ip.txt").read().strip()
-    except FileNotFoundError:
-        ip_cmd = 'ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1'
-        for i in range(5):
-          f = os.popen(ip_cmd)
-          ip = f.read()
-          if ip != "":
-              return ip.strip()
-          sleep(4)
+        with open(TEAM_IP_FILE) as ip_file:
+            return ip_file.read().strip()
+    except OSError:
         return randint(0, 1000000000)
-    else:
-        return ip
 
 
-PATH_TO_GETH_IPC = "/root/node/geth.ipc"
-PATH_TO_GETH_DIR = "/root/node/"
+STATIC_BOOTNODES = [
+    "enode://f7c62f793afbb6cb9667f1b8c4e0f527422b4b95713a79e17d20e1c4a5a81ff48c6564501118a9531adf5e92f011604ff224f559484172f09daa6884a84a10d3@10.10.10.101:1337"
+]
+DYNAMIC_BOOTNODES = "http://10.10.10.101/bootnodes.json"
+PATH_TO_GETH_IPC = "/home/PirateCoin/node/geth.ipc"
+PATH_TO_GETH_DIR = "/home/PirateCoin/node/"
 PATH_TO_GENESIS_BLOCK = "/home/PirateCoin/genesis-block.json"
-PATH_TO_GETH_LOGS = "/root/geth.log"
-PATH_TO_ETHASH = "/root/.ethash/"
+PATH_TO_GETH_LOGS = "/home/PirateCoin/geth.log"
+PATH_TO_ETHASH = "/home/PirateCoin/.ethash/"
+
+
+try:
+    dyn_nodes = loads(urlopen(DYNAMIC_BOOTNODES, timeout=15).read().decode())
+    STATIC_BOOTNODES = list(set(STATIC_BOOTNODES + dyn_nodes))
+except Exception:
+    pass
 
 geth_run_command = "geth " \
-                   "--datadir {}" \
+                   "--datadir {geth_path}" \
                    " --networkid 31337" \
                    " --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpcapi 'db,eth,net,web3,personal'"\
                    " --port 30303" \
                    " --netrestrict '10.60.0.0/14,10.80.0.0/14,10.10.0.0/16'"\
                    " --maxpeers 30"\
                    " --verbosity 5"\
-                   " --bootnodes 'enode://f7c62f793afbb6cb9667f1b8c4e0f527422b4b95713a79e17d20e1c4a5a81ff48c6564501118a9531adf5e92f011604ff224f559484172f09daa6884a84a10d3@10.10.10.101:1337'" \
-                   " --ethstats node_{}:ructfe_secret_key@10.10.10.102:38030 2>> {}"\
-    .format(PATH_TO_GETH_DIR, get_local_ip(), PATH_TO_GETH_LOGS)
+                   " --bootnodes '{bootnodes}'" \
+                   " --ethstats node_{local_ip}:ructfe_secret_key@10.10.10.102:38030 2>> {get_logs}"\
+    .format(
+        geth_path=PATH_TO_GETH_DIR,
+        bootnodes=",".join(STATIC_BOOTNODES),
+        local_ip=get_local_ip(),
+        get_logs=PATH_TO_GETH_LOGS)
 
 
 if not os.path.isdir(PATH_TO_GETH_DIR):
@@ -55,8 +64,8 @@ print("Geth dir initialized started")
 print("Cleaning old DAG files...")
 if os.path.isdir(PATH_TO_ETHASH):
     listing_command = "ls -t {}".format(PATH_TO_ETHASH)
-    f = os.popen(listing_command)
-    files_listing = f.read().strip("\n").split("\n")
+    fl = os.popen(listing_command)
+    files_listing = fl.read().strip("\n").split("\n")
     for file in files_listing[2:]:
         os.remove(PATH_TO_ETHASH + file)
 
@@ -85,6 +94,13 @@ print("Account created")
 
 
 geth_wrapper.start_miner(1)
-print("Miner started")
+print("Miner started in single thread!")
 
-p2.wait()
+
+sleep(10 * 60)  # first ten minutes of initialization & pre-mining
+while True:
+    if p2.poll() is not None:  # oops, geth is dead?
+        signal.alarm(1)
+    if geth_wrapper.get_current_miner_hashrate() / 1024 < 5:
+        signal.alarm(1)  # restart container on low hash rate
+    sleep(60)

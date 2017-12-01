@@ -1,0 +1,10 @@
+version: '3'
+services:
+  baz:
+    build: .
+    volumes:
+      - ./baz:/home/baz/baz
+    restart: on-failure
+    ports:
+      - "4280:4280"
+  

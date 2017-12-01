@@ -84,4 +84,6 @@ uint192 not(uint192 n)
 	n.i0 = ~n.i0;
 	n.i1 = ~n.i1;
 	n.i2 = ~n.i2;
+
+	return n;
 }

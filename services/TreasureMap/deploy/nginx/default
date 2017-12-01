@@ -1,0 +1,13 @@
+server {
+	listen 80 default_server;
+
+	location / {
+		try_files $uri $uri/ @service;
+		index index.html;
+		root /home/TreasureMap/deploy/Static;
+	}
+
+	location @service {
+		proxy_pass http://treasuremap:7483;
+	}
+}

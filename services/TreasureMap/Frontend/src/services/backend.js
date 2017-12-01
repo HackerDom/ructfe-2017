@@ -11,12 +11,16 @@ const _fetch = async url => {
 };
 
 export const fetchData = async () => {
-  return Promise.all([_fetch("/api/publics"), _fetch("/api/points")])
-    .then(([publics, privates]) => {
-      let data = [...publics, ...privates];
-      return normalize(data, points).entities.point;
-    })
-    .then(() => []);
+  try {
+    let [publics, privates] = await Promise.all([
+      _fetch("/api/publics"),
+      _fetch("/api/points")
+    ]);
+    let data = [...publics, ...privates];
+    return normalize(data, points).entities.point;
+  } catch (e) {
+    return [];
+  }
 };
 
 export const putNewPoint = async data => {
@@ -25,15 +29,14 @@ export const putNewPoint = async data => {
 };
 
 export const login = async (user, password) => {
-  console.log(user);
-
-  return fetch("/api/login", {
-    body: stringify({ user, password }),
-    method: "POST",
-    credentials: "includes"
-  })
-    .then(res => {
-      return !!res.ok;
-    })
-    .catch(e => false);
+  try {
+    let res = await fetch("/api/login", {
+      body: JSON.stringify({ user, password }),
+      method: "POST",
+      credentials: "includes"
+    });
+    return !!res.ok;
+  } catch (e) {
+    return false;
+  }
 };

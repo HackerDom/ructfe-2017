@@ -8,7 +8,7 @@ from jinja2 import Template
 from db.client import DBClient
 from db.model import Model, TextField, ValidationError
 from torrent_format.torrent_file import TorrentFile, PrivateTorrentFile, InvalidTorrentFileError
-from utils import generate_uid, get_base_of_hash
+from utils import generate_uid, get_base_of_passw
 
 LOGIN_PATTERN = re.compile("^[a-zA-Z0-9_-]{3,50}$")
 
@@ -20,7 +20,7 @@ class UserError(Exception):
 
 class User(Model):
     login = TextField(50)
-    password_hash = TextField(256)
+    password_base = TextField(256)
     uid = TextField(32)
 
     @staticmethod
@@ -35,11 +35,11 @@ class Cookie:
     def __init__(self, uid, login, password, max_age=60 * 60):
         self.uid = uid
         self.max_age = max_age
-        self.secret = Cookie.generate_cookie_secret(uid, login, get_base_of_hash(password))
+        self.secret = Cookie.generate_cookie_secret(uid, login, get_base_of_passw(password))
 
     @staticmethod
-    def generate_cookie_secret(uid, login, password_hash):
-        return get_base_of_hash(login + password_hash + uid)
+    def generate_cookie_secret(uid, login, password_base):
+        return get_base_of_passw(login + password_base + uid)
 
     @staticmethod
     def is_valid(cookie_uid, cookie_secret):
@@ -48,7 +48,7 @@ class Cookie:
         user = User.get_user_by_id(cookie_uid)
         if user is None:
             return False
-        if Cookie.generate_cookie_secret(user.uid, user.login, user.password_hash) != cookie_secret:
+        if Cookie.generate_cookie_secret(user.uid, user.login, user.password_base) != cookie_secret:
             return False
         return True
 
@@ -85,7 +85,7 @@ def register(login, password):
     users = User.filter(login=login)
     if users:
         raise UserError('Username "{}" is already exists.'.format(login))
-    User.create(uid=generate_uid(), login=login, password_hash=get_base_of_hash(password))
+    User.create(uid=generate_uid(), login=login, password_base=get_base_of_passw(password))
 
 
 def authenticate(login, password):
@@ -94,7 +94,7 @@ def authenticate(login, password):
     if not users:
         raise UserError("User {} doesn't exist.".format(login))
     user = users[0]
-    if user.password_hash != get_base_of_hash(password):
+    if user.password_base != get_base_of_passw(password):
         raise UserError("Wrong password.")
     return user.uid
 
@@ -180,6 +180,11 @@ class RequestHandler:
     @cherrypy.expose
     def signup(self, login, password):
         login = html.escape(login)
+        if len(password) > 192:
+            self.set_error("Password must be shorter than 193 characters.")
+            raise cherrypy.HTTPRedirect('/signup_page')
+        else:
+            password = html.escape(password)
         try:
             register(login, password)
             set_cookie(login, password)

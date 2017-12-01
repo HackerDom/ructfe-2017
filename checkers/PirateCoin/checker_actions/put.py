@@ -16,10 +16,6 @@ from config import \
     GETH_RPC_PATH, ACCOUNT_PASSWORD, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
-### TESTING ###
-from utils import parse_team_addr
-### /TESTING ###
-
 TIMEOUT = 7
 
 
@@ -31,7 +27,6 @@ def create_request_object(team_addr):
 
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    team_addr = parse_team_addr(team_addr)
     wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
     gas_per_transaction = 400000
 
