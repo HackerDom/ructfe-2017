@@ -41,8 +41,10 @@ export default (lat, lng, popup) => {
   const form = document.createElement("form");
   form.action = "#";
 
-  form.appendChild(getFormLine("y", encodeCoordinates(parseFloat(lat) / 180)));
+  form.appendChild(getFormLine("y", encodeCoordinates(parseFloat(lat) / 90)));
+  // form.appendChild(getFormLine("oy", lat));
   form.appendChild(getFormLine("x", encodeCoordinates(parseFloat(lng) / 180)));
+  // form.appendChild(getFormLine("ox", lng));
   form.appendChild(getFormLine("message"));
   form.appendChild(getCheckbox());
   form.appendChild(getSubmit());

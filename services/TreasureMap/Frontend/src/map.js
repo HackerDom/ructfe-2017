@@ -1,7 +1,11 @@
 import mapboxgl from "mapbox-gl";
 import newPointForm from "./components/newPointForm";
 import { pathPointSelect } from "./store/actions";
-import { encodeCoordinates } from "./services/points";
+import {
+  encodeCoordinates,
+  lngLatToXY,
+  xyToCoordinates
+} from "./services/points";
 import store from "./store";
 import { bindActionCreators } from "redux";
 
@@ -24,10 +28,7 @@ map.on("click", e => {
       map.clicked = 0;
       bindActionCreators(pathPointSelect, store.dispatch)({
         type: "coordinates",
-        coordinates: {
-          y: encodeCoordinates(e.lngLat.lat),
-          x: encodeCoordinates(e.lngLat.lng)
-        }
+        coordinates: lngLatToXY(e.lngLat)
       });
     }
   }, 300);
