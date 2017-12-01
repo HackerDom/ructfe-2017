@@ -7,38 +7,46 @@
     "codestyle": "prettier --write",
     "precommit": "lint-staged",
     "start": "webpack-dev-server",
-    "build": "webpack"
+    "build": "better-npm-run build"
+  },
+  "betterScripts": {
+    "build": {
+      "command": "webpack -p",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
   },
   "lint-staged": {
     "*.{js,json,css}": ["prettier --write", "git add"]
   },
   "dependencies": {
-    "@babel/core": "^7.0.0-beta.32",
-    "@babel/preset-env": "^7.0.0-beta.32",
-    "@babel/preset-stage-0": "^7.0.0-beta.32",
-    "@babel/preset-stage-2": "^7.0.0-beta.32",
-    "babel-loader": "8.0.0-beta.0",
-    "css-loader": "^0.28.7",
-    "express": "^4.16.2",
+    "better-npm-run": "^0.1.0",
     "form-serialize": "^0.7.2",
-    "html-webpack-plugin": "^2.30.1",
-    "lodash": "^4.17.4",
     "mapbox-gl": "^0.42.2",
     "normalizr": "^3.2.4",
     "redux": "^3.7.2",
     "redux-actions": "^2.2.1",
     "redux-thunk": "^2.2.0",
-    "style-loader": "^0.19.0",
-    "turf": "^3.0.14",
-    "webpack": "^3.8.1",
-    "webpack-dev-middleware": "^1.12.2",
-    "webpack-dev-server": "^2.9.5",
-    "webpack-hot-middleware": "^2.21.0",
-    "ws": "^3.3.2"
+    "turf": "^3.0.14"
   },
   "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "7.1.0",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "6.24.1",
+    "babel-preset-stage-2": "6.24.1",
+    "css-loader": "^0.28.7",
+    "html-webpack-plugin": "^2.30.1",
     "husky": "^0.14.3",
     "lint-staged": "^5.0.0",
-    "prettier": "1.8.2"
+    "prettier": "1.8.2",
+    "style-loader": "^0.19.0",
+    "webpack": "1.15.0",
+    "webpack-dev-server": "1.16.5"
+  },
+  "browserslist": {
+    "production": ["last 2 versions"]
   }
 }

@@ -21,7 +21,7 @@ export default user => {
   }
 
   if (user) {
-    wrapper.innerText = "";
+    wrapper.innerText = `Hi, ${user}`;
   } else {
     return wrapper;
   }

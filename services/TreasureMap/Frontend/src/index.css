@@ -7,7 +7,7 @@ body {
   font-size: 10px;
 }
 
-input {
+.webflow-style-input input {
   border-style: none;
   background: transparent;
   outline: none;

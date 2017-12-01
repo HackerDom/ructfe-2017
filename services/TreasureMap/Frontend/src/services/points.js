@@ -1,3 +1,15 @@
+export const normalize = coords => {
+  if (coords >= 180) {
+    console.log(coords - 360);
+    return coords - 360;
+  }
+  if (coords <= -180) {
+    console.log(coords + 360);
+    return coords + 360;
+  }
+  console.log(coords);
+  return coords;
+};
 // из цифры в строчку
 // дели на 180 или 90 перед использованием
 export const encodeCoordinates = coord => {
@@ -30,7 +42,7 @@ export const xyToCoordinates = ({ x, y }) => [
 ];
 
 export const lngLatToXY = ({ lng, lat }) => ({
-  x: encodeCoordinates(lng / 180),
+  x: encodeCoordinates(normalize(lng) / 180),
   y: encodeCoordinates(lat / 90)
 });
 
