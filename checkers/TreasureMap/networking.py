@@ -26,7 +26,7 @@ class WSHelper:
 			async for msg in ws:
 				if msg.type == aiohttp.WSMsgType.TEXT:
 					try:
-						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user']))
+						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
 					except Exception as ex:
 						checher.mumble(error='can\'t parse service responce', exception=ex)
 					await self.queue.put()

@@ -19,7 +19,7 @@ def check_points_list(l, expected=[]):
 	for i in range(len(l)):
 		if not type(l[i]) is dict:
 			checker.mumble(error='point #{} is not a dict, {}'.format(i, type(l[i])))
-		for field in expected:
+		for field in fields:
 			if field not in l[i]:
 				error.append(field)
 		if len(error) > 0:
