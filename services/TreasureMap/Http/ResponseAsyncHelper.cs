@@ -15,12 +15,12 @@ namespace TreasureMap.Http
 			await response.WriteDataAsync(data).ConfigureAwait(false);
 		}
 
-		public static async Task WriteDataAsync(this HttpListenerResponse response, byte[] data)
+		private static async Task WriteDataAsync(this HttpListenerResponse response, byte[] data)
 		{
 			await response.WriteDataAsync(data, 0, data?.Length ?? 0).ConfigureAwait(false);
 		}
 
-		public static async Task<int> WriteDataAsync(this HttpListenerResponse response, byte[] data, int offset, int count)
+		private static async Task<int> WriteDataAsync(this HttpListenerResponse response, byte[] data, int offset, int count)
 		{
 			if(data == null || count == 0)
 				response.ContentLength64 = 0;
@@ -34,8 +34,7 @@ namespace TreasureMap.Http
 
 		public static async Task WriteStringAsync(this HttpListenerContext context, string value, Encoding encoding = null)
 		{
-			byte[] buffer;
-			buffer = value == null ? new byte[0] : (encoding ?? Encoding.UTF8).GetBytes(value);
+			var buffer = value == null ? new byte[0] : (encoding ?? Encoding.UTF8).GetBytes(value);
 			try
 			{
 				await
@@ -55,6 +54,6 @@ namespace TreasureMap.Http
 			context.Response.Headers.Add(HttpResponseHeader.SetCookie, $"{name}={value}; path=/{(httpOnly ? "; HttpOnly" : null)}");
 		}
 
-		public static string ContentType = "application/json; charset=utf-8";
+		private const string ContentType = "application/json; charset=utf-8";
 	}
 }
