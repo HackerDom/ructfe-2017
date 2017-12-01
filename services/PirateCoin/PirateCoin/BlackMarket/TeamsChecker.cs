@@ -52,7 +52,7 @@ namespace BlackMarket
 				{
 					var random = new Random().Next(30);
 					log.Info($"New team {vulnboxIp} checking started. Sleeping {random} sec before start");
-//					Thread.Sleep(TimeSpan.FromSeconds(random));
+					Thread.Sleep(TimeSpan.FromSeconds(random));
 
 					var web3 = ConnectToGethNode();
 					log.Info($"Successfully connected to parity node {parityRpcUrl} via RPC");
