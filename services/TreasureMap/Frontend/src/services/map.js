@@ -2,10 +2,13 @@ import { getCoordinatesFromPoint } from "./points";
 import map from "../map";
 import { point, featureCollection } from "turf";
 import mapboxgl from "mapbox-gl";
-
+import { pathPointSelect } from "../store/actions";
+import store from "../store";
+import { bindActionCreators } from "redux";
+let allLayers = [];
 export const addPointToMap = rawPoint => {
   const { id, x, y, message: description } = getCoordinatesFromPoint(rawPoint);
-
+  // allLayers.map(layer => layer.remove())
   const layer = {
     id,
     type: "symbol",
@@ -31,26 +34,47 @@ export const addPointToMap = rawPoint => {
     }
   };
   try {
-    map.addLayer(layer).on("click", id, e => {
+    const addedLayer = map.addLayer(layer).on("click", id, e => {
+      map.isOpenNewPointForm = true;
+      // trigger PATH_POINT_SELECT here
+      bindActionCreators(pathPointSelect, store.dispatch)({
+        type: "point",
+        id
+      });
       if (e.features[0].properties.description) {
         new mapboxgl.Popup()
           .setLngLat(e.features[0].geometry.coordinates)
           .setText(e.features[0].properties.description)
-          .addTo(map);
+          .addTo(map)
+          .on("close", () => (map.isOpenNewPointForm = false));
+      } else {
+        map.isOpenNewPointForm = false;
       }
     });
+    allLayers.push(addedLayer);
   } catch (e) {
     switch (e.message) {
       case "There is already a source with this ID":
         break;
       case "Style is not done loading":
         map.on("load", () => {
-          map.addLayer(layer).on("click", id, e => {
-            new mapboxgl.Popup()
-              .setLngLat(e.features[0].geometry.coordinates)
-              .setText(e.features[0].properties.description)
-              .addTo(map);
+          map.isOpenNewPointForm = true;
+          const addedLayer = map.addLayer(layer).on("click", id, e => {
+            bindActionCreators(pathPointSelect, store.dispatch)({
+              type: "point",
+              id
+            });
+            if (e.features[0].properties.description) {
+              new mapboxgl.Popup()
+                .setLngLat(e.features[0].geometry.coordinates)
+                .setText(e.features[0].properties.description)
+                .on("close", () => (map.isOpenNewPointForm = false))
+                .addTo(map);
+            } else {
+              map.isOpenNewPointForm = false;
+            }
           });
+          allLayers.push(addedLayer);
         });
         break;
       default:

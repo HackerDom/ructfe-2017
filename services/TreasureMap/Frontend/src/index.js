@@ -5,6 +5,7 @@ import map from "./map";
 
 import { bindActionCreators } from "redux";
 import loginForm from "./components/loginForm";
+import path from "./components/pathRenderer";
 import store from "./store";
 
 import { fetchData } from "./store/actions";
@@ -20,4 +21,5 @@ store.subscribe(() => {
     addPointToMap(point);
   });
   loginForm(state.user);
+  path(state.path, state.points);
 });

@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 const path = require("path");
 
 module.exports = {
@@ -39,6 +40,19 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: "Treasure map",
       template: "src/index.html"
+    }),
+    new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true,
+      minimize: true,
+      output: {
+        comments: false
+      },
+      compress: {
+        warnings: false,
+        drop_debugger: true,
+        dead_code: true,
+        unused: true
+      }
     })
   ]
 };

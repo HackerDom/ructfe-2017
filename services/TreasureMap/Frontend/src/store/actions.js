@@ -6,10 +6,10 @@ import {
 } from "../services/backend";
 
 const dataFetched = createAction(actions.DATA_FETCHED);
+export const pathPointSelect = createAction(actions.PATH_POINT_SELECT);
 export const createPoint = createAction(actions.CREATE_POINT);
 const dataFetchedFail = createAction(actions.DATA_FETCHED + actions.FAIL);
 export const loginOk = createAction(actions.LOGIN);
-const loginFail = createAction(actions.LOGIN + actions.FAIL);
 
 export const fetchData = () => {
   return async dispatch => {
