@@ -122,11 +122,3 @@ pushn 400
 respond
 
 ---
-
-handler index
-
-pushs Hi there
-pushn 200
-respond
-
----

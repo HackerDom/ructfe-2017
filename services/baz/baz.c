@@ -4,6 +4,7 @@
 #include "vm.h"
 #include "storage.h"
 #include "baz.vm.h"
+#include "face.html.h"
 
 #include <asm/errno.h>
 
@@ -298,9 +299,7 @@ void process_request(int32 fd, char *request)
 					{
 						state = ST_KEY;
 
-						if (!strcmp(buf, ""))
-							handler = handler_index;
-						else if (!strcmp(buf, "mix"))
+						if (!strcmp(buf, "mix"))
 							handler = handler_mix;
 						else if (!strcmp(buf, "mixnew"))
 							handler = handler_mixnew;
@@ -309,7 +308,10 @@ void process_request(int32 fd, char *request)
 						else if (!strcmp(buf, "list"))
 							handler = handler_list;
 						else
-							handler = handler_notfound;
+						{
+							respond(fd, 200, face, "text/html");
+							return;
+						}
 					}
 					else if (state == ST_KEY)
 					{

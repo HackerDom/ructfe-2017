@@ -16,9 +16,9 @@ while True:
 	#print(url)
 	response = urllib2.urlopen(url)
 	html = response.read()
-	if not 'f4ece80d85d714b5' in html:
-		print(html)
-		raise Exception("FUCK BAD RESPONSE");
+	#if not 'f4ece80d85d714b5' in html:
+	#	print(html)
+	#	raise Exception("FUCK BAD RESPONSE");
 
 	delta = time.time() - ts
 
