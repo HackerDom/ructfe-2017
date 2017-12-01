@@ -1,2 +1,2 @@
-cs_worker_checkers_jobs: 200
+cs_worker_checkers_jobs: 300
 cs_worker_checkers_queues: -q checker -q checker-1

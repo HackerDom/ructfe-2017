@@ -58,3 +58,7 @@
     warn: no
   tags:
     - release
+
+- name: Restart service
+  systemd: name={{ service_name }} state=restarted
+  when: "restart is defined"

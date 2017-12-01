@@ -2,11 +2,14 @@ package main
 
 import (
     "time"
+    "sync"
     "github.com/asdine/storm"
     "github.com/asdine/storm/q"
 )
 type Storage struct {
     db *storm.DB
+    Last map[string]chan *Message
+    Mutex *sync.Mutex
 }
 
 type User struct {
@@ -56,7 +59,7 @@ func NewStorage() *Storage {
         panic(err)
     }
 
-    return &Storage{db: db}
+    return &Storage{db: db, Last: make(map[string]chan *Message), Mutex: &sync.Mutex{}}
 }
 
 func (storage *Storage) GetUser(username string) *User {
@@ -103,8 +106,17 @@ func (storage *Storage) IterateUsers(limit int, re string, fn func(user User)) {
     }
 }
 
-func (storage *Storage) SaveMessage(message *Message) {
+func (storage *Storage) SaveMessage(message *Message, autoReply bool) {
     message.SendedAt = time.Now()
+
+    if autoReply && message.Author != message.To {
+        storage.Mutex.Lock()
+        channel := storage.Last[message.To]
+        storage.Mutex.Unlock()
+
+        channel <- message
+    }
+
     err := storage.db.Save(message)
 
     if err != nil {
@@ -114,7 +126,7 @@ func (storage *Storage) SaveMessage(message *Message) {
 
 func (storage *Storage) IterateMessages(from string, to string, fn func(_ Message)) {
     var messages []Message
-    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Reverse().Limit(15)
+    query := storage.db.Select(q.Eq("From", from), q.Eq("To", to)).OrderBy("SendedAt").Limit(5).Reverse()
     query.Find(&messages)
 
     for i := range messages {

@@ -103,8 +103,6 @@ namespace BlackMarket
 	class TraceResponse
 	{
 		[DataMember] public List<TraceResponseItem> result;
-		[DataMember] public int id;
-		[DataMember] public string jsonrpc;
 	}
 
 	[DataContract]

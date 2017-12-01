@@ -6,6 +6,9 @@ import random
 import string
 import json
 import asyncio
+import time
+
+import TextGenerator
 
 printable = string.digits + string.ascii_letters + string.punctuation
 
@@ -44,6 +47,18 @@ def make_err_message(message, request, reply):
 def get_value_or_rand_string(value, l, additional=''):
 	if value is None:
 		return get_rand_string(l, additional)
+	else:
+		return value
+
+def get_value_or_rand_name(value):
+	if value is None:
+		return TextGenerator.get_name()
+	else:
+		return value
+
+def get_value_or_rand_text(value):
+	if value is None:
+		return TextGenerator.get_text()
 	else:
 		return value
 
@@ -109,6 +124,8 @@ class Checker:
 			raise ValueError('wrong number of vuln')
 		return self.flag_handlers[vuln]
 
+
+start = time.time()
 def log(*message):
-	print(*message, file=sys.stderr)
+	print('{: 2.05f}'.format(time.time() - start), *message, file=sys.stderr)
 	sys.stderr.flush()
