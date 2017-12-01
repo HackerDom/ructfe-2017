@@ -4,17 +4,20 @@ import store from "../store";
 const onMsg = ({ data }) => {
   try {
     let res = JSON.parse(data);
-    if (res.user) {
+    let isNewPoint = res.x && res.y;
+    if (isNewPoint) {
       store.dispatch(createPoint(res));
     } else {
       store.dispatch(removePoint(res));
     }
   } catch (e) {
-    console.log("💩");
+    console.log(`💩: ${e.message}`);
   }
 };
 
-let pointsSocket = new WebSocket(`ws://${location.host}/ws/points`);
-let publicSocket = new WebSocket(`ws://${location.host}/ws/publics`);
-pointsSocket.onmessage = onMsg;
-publicSocket.onmessage = onMsg;
+export default (connect = () => {
+  let pointsSocket = new WebSocket(`ws://${location.host}/ws/points`);
+  let publicSocket = new WebSocket(`ws://${location.host}/ws/publics`);
+  pointsSocket.onmessage = onMsg;
+  publicSocket.onmessage = onMsg;
+});
