@@ -28,6 +28,10 @@ export const putNewPoint = async data => {
   return Date.now().toString();
 };
 
+export const buildPath = async (start, end, sub) => {
+  return [start, end];
+};
+
 export const login = async (user, password) => {
   try {
     let res = await fetch("/api/login", {
