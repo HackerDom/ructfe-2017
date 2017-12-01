@@ -27,12 +27,10 @@ export const fetchData = async () => {
       $get("/api/points")
     ]);
 
-    console.log(publicsRes.ok, privatesRes.ok);
     if (publicsRes.ok && privatesRes.ok) {
-      let publics = await publicsRes.json();
-      let privates = await privatesRes.json();
+      let publics = (await publicsRes.json()) || [];
+      let privates = (await privatesRes.json()) || [];
       let data = [...publics, ...privates];
-      console.log(data);
       return normalize(data, points).entities.point;
     } else {
       return false;

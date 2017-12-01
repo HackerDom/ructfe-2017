@@ -1,5 +1,4 @@
 import "./index.css";
-// import WebSocket from "ws";
 import "mapbox-gl/dist/mapbox-gl.css";
 import map from "./map";
 

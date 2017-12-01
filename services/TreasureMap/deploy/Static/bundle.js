@@ -1840,13 +1840,11 @@ const $post = async (url, data) => {
 const fetchData = async () => {
   try {
     let [publicsRes, privatesRes] = await Promise.all([$get("/api/publics"), $get("/api/points")]);
-    console.log(publicsRes.ok, privatesRes.ok);
 
     if (publicsRes.ok && privatesRes.ok) {
-      let publics = await publicsRes.json();
-      let privates = await privatesRes.json();
+      let publics = (await publicsRes.json()) || [];
+      let privates = (await privatesRes.json()) || [];
       let data = [...publics, ...privates];
-      console.log(data);
       return (0, _normalizr.normalize)(data, points).entities.point;
     } else {
       return false;
@@ -5799,7 +5797,6 @@ var _map2 = __webpack_require__(201);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// import WebSocket from "ws";
 const updateDataCycle = async () => {
   let res = await (0, _backend.fetchData)();
 
