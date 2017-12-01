@@ -1,12 +1,12 @@
 import json
 import binascii
 
-from datetime import datetime
 from urllib.request import urlopen
 from urllib.parse import urlencode
 from urllib.error import URLError
 from socket import socket
 
+from requests.exceptions import ConnectionError
 from web3 import RPCProvider, Web3
 from web3.contract import ConciseContract
 from web3.exceptions import BadFunctionCallOutput
@@ -20,36 +20,13 @@ from config import \
 
 TIMEOUT = 7
 TRANSACTION_COOLDOWN = 60
-FREE_TRANSACTION_TEXT = binascii.hexlify(
-    b"Ethers for everybody, FREE, and no one will go away unsatisfied!")
+FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
+    b"Ethers for everybody, FREE, and no one will go away unsatisfied!")\
+    .decode()
 
 
 def get_check_contract(team_addr, flag_id, flag):
-    contract_addr, wei_in_transaction, contract_creation_time \
-        = flag_id.split(":")
-
-    "ETHERS FOR EVERYBODY, FREE, AND NO ONE WILL GO AWAY UNSATISFIED"
-    w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
-    w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
-
-    try:
-        team_coinbase = urlopen(
-            create_request_object(
-                SERVICE_COINBASE.format(team_addr)),
-            timeout=TIMEOUT
-        ).read().decode()
-        int(team_coinbase, 16)
-    except (URLError, socket.timeout):
-        return CheckerAnswers.DOWN("Can't reach team web server", "")
-    except ValueError:
-        return CheckerAnswers.MUMBLE("Can't parse team coinbase!", "")
-
-    w3.eth.sendTransaction({
-        "to": team_coinbase,
-        "from": ACCOUNT_ID,
-        "value": 1000000000000,
-        "data": FREE_TRANSACTION_TEXT
-    })
+    contract_addr = flag_id
 
     try:
         response = urlopen(
@@ -70,47 +47,63 @@ def get_check_contract(team_addr, flag_id, flag):
     except (URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
 
-    if int(contract_creation_time) + TRANSACTION_COOLDOWN >= \
-            int(datetime.now().timestamp()):
-        return CheckerAnswers.OK()
+    try:
+        team_coinbase = urlopen(
+            create_request_object(
+                SERVICE_COINBASE.format(team_addr)),
+            timeout=TIMEOUT
+        ).read().decode()
+        int(team_coinbase, 16)
+    except (URLError, socket.timeout):
+        return CheckerAnswers.DOWN("Can't reach team web server", "")
+    except ValueError:
+        return CheckerAnswers.MUMBLE("Can't parse team coinbase!", "")
 
     try:
         with open("contract_abi.json") as abi:
             contract_abi = json.load(abi)
-    except OSError as e:
+    except OSError:
         return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
 
-    contract_instance = w3.eth.contract(
-        contract_abi,
-        contract_addr,
-        ContractFactoryClass=ConciseContract)
-
-    contract_ethereum_balance = w3.eth.getBalance(contract_addr)
     try:
-        bank_balance = int(contract_instance.totalBankBalance())
-        own_balance = int(contract_instance.getUserBalance(ACCOUNT_ID))
-    except BadFunctionCallOutput:
-        return CheckerAnswers.MUMBLE(
-            "Couldn't call expected contract methods!",
-            "error calling on bankBalance() or getUserBalance()")
-    except ValueError:
-        return CheckerAnswers.MUMBLE(
-            "Unexpected methods answers!",
-            "can't parse int on calling bankBalance() or getUserBalance()")
+        w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
+        w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
+        w3.eth.sendTransaction({
+            "to": team_coinbase,
+            "from": ACCOUNT_ID,
+            "value": 1000000000000,
+            "data": FREE_TRANSACTION_TEXT
+        })
 
-    if bank_balance > contract_ethereum_balance:
+        contract_instance = w3.eth.contract(
+            contract_abi,
+            contract_addr,
+            ContractFactoryClass=ConciseContract)
+
+        contract_total_ethers = w3.eth.getBalance(contract_addr)
+
+        try:
+            total_tokens = int(contract_instance.totalBankBalance())
+            checker_tokens = int(contract_instance.getUserBalance(ACCOUNT_ID))
+        except BadFunctionCallOutput:
+            return CheckerAnswers.MUMBLE(
+                "Couldn't call expected contract methods!",
+                "error calling on bankBalance() or getUserBalance()")
+        except ValueError:
+            return CheckerAnswers.MUMBLE(
+                "Unexpected methods answers!",
+                "can't parse int on calling bankBalance() or getUserBalance()")
+    except ConnectionError:
+        return CheckerAnswers.CHECKER_ERROR("", "Can't connect to node rpc")
+
+    if total_tokens > contract_total_ethers:
         return CheckerAnswers.CORRUPT(
             "Unsynchronized balances in contract!",
             "bank balance > contract balance")
 
-    if own_balance < bank_balance or own_balance < contract_ethereum_balance:
+    if checker_tokens > total_tokens or checker_tokens > contract_total_ethers:
         return CheckerAnswers.CORRUPT(
             "Unsynchronized balances in contract!",
             "checker balance < contract balance")
-
-    if own_balance != int(wei_in_transaction):
-        return CheckerAnswers.CORRUPT(
-            "Unexpected amount of tokens on wallet!",
-            "wallet != sent_wei")
 
     return CheckerAnswers.OK()

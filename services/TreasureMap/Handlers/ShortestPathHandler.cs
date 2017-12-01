@@ -19,7 +19,7 @@ namespace TreasureMap.Handlers
 		public override IEnumerable<HttpMethod> Methods => new[] {HttpMethod.Post};
 		public override string Path => "/api/path";
 
-		private const int MaxRequest = 1000;
+		private const int MaxRequest = 10000;
 
 		protected override async Task HandleInternal(HttpListenerContext context, string login)
 		{
@@ -41,6 +41,7 @@ namespace TreasureMap.Handlers
 				.Select(PointHolder.GetPoint)
 				.WhereNotNull()
 				.Select(point => new DrawPoint {X = point.X, Y = point.Y})
+				.Distinct()
 				.ToList();
 
 			var points = PathFinder.Find(request.Start, inner, request.Finish);
