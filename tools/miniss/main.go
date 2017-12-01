@@ -163,6 +163,7 @@ func main() {
                     fmt.Printf("%d\t%d\n", statusCode, count)
                 }
             }
+            time.Sleep(5 * time.Second)
         }()
     }
 
