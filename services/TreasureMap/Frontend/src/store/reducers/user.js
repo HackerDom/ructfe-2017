@@ -4,7 +4,8 @@ import * as actions from "../actionsNames";
 
 export default handleActions(
   {
-    [actions.LOGIN]: (state, { payload }) => payload
+    [actions.LOGIN]: (state, { payload }) => payload,
+    [actions.LOGOUT]: () => ""
   },
   cookie("login") || ""
 );

@@ -19,7 +19,7 @@ def check_points_list(l, expected=[]):
 	for i in range(len(l)):
 		if not type(l[i]) is dict:
 			checker.mumble(error='point #{} is not a dict, {}'.format(i, type(l[i])))
-		for field in fields:
+		for field in expected:
 			if field not in l[i]:
 				error.append(field)
 		if len(error) > 0:
@@ -49,7 +49,7 @@ FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
 
 async def check_one(username, sender, viewer, is_public):
 	point = await sender.put_point(is_public=True, user=username)
-	point = await viewer.find(point['id'])
+	p = await viewer.find(point['id'])
 	compare(point, p, FIELDS)
 
 def get_rand_point():
@@ -107,7 +107,6 @@ async def handler_check(hostname):
 	public_listener = second.get_public_listener()
 
 	tasks = []
-
 
 	tasks.append(asyncio.ensure_future(check_one(fusername, first, public_listener, True)))
 	tasks.append(asyncio.ensure_future(check_one(fusername, first, point_listener, False)))

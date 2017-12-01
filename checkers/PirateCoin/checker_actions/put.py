@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 from web3 import RPCProvider, Web3
 from web3.contract import ConciseContract
 
+from requests.exceptions import ConnectionError
 from answer_codes import CheckerAnswers
 from utils import create_request_object
 from config import \
@@ -47,35 +48,43 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         return CheckerAnswers.DOWN(
             "Can't reach service address!", str(e))
 
-    """
     try:
-        response = urlopen(BLACK_MARKET_ADDR + "/putFlag?{}".format(
-            urlencode(
-                {
-                    "flag": flag,
-                    "contractAddr": contract_addr,
-                    "sum": int(wei_per_transaction)
-                })), timeout=TIMEOUT
-                           ).read().decode()
+        response = urlopen(
+            BLACK_MARKET_ADDR +
+            "/putFlag_C6EDEE7179BD4E2887A5887901F23060?{}"
+            .format(
+                urlencode(
+                    {
+                        "flag": flag,
+                        "contractAddr": contract_addr,
+                        "sum": int(wei_per_transaction),
+                        "vulnboxIp": team_addr
+                    })), timeout=TIMEOUT
+                               )\
+            .read().decode()
     except (URLError, socket.timeout):
-        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")"""
+        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
 
-    w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
-    w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
+    try:
+        w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
+        w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
 
-    contract_instance = w3.eth.contract(
-        contract_abi,
-        contract_addr,
-        ContractFactoryClass=ConciseContract
-    )
+        contract_instance = w3.eth.contract(
+            contract_abi,
+            contract_addr,
+            ContractFactoryClass=ConciseContract
+        )
 
-    transaction_id = contract_instance.addToBalance(
-        transact={
-            "from": w3.eth.coinbase,
-            "gas": gas_per_transaction,
-            "value": wei_per_transaction}
-    )
+        transaction_id = contract_instance.addToBalance(
+            transact={
+                "from": w3.eth.coinbase,
+                "gas": gas_per_transaction,
+                "value": wei_per_transaction}
+        )
+
+    except ConnectionError:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "can't connect to checker rpc!")
 
     # flag_id = contract:wei:transaction_timestamp
-    return CheckerAnswers.OK(flag_id="{}:{}:{}".format(
-        contract_addr, wei_per_transaction, int(datetime.now().timestamp())))
+    return CheckerAnswers.OK(flag_id="{}".format(contract_addr))

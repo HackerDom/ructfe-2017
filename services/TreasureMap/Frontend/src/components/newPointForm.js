@@ -5,7 +5,7 @@ import { bindActionCreators } from "redux";
 import store from "../store";
 import { createPoint } from "../store/actions";
 
-const getFormLine = (title, value) => {
+function getFormLine(title, value) {
   const wrapper = document.createElement("div");
   const text = document.createElement("span");
   const input = document.createElement("input");
@@ -17,7 +17,7 @@ const getFormLine = (title, value) => {
   wrapper.appendChild(text);
   wrapper.appendChild(input);
   return wrapper;
-};
+}
 
 const getCheckbox = () => {
   const wrapper = document.createElement("div");
@@ -40,8 +40,7 @@ const getSubmit = () => {
 export default (lat, lng, popup) => {
   const form = document.createElement("form");
   form.action = "#";
-
-  form.appendChild(getFormLine("y", encodeCoordinates(parseFloat(lat) / 180)));
+  form.appendChild(getFormLine("y", encodeCoordinates(parseFloat(lat) / 90)));
   form.appendChild(getFormLine("x", encodeCoordinates(parseFloat(lng) / 180)));
   form.appendChild(getFormLine("message"));
   form.appendChild(getCheckbox());

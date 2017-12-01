@@ -65,7 +65,7 @@ namespace TreasureMap.Ws
 		public Task BroadcastAsync(Point point, string msg, CancellationToken token)
 		{
 			if (msg == null)
-				msg = point.ToJsonString();
+				msg = point.Convert().ToJsonString();
 			return
 				Task.WhenAll(
 					sockets
@@ -82,18 +82,18 @@ namespace TreasureMap.Ws
 
 		private async Task TryRegister(WebSocket ws, CancellationToken token)
 		{
-//			await Task.Delay(250, token).ConfigureAwait(false); //NOTE: ws4py issue workaround =\
 			try
 			{
 				Log.Info($"request for {ws.HttpRequest.RequestUri}");
 				var connection = CreateConnection(ws);
-				if (!connection.HasValue)
-					throw new UnauthorizedAccessException();
-//				await ws.WriteStringAsync(HelloMessage, token).ConfigureAwait(false);
+				if (!connection.HasValue) { 
+					ws.Close();
+					return;
+				}
 				var conn = connection.Value;
 				sockets[ws] = conn;
 				Log.Info($"request for {ws.HttpRequest.RequestUri} registered");
-				conn.InitData.ForEach(point => TrySendAsync(ws, conn, point, token).Wait(token));
+				await Task.WhenAll(conn.InitData.Select(point => TrySendAsync(ws, conn, point, token))).ConfigureAwait(false);
 			}
 			catch
 			{
@@ -154,11 +154,10 @@ namespace TreasureMap.Ws
 			return null;
 		}
 
-		private const string HelloMessage = "hello";
 		private readonly ConcurrentDictionary<WebSocket, Connection> sockets = new ConcurrentDictionary<WebSocket, Connection>();
 		private readonly WebSocketListener listener;
 		private readonly IPEndPoint endpoint;
 
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
+		private static readonly ILog Log = LogManager.GetLogger(typeof(WsServer));
 	}
 }

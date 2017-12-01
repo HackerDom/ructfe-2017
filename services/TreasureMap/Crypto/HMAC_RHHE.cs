@@ -28,7 +28,7 @@ namespace TreasureMap.Crypto
 		{
 			var bytes = Encoding.GetBytes(data);
 			var res = ComputeHash(bytes);
-			return Convert.ToBase64String(res);
+			return Convert.ToBase64String(res).Replace('+', '-').Replace('/', '_');
 		}
 	}
 }

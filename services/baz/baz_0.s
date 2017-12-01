@@ -99,3 +99,11 @@ reuseaddr:
     syscall
     pop %rdx
     ret
+
+.globl openrw
+openrw:
+    mov $2,%rax
+    mov $66,%rsi
+    mov $0600,%rdx
+    syscall
+    ret
