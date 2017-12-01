@@ -8,7 +8,7 @@ from answer_codes import CheckerAnswers
 
 def check_service_state(team_addr):  # todo implement it
     try:
-        req_object = create_request_object(team_addr + ":14473")
+        req_object = create_request_object("http://" + team_addr + ":14473")
         urlopen(req_object, timeout=5).read().decode()
     except (HTTPError, URLError, socket.timeout) as e:
         return CheckerAnswers.DOWN("Can't reach service main page!", str(e))
