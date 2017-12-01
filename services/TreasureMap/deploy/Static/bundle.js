@@ -5787,7 +5787,7 @@ const updateDataCycle = async () => {
 };
 
 updateDataCycle();
-(0, _updateLoginForm.default)();
+(0, _updateLoginForm.default)(_store.default.getState().user);
 (0, _pathControl.default)();
 
 _store.default.subscribe(() => {

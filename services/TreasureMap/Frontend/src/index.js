@@ -21,7 +21,7 @@ const updateDataCycle = async () => {
 };
 
 updateDataCycle();
-loginForm();
+loginForm(store.getState().user);
 pathControlInit();
 
 store.subscribe(() => {
