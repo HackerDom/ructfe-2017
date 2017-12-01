@@ -25,10 +25,7 @@ namespace PirateCoin
 					{
 						var coinbaseAddress = contractsUpdater.CoinbaseAddress;
 						if(coinbaseAddress == null)
-						{
-							context.Close((int)HttpStatusCode.NotFound);
-							return;
-						}
+							throw new HttpException((int)HttpStatusCode.NotFound, "can't find coinbase. my geth node still not running?");
 						await context.WriteStringAsync(contractsUpdater.CoinbaseAddress);
 					})
 					.AddHandler(HttpMethod.Get.ToString(), "/", async context =>
