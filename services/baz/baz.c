@@ -203,8 +203,6 @@ void close(int32 fd);
 
 uint32 fcntl(int32 fd, int32 cmd, uint32 arg);
 
-__attribute__((noreturn)) void exit(int32 code);
-
 int32 epoll_create1(int32 flags);
 
 int32 epoll_ctl(int32 __epfd, int32 __op, int32 __fd, struct epoll_event *__event);
