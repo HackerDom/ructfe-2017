@@ -20,7 +20,7 @@ namespace BlackMarket
 			{
 				stateManager = new StateManager("state.json");
 				transactionChecker = new TransactionChecker(bankContractAbiFilepath, bankAttackerContractAbiFilepath, Settings.ParityRpcUrl);
-				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, bankContractAbiFilepath, Settings.SourceAccount, Settings.Pass);
+				teamsChecker = new TeamsChecker(Settings.ParityRpcUrl, Settings.GethRpcUrl, bankContractAbiFilepath, Settings.GethPass);
 
 				var httpServer = new HttpServer(port);
 				httpServer
@@ -40,12 +40,12 @@ namespace BlackMarket
 		private static async Task CheckTeamCallback(HttpListenerContext context)
 		{
 			var vulnboxIp = context.Request.QueryString["vulnboxIp"];
-			if(vulnboxIp == null)
+			if(string.IsNullOrWhiteSpace(vulnboxIp))
 				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'vulnboxIp'");
 
 			var lastIllegalPatchedDetectedDt = teamsChecker.GetLastIllegalPatchedDetectedDt(vulnboxIp);
 
-			await context.WriteStringAsync(((int)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
+			await context.WriteStringAsync(((long)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
 		}
 
 		private static async Task PutFlagCallback(HttpListenerContext context)
@@ -55,7 +55,7 @@ namespace BlackMarket
 			var sumStr = context.Request.QueryString["sum"];
 			var vulnboxIp = context.Request.QueryString["vulnboxIp"];
 
-			if(flag == null || contractAddr == null || !decimal.TryParse(sumStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var sum) || vulnboxIp == null)
+			if(string.IsNullOrWhiteSpace(flag) || string.IsNullOrWhiteSpace(contractAddr) || !decimal.TryParse(sumStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var sum) || string.IsNullOrWhiteSpace(vulnboxIp))
 				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'flag', 'contractAddr', 'sum', 'vulnboxIp'");
 
 			stateManager.Insert(new FlagData { contractAddr = contractAddr, flag = flag, sum = sum });
@@ -74,7 +74,7 @@ namespace BlackMarket
 
 			var transaction = context.Request.QueryString["transaction"];
 			var contractAddr = context.Request.QueryString["contractAddr"]?.ToLowerInvariant();
-			if(transaction == null || contractAddr == null)
+			if(string.IsNullOrWhiteSpace(transaction) || string.IsNullOrWhiteSpace(contractAddr))
 				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'transaction', 'contractAddr'");
 
 			var flags = stateManager.FindByContractAddr(contractAddr);
@@ -99,7 +99,7 @@ namespace BlackMarket
 					"contract does not look being hacked (total balance on all deposits seems equal to contract balance)");
 
 			var hackerContractAddr = await transactionChecker.CheckTransactionAndFindHackerContractAddr(transaction, contractAddr, flags.First().sum);
-			if(hackerContractAddr ==  null)
+			if(hackerContractAddr == null)
 				throw new HttpException((int)HttpStatusCode.Unauthorized,
 					"contract does not look being hacked (your transaction should show stealing coins to single recipient addr and amount not less than we deposited)");
 
@@ -145,7 +145,7 @@ namespace BlackMarket
 		{
 			var flag = context.Request.QueryString["flag"];
 			var contractAddr = context.Request.QueryString["contractAddr"]?.ToLowerInvariant();
-			if(flag == null || contractAddr == null)
+			if(string.IsNullOrWhiteSpace(flag) || string.IsNullOrWhiteSpace(contractAddr))
 				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'flag', 'contractAddr'");
 
 			var flagsData = stateManager.FindByContractAddr(contractAddr);

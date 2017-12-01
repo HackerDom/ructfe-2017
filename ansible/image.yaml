@@ -8,6 +8,16 @@
         key: https://github.com/{{ item }}.keys
       with_items:
         - m-messiah
+        - alexbers
+        - avkhozov
+        - DQKrait
+        - kostteg
+        - ld86
+        - RuslanKutdusov
+        - rx00
+        - slogger
+        - Tinkturianec
+        - werelaxe
   roles:
     - { role: console }
     - { role: service, service_name: baz, binary: yes }
