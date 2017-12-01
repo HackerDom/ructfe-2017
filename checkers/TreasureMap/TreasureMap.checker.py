@@ -40,9 +40,9 @@ def compare(p1, p2, fields):
 
 async def get_point_with_flag(hostname, username, password, id):
 	state = State(hostname, PORT)
-	await state.login(id['username'], id['password'])
+	await state.login(username, password)
 	listener = state.get_points_listener()
-	point = await listener.find(id['id'])
+	point = await listener.find(id)
 	return point
 		
 FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
