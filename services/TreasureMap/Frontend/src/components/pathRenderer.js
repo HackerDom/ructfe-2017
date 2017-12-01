@@ -74,7 +74,7 @@ export default ({ startPoint, endPoint, path, sub }, pointsData) => {
           type: "line",
           source: "lines",
           paint: {
-            "line-color": "yellow",
+            "line-color": "#b294ff",
             "line-opacity": 0.75,
             "line-width": 5
           }

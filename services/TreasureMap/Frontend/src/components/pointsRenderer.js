@@ -58,20 +58,25 @@ export default points => {
         .addLayer({
           id: "allPointsCluster",
           type: "circle",
-          // type: "background",
           source: "allPoints",
           filter: ["has", "point_count"],
           paint: {
-            // "background-color": {
+            "circle-opacity": 0.5,
             "circle-color": {
               property: "point_count",
               type: "interval",
-              stops: [[0, "#51bbd6"], [100, "#f1f075"], [750, "#f28cb1"]]
+              stops: [
+                [0, "#b294ff"],
+                [10, "#57e6e6"],
+                [30, "#51bbd6"],
+                [50, "#f1f075"],
+                [100, "#f28cb1"]
+              ]
             },
             "circle-radius": {
               property: "point_count",
               type: "interval",
-              stops: [[0, 20], [100, 30], [750, 40]]
+              stops: [[0, 20], [10, 25], [30, 30], [50, 35], [100, 40]]
             }
           }
         })
@@ -89,7 +94,11 @@ export default points => {
             "text-anchor": "center",
             "text-field": "{point_count_abbreviated}",
             "text-font": ["Arial Unicode MS Bold"],
+
             "text-size": 12
+          },
+          paint: {
+            "text-color": "white"
           }
         });
       map.on("click", "allPoints", e => {
