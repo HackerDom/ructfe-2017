@@ -189,11 +189,8 @@ def put(hostname, flag_id, flag, vuln):
 
     exit_code = OK
     try:
-        for i in range(5):
-            name = select_name()
-            response = requests.get('http://%s:4280/memorize?name=%s&what=%s' % (hostname, name, ','.join(recipe)))
-            if response.status_code != 409:
-                break
+        #TODO multiple selection attempts
+        response = requests.get('http://%s:4280/memorize?name=%s&what=%s' % (hostname, name, ','.join(recipe)))
         response.raise_for_status()
 
         response = requests.get('http://%s:4280/list?skip=0&take=31' % hostname)
@@ -249,15 +246,10 @@ def get(hostname, flag_id, flag, _):
     exit(exit_code)
 
 
-COMMANDS = {'check': check, 'put': put, 'get': get, 'info': info}
+def make_recipe_for_name(name):
+    flag = name + '0' * (31 - len(name)) + '='
+    return ','.join(flag_to_recipe(flag))
 
+#print(make_recipe_for_name(input()))
 
-def main():
-    try:
-        COMMANDS.get(argv[1], not_found)(*argv[2:])
-    except Exception:
-        traceback.print_exc()
-        exit(CHECKER_ERROR)
-
-if __name__ == '__main__':
-    main()
+print(flag_to_recipe('1AG359TGGAGG7AKT5XTIO8KHZ1J4VMW='))

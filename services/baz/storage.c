@@ -22,6 +22,11 @@ slot slots[MAXITEMS];
 uint64 current_item;
 uint64 current_node;
 
+int32 logfd;
+
+
+bool store_item_impl(slot *item);
+
 void init_storage()
 {
 	current_item = 0;
@@ -29,6 +34,31 @@ void init_storage()
 	memzero(nodes, sizeof(nodes));
 	memzero(slots, sizeof(slots));
 	nodes[0].used = true;
+
+	if ((logfd = openrw("storage")) < 0)
+	{
+		print("fuck storage\n");
+		exit(1);
+	}
+
+	uint64 items_read = 0;
+	slot item;
+	while (true)
+	{
+		int32 bytesRead = read(logfd, &item, sizeof(item));
+
+		if (!bytesRead)
+			break;
+
+		if (bytesRead < sizeof(item) || item.value[31] != '=')
+		{
+			print("Item ");nprint(items_read);print(" is corrupt\n");
+			break;
+		}
+
+		store_item_impl(&item);
+		items_read++;
+	}
 }
 
 uint64 allocate_node()
@@ -57,6 +87,8 @@ void delete_item(slot *item)
 		uint64 n = *key - 'A';
 		path[i++] = current;
 		current = nodes[current].trans[n] - 1;
+		if (current > MAXNODES)
+			return;
 	}
 
 	nodes[current].value = 0;
@@ -105,7 +137,39 @@ void copy_value(const void *src, void *dest)
 	((uint64 *)dest)[3] = ((uint64 *)src)[3];
 }
 
-char * store_item(const char *key, char *value)
+bool store_item_impl(slot *item)
+{
+	uint64 current = 0;
+
+	uint32 new_item = add_item(item);
+
+	char *key;
+	for (key = item->key; *key && key < item->value; key++)
+	{
+		uint64 n = *key - 'A';
+		if (n >= 26)
+			return false;
+		if (!nodes[current].trans[n])
+		{
+			uint64 nd = allocate_node();
+			if (nd == -1)
+			{
+				return false;
+			}
+			nodes[current].trans[n] = nd + 1;
+		}
+		current = nodes[current].trans[n] - 1;
+	}
+
+	if (nodes[current].value)
+		return false;
+
+	nodes[current].value = new_item + 1;
+
+	return true;
+}
+
+char * store_item(char *key, char *value)
 {
 	if (!key || !value)
 		return 0;
@@ -114,29 +178,13 @@ char * store_item(const char *key, char *value)
 	if (!name_flag(key, item.key))
 		return 0;
 
-	uint64 current = 0;
-
-	for (key = item.key; *key && key < item.value; key++)
+	if (store_item_impl(&item))
 	{
-		uint64 n = *key - 'A';
-		if (n >= 26)
-			return 0;
-		if (!nodes[current].trans[n])
-		{
-			uint64 nd = allocate_node();
-			if (nd == -1)
-				return 0;
-			nodes[current].trans[n] = nd + 1;
-		}
-		current = nodes[current].trans[n] - 1;
+		write(logfd, &item, sizeof(item));
+		return key;
 	}
 
-	if (nodes[current].value)
-		return 0;
-
-	nodes[current].value = add_item(&item) + 1;
-
-	return value;
+	return 0;
 }
 
 char * load_item(const char *key, char *buffer)
@@ -273,7 +321,7 @@ char * encode_flag(const char *recipe, char *buffer)
 		recipe++;
 	}
 
-	n = not(n);
+	//n = not(n);
 	n = xor(n, magic);
 	
 	uint64 length = 0;

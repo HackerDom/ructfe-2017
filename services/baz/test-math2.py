@@ -117,6 +117,10 @@ def convert_base(x, base_from, base_to):
         l.append(value)
     l.reverse()
 
+    if len(l) == 0:
+        l.append(0)
+
+    #return l[-31:]
     return l
 
 def flag_to_recipe(flag):
@@ -130,6 +134,8 @@ def merge_bytes(s):
 
 def hash_flag(flag):
     flag_copy = [0] * 32
+
+    assert len(flag) == 32
 
     for i in range(32):
         idx = i if i % 2 == 0 else 32 - i
@@ -189,11 +195,8 @@ def put(hostname, flag_id, flag, vuln):
 
     exit_code = OK
     try:
-        for i in range(5):
-            name = select_name()
-            response = requests.get('http://%s:4280/memorize?name=%s&what=%s' % (hostname, name, ','.join(recipe)))
-            if response.status_code != 409:
-                break
+        #TODO multiple selection attempts
+        response = requests.get('http://%s:4280/memorize?name=%s&what=%s' % (hostname, name, ','.join(recipe)))
         response.raise_for_status()
 
         response = requests.get('http://%s:4280/list?skip=0&take=31' % hostname)
@@ -220,44 +223,27 @@ def put(hostname, flag_id, flag, vuln):
         exit_code = MUMBLE
     if exit_code == OK:
         print(name)
-    exit(exit_code)
+def recipe_to_flag(recipe):
+    return unparse_flag(convert_base(parse_recipe(recipe), len(spirits), len(flag_alpha)))
+def int_to_flag(n):
+    l = []
+    while (n > 0):
+        l.append(n % len(flag_alpha))
+        n //= len(flag_alpha)
+    l.reverse()
+    l = ([0] * (31 - len(l))) + l
+    return unparse_flag(l)
 
+for i in range(100000000000):
+    #flag = int_to_flag(36 ** 31 - i - 1)
 
-def get(hostname, flag_id, flag, _):
+    flag = int_to_flag(i)
+    #flag = ''.join([random.choice(flag_alpha) for _ in range(31)]) + '='
+    #flag = recipe_to_flag([e])
+    print(flag)
 
-    name = flag_id
-    flag_hash = hash_flag(flag)
+    #print('%s -> %s -> %s' % (flag, ','.join(flag_to_recipe(flag)), recipe_to_flag(flag_to_recipe(flag))))
+    #input()
 
-    exit_code = OK
-    try:
-        response = requests.get('http://%s:4280/mix?name=%s' % (hostname, name))
-        response.raise_for_status()
-
-        if flag_hash != response.text:
-            exit_code = CORRUPT
-            print_to_stderr('Hash mismatch for new flag: expected "%s", found "%s"' % (flag_hash, response.text))
-            exit(exit_code)
-
-    except ConnectionError as error:
-        print_to_stderr("Connection error: hostname: {}, error: {}".format(hostname, error))
-        exit_code = DOWN
-    except HTTPError as error:
-        print_to_stderr("HTTP Error: hostname: {}, error: {}".format(hostname, error))
-        exit_code = MUMBLE
-    if exit_code == OK:
-        print(name)
-    exit(exit_code)
-
-
-COMMANDS = {'check': check, 'put': put, 'get': get, 'info': info}
-
-
-def main():
-    try:
-        COMMANDS.get(argv[1], not_found)(*argv[2:])
-    except Exception:
-        traceback.print_exc()
-        exit(CHECKER_ERROR)
-
-if __name__ == '__main__':
-    main()
+    put('localhost', '', flag, 1)
+    print(i)

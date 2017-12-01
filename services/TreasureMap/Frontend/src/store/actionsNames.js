@@ -4,4 +4,5 @@ export const PATH_POINT_SELECT = "PATH_POINT_SELECT";
 export const PATH_BUILD = "PATH_BUILD";
 export const PATH_CLEAR = "PATH_CLEAR";
 export const LOGIN = "LOGIN";
+export const LOGOUT = "LOGOUT";
 export const FAIL = "_FAIL";

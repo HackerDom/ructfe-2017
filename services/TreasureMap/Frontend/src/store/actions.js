@@ -10,16 +10,7 @@ export const pathPointSelect = createAction(actions.PATH_POINT_SELECT);
 export const clearPath = createAction(actions.PATH_CLEAR);
 export const createPoint = createAction(actions.CREATE_POINT);
 export const loginOk = createAction(actions.LOGIN);
-
-// export const fetchData = () => {
-//   return async dispatch => {
-//     try {
-//       dispatch(dataFetched(await fetchDataService()));
-//     } catch (e) {
-//       dispatch(dataFetchedFail());
-//     }
-//   };
-// };
+export const logoutOk = createAction(actions.LOGOUT);
 
 export const login = (user, password) => {
   return async dispatch => {

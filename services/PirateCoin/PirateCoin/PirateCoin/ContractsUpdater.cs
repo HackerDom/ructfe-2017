@@ -45,7 +45,7 @@ namespace PirateCoin
 
 		public void Start()
 		{
-			worker = new Thread(() =>
+			var worker = new Thread(() =>
 			{
 				ConnectToGethNode();
 				log.Info($"Successfully connected to geth node {gethRpcUrl} via RPC");
@@ -92,8 +92,6 @@ namespace PirateCoin
 		private readonly TimeSpan contractDeployPeriod;
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(ContractsUpdater));
-
-		private Thread worker;
 
 		private Web3 web3;
 		private string contractByteCodePath;

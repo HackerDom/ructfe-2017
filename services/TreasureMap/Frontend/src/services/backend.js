@@ -1,9 +1,9 @@
 import { stringify } from "querystring";
 import { normalize, schema } from "normalizr";
-
+import { logoutOk } from "../store/actions";
 const point = new schema.Entity("point");
 const points = new schema.Array(point);
-
+import store from "../store";
 const getParams = {
   credentials: "include"
 };
@@ -26,6 +26,10 @@ export const fetchData = async () => {
       $get("/api/publics"),
       $get("/api/points")
     ]);
+    if (publicsRes.status === 403 || privatesRes.status === 403) {
+      store.dispatch(logoutOk());
+      return false;
+    }
 
     if (publicsRes.ok && privatesRes.ok) {
       let publics = (await publicsRes.json()) || [];
@@ -43,7 +47,15 @@ export const fetchData = async () => {
 export const putNewPoint = async data => {
   try {
     let res = await $post("/api/add", data);
-    return await res.text();
+    if (res.status === 403) {
+      store.dispatch(logoutOk());
+      return "";
+    }
+    if (res.ok) {
+      return await res.text();
+    } else {
+      return Date.now();
+    }
   } catch (e) {
     return "";
   }
@@ -52,6 +64,10 @@ export const putNewPoint = async data => {
 export const buildPath = async (start, finish, sub) => {
   try {
     let res = await $post("/api/path", { start, finish, sub });
+    if (res.status === 403) {
+      store.dispatch(logoutOk());
+      return false;
+    }
     return await res.json();
   } catch (e) {
     return false;
@@ -61,6 +77,10 @@ export const buildPath = async (start, finish, sub) => {
 export const login = async (user, password) => {
   try {
     let res = await $post("/api/login", { user, password });
+    if (res.status === 403) {
+      store.dispatch(logoutOk());
+      return false;
+    }
     return !!res.ok;
   } catch (e) {
     return false;

@@ -19,8 +19,8 @@ namespace BlackMarket
 	{
 		public TransactionChecker(string bankContractAbiFilepath, string bankAttackerContractAbiFilepath, string parityRpcUrl)
 		{
-			this.bankContractAbiFilepath = bankContractAbiFilepath;
-			this.bankAttackerContractAbiFilepath = bankAttackerContractAbiFilepath;
+			this.bankContractAbi = File.ReadAllText(bankContractAbiFilepath);
+			this.bankAttackerContractAbi = File.ReadAllText(bankAttackerContractAbiFilepath);
 			this.parityRpcUrl = parityRpcUrl;
 		}
 
@@ -28,7 +28,7 @@ namespace BlackMarket
 		{
 			var web3 = new Web3(Settings.ParityRpcUrl);
 
-			var contract = web3.Eth.GetContract(File.ReadAllText(bankAttackerContractAbiFilepath), contractAddr);
+			var contract = web3.Eth.GetContract(bankAttackerContractAbi, contractAddr);
 
 			var ownerIp = await contract.GetFunction("ownerIp").CallAsync<uint>();
 			return new IPAddress(BitConverter.GetBytes(ownerIp)).ToString();
@@ -91,7 +91,7 @@ namespace BlackMarket
 		{
 			var web3 = new Web3(Settings.ParityRpcUrl);
 
-			var contract = web3.Eth.GetContract(File.ReadAllText(bankContractAbiFilepath), contractAddr);
+			var contract = web3.Eth.GetContract(bankContractAbi, contractAddr);
 
 			var totalBankBalance = await contract.GetFunction("totalBankBalance").CallAsync<BigInteger>();
 			var totalEthBalance = (await web3.Eth.GetBalance.SendRequestAsync(contractAddr)).Value;
@@ -132,8 +132,8 @@ namespace BlackMarket
 			[DataMember] public string jsonrpc;
 		}
 
-		private string bankContractAbiFilepath;
-		private string bankAttackerContractAbiFilepath;
+		private string bankContractAbi;
+		private string bankAttackerContractAbi;
 		private string parityRpcUrl;
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(TransactionChecker));

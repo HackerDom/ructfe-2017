@@ -113,6 +113,8 @@ bool to_string_hex(uint64 value, char *buffer, int64 buffer_length)
 
 uint64 strcmp(const char *str1, const char *str2)
 {
+	if (!str1 || !str2)
+		return !str1 && !str2;
 	while (*str1 && (*str1 == *str2))
 	{
 		str1++;
@@ -203,8 +205,6 @@ void close(int32 fd);
 
 uint32 fcntl(int32 fd, int32 cmd, uint32 arg);
 
-__attribute__((noreturn)) void exit(int32 code);
-
 int32 epoll_create1(int32 flags);
 
 int32 epoll_ctl(int32 __epfd, int32 __op, int32 __fd, struct epoll_event *__event);
@@ -280,7 +280,6 @@ void process_request(int32 fd, char *request)
 	{
 		if (i >= (int64)sizeof(buf))
 		{
-			print("bad request\n");
 			handler = handler_badrequest;
 			break;
 		}

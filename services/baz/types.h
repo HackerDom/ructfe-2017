@@ -52,8 +52,8 @@ typedef struct {
 void print(const char *message);
 void nprint(int64 num);
 
-int64 write(int32 fd, const byte *data, int64 length);
-int64 read(int32 fd, byte *data, int64 length);
+int64 write(int32 fd, const void *data, int64 length);
+int64 read(int32 fd, void *data, int64 length);
 
 uint64 strlen(const char *str);
 uint64 strcmp(const char *str1, const char *str2);
@@ -64,3 +64,6 @@ bool to_string(int64 value, char *buffer, int64 buffer_length);
 void memzero(void *data, int64 length);
 
 bool to_string_hex(uint64 value, char *buffer, int64 buffer_length);
+
+int32 openrw(const char *path);
+__attribute__((noreturn)) void exit(int32 code);

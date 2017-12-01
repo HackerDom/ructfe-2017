@@ -1,11 +1,7 @@
 import mapboxgl from "mapbox-gl";
 import newPointForm from "./components/newPointForm";
 import { pathPointSelect } from "./store/actions";
-import {
-  encodeCoordinates,
-  lngLatToXY,
-  xyToCoordinates
-} from "./services/points";
+import { lngLatToXY, normalize } from "./services/points";
 import store from "./store";
 import { bindActionCreators } from "redux";
 
@@ -39,7 +35,7 @@ map.on("dblclick", e => {
   map.popupIsOpen = true;
   const popup = new mapboxgl.Popup().setLngLat(e.lngLat);
   popup
-    .setDOMContent(newPointForm(e.lngLat.lat, e.lngLat.lng, popup))
+    .setDOMContent(newPointForm(e.lngLat.lat, normalize(e.lngLat.lng), popup))
     .addTo(map)
     .on("close", () => (map.popupIsOpen = false));
 });

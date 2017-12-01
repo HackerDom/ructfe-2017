@@ -7,7 +7,7 @@ body {
   font-size: 10px;
 }
 
-input {
+.webflow-style-input input {
   border-style: none;
   background: transparent;
   outline: none;
@@ -32,6 +32,7 @@ input {
   position: absolute;
   top: 0;
   right: 0;
+  color: #bfd2ff;
 }
 
 .pathControll {
