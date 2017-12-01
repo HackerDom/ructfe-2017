@@ -7,7 +7,7 @@ void respond(int32 fd, uint64 code, const char *text, const char *content_type)
 	char buf[32];
 	to_string(text ? strlen(text) : 0, buf, sizeof(buf));
 
-	char response[20480];
+	char response[40960];
 	response[0] = 0;
 	switch (code)
 	{
@@ -122,7 +122,7 @@ void run_handler(byte *handler, int32 fd, uint64 *params)
 				stack[sp - 1] = (uint64)name_flag((const char *)stack[sp - 1], namebuffer);
 				break;
 			case OP_store:
-				t = (uint64)store_item((const char *)stack[sp - 1], (char *)stack[sp - 2]);
+				t = (uint64)store_item((char *)stack[sp - 1], (char *)stack[sp - 2]);
 				sp--;
 				stack[sp - 1] = t;
 				break;
