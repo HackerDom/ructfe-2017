@@ -59,7 +59,7 @@ def parse_json(string, *expected):
 		return data
 	for fields in expected:
 		errors = []
-		for field in expected:
+		for field in fields:
 			if field not in data:
 				errors.append(field)
 		if len(errors) == 0:
