@@ -1,4 +1,5 @@
 port = 7483
+ws-port = 7484
 secret = dump/secret
 credentials = dump/credentials
 points = dump/points
