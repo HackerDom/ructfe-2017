@@ -6,6 +6,7 @@ import random
 import string
 import json
 import asyncio
+import time
 
 import TextGenerator
 
@@ -123,6 +124,8 @@ class Checker:
 			raise ValueError('wrong number of vuln')
 		return self.flag_handlers[vuln]
 
+
+start = time.time()
 def log(*message):
-	print(*message, file=sys.stderr)
+	print('{: 2.05f}'.format(time.time() - start), *message, file=sys.stderr)
 	sys.stderr.flush()
