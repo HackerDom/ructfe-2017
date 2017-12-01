@@ -14,13 +14,13 @@ const map = new mapboxgl.Map({
   center: [60.6, 56.8],
   zoom: 10
 });
-console.log(mapboxgl);
+
 map.doubleClickZoom.disable();
 
 map.on("click", e => {
   map.clicked = (map.clicked || 0) + 1;
   setTimeout(function() {
-    if (map.clicked === 1 && !map.isOpenNewPointForm) {
+    if (map.clicked === 1 && !map.popupIsOpen) {
       map.clicked = 0;
       bindActionCreators(pathPointSelect, store.dispatch)({
         type: "coordinates",
@@ -35,11 +35,12 @@ map.on("click", e => {
 
 map.on("dblclick", e => {
   map.clicked = 0;
-  map.isOpenNewPointForm = true;
+  map.popupIsOpen = true;
   const popup = new mapboxgl.Popup().setLngLat(e.lngLat);
   popup
     .setDOMContent(newPointForm(e.lngLat.lat, e.lngLat.lng, popup))
     .addTo(map)
-    .on("close", () => (map.isOpenNewPointForm = false));
+    .on("close", () => (map.popupIsOpen = false));
 });
+
 export default map;

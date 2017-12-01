@@ -8,7 +8,8 @@ export default handleActions(
         if (!state.startPoint) {
           return {
             ...state,
-            startPoint: payload.coordinates
+            startPoint: payload.coordinates,
+            path: []
           };
         } else {
           return {
@@ -33,7 +34,9 @@ export default handleActions(
       sub: []
     }),
     [actions.PATH_BUILD]: (state, { payload }) => ({
-      ...state,
+      startPoint: undefined,
+      endPoint: undefined,
+      sub: [],
       path: payload
     })
   },
