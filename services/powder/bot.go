@@ -1,7 +1,6 @@
 package main
 
 import (
-    "time"
     "crypto/md5"
     "io"
 )
@@ -21,6 +20,9 @@ func NewBot(user *User) *Bot {
 func SetupAutoReply(storage *Storage) {
     storage.IterateUsers(0, "", func (user User) {
         if user.AutoReply {
+            storage.Mutex.Lock()
+            storage.Last[user.Username] = make(chan *Message)
+            storage.Mutex.Unlock()
             StartBot(&user, storage)
         }
     })
@@ -112,16 +114,20 @@ func (bot *Bot) Say(message *Message) []*Message {
 func StartBot(user *User, storage *Storage) {
     go func() {
         bot := NewBot(user)
+        storage.Mutex.Lock()
+        channel := storage.Last[user.Username]
+        storage.Mutex.Unlock()
         for {
-            lastMessage := storage.LastMessage(user.Username)
+            lastMessage := <-channel
             bot.Listen(lastMessage)
             for _, message := range bot.Say(lastMessage) {
-                storage.SaveMessage(message)
-            }
-            if lastMessage == nil {
-                time.Sleep(5 * time.Second)
-            } else {
-                time.Sleep(time.Second)
+                user := storage.GetUser(message.To)
+
+                if user == nil {
+                    continue
+                }
+
+                storage.SaveMessage(message, user.AutoReply)
             }
         }
     }()

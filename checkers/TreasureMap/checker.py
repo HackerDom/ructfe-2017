@@ -7,6 +7,8 @@ import string
 import json
 import asyncio
 
+import TextGenerator
+
 printable = string.digits + string.ascii_letters + string.punctuation
 
 def ructf_error(status=110, message=None, error=None, exception=None):
@@ -44,6 +46,18 @@ def make_err_message(message, request, reply):
 def get_value_or_rand_string(value, l, additional=''):
 	if value is None:
 		return get_rand_string(l, additional)
+	else:
+		return value
+
+def get_value_or_rand_name(value):
+	if value is None:
+		return TextGenerator.get_name()
+	else:
+		return value
+
+def get_value_or_rand_text(value):
+	if value is None:
+		return TextGenerator.get_text()
 	else:
 		return value
 

@@ -197,13 +197,19 @@ func (api *API) UpdateConversation(c echo.Context) error {
         return api.Error(c, "You should login first")
     }
 
+    user := api.storage.GetUser(c.FormValue("to"))
+
+    if user == nil {
+        return api.Error(c, fmt.Sprintf("Can't find user %s", login))
+    }
+
     message := Message{
         From: login,
         To: c.FormValue("to"),
         Author: login,
         Message: c.FormValue("message"),
     }
-    api.storage.SaveMessage(&message)
+    api.storage.SaveMessage(&message, user.AutoReply)
 
     message = Message{
         From: c.FormValue("to"),
@@ -211,7 +217,7 @@ func (api *API) UpdateConversation(c echo.Context) error {
         Author: login,
         Message: c.FormValue("message"),
     }
-    api.storage.SaveMessage(&message)
+    api.storage.SaveMessage(&message, user.AutoReply)
 
     result := map[string]interface{}{}
 
@@ -256,6 +262,10 @@ func (api *API) AutoReply(c echo.Context) error {
     }
 
     user.AutoReply = true
+    api.storage.Mutex.Lock()
+    api.storage.Last[user.Username] = make(chan *Message)
+    api.storage.Mutex.Unlock()
+
     api.storage.SaveUser(user)
 
     StartBot(user, api.storage)

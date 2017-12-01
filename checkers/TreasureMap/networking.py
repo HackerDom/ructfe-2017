@@ -26,19 +26,22 @@ class WSHelper:
 	def start(self):
 		asyncio.async(self.start_internal())
 	async def start_internal(self):
-		async with self.connection as ws:
-			async for msg in ws:
-				if msg.type == aiohttp.WSMsgType.TEXT:
-					try:
-						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
-					except Exception as ex:
-						checker.mumble(error='can\'t parse service responce', exception=ex)
-					await self.queue.put(data)
-				elif msg.type == aiohttp.WSMsgType.CLOSED:
-					self.closed = True
-					break
-				else:
-					checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
+		try:
+			async with self.connection as ws:
+				async for msg in ws:
+					if msg.type == aiohttp.WSMsgType.TEXT:
+						try:
+							data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
+						except Exception as ex:
+							checker.mumble(error='can\'t parse service responce', exception=ex)
+						await self.queue.put(data)
+					elif msg.type == aiohttp.WSMsgType.CLOSED:
+						self.closed = True
+						break
+					else:
+						checker.mumble(error='get message with unexpected type {}\nmessage: {}'.format(msg.type, msg.data))
+		except Exception as ex:
+			checker.down(error='something down', exception=ex)
 	def want(self, point):
 		self.wanted.add(json.dumps(data, sort_keys=True))
 	async def finish(self):
@@ -100,7 +103,7 @@ class State:
 
 	async def register(self, username=None, password=None):
 		can_retry = username is None
-		request = {'user': checker.get_value_or_rand_string(username, 8), 'password': checker.get_value_or_rand_string(password, 16)}
+		request = {'user': checker.get_value_or_rand_name(username), 'password': checker.get_value_or_rand_string(password, 16)}
 		status, text = await self.post('/api/login', request, need_check_status = False)
 		if status == 200:
 			return request['user'], request['password']
@@ -143,7 +146,7 @@ class State:
 		point = {
 			'x' : checker.get_value_or_rand_string(x, 13, checker.printable), 
 			'y' : checker.get_value_or_rand_string(y, 13, checker.printable), 
-			'message' : checker.get_value_or_rand_string(message, 50), 
+			'message' : checker.get_value_or_rand_text(message), 
 			'public' : is_public if is_public is not None else random.choice([True, False])}
 		point['id'] = await self.post('/api/add', point)
 		point['user'] = user
