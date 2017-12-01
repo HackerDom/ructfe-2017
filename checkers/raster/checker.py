@@ -306,7 +306,7 @@ def check(*args):
 			# checked
 			close(CORRUPT, "Service corrupted", "Invalid paylod expected ( %u, %u, %u, %u ), received ( %u %u %u %u )" % ( cp[0], cp[1], cp[2], cp[3], p[0], p[1], p[2], p[3] ) )
 
-	close( OK, fileToRemove=bin_file )
+	close( OK, fileToRemove=bin_file, private="Check method: %d" % c )
 
 
 ##
