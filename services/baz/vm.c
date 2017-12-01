@@ -7,7 +7,7 @@ void respond(int32 fd, uint64 code, const char *text, const char *content_type)
 	char buf[32];
 	to_string(text ? strlen(text) : 0, buf, sizeof(buf));
 
-	char response[4096];
+	char response[20480];
 	response[0] = 0;
 	switch (code)
 	{
