@@ -15,8 +15,9 @@ namespace TreasureMap.Db
 		private static readonly ConcurrentDictionary<string, Point> DataBase = new ConcurrentDictionary<string, Point>();
 		private static readonly ConcurrentBag<string> Publics = new ConcurrentBag<string>();
 		private static readonly ConcurrentDictionary<string, HashSet<string>> PerUser = new ConcurrentDictionary<string, HashSet<string>>();
+		private static Action<Point> onAdd;
 
-		public static void Init(string path, int sleep, int ttl)
+		public static void Init(string path, int sleep, int ttl, Action<Point> _onAdd)
 		{
 			var deadline = DateTime.UtcNow.AddMilliseconds(-ttl);
 			DataLoader.Load<Point>(path, point =>
@@ -25,6 +26,7 @@ namespace TreasureMap.Db
 					AddIntenal(point);
 			});
 
+			onAdd = _onAdd;
 			DataBase.ForEach(pair => currentId = Math.Max(currentId, long.Parse(pair.Value.Id)));
 
 			new PeriodicSaver<Point>(path, sleep, () =>
@@ -44,6 +46,8 @@ namespace TreasureMap.Db
 
 			AddIntenal(point);
 
+			onAdd(point);
+
 			return point.Id;
 		}
 
@@ -55,6 +59,11 @@ namespace TreasureMap.Db
 				Publics.Add(point.Id);
 
 			PerUser.AddOrUpdateLocked(point.User, point.Id);
+		}
+
+		public static IEnumerable<Point> GetAll()
+		{
+			return DataBase.Select(pair => pair.Value);
 		}
 
 		public static IEnumerable<Point> GetPublics()

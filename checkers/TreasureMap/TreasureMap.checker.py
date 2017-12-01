@@ -41,11 +41,8 @@ def compare(p1, p2, fields):
 async def get_point_with_flag(hostname, username, password, id):
 	state = State(hostname, PORT)
 	await state.login(id['username'], id['password'])
-	points = await state.get_points()
-	check_points_list(points, FIELDS)
-	p = get_point(points, id['id'])
-	if p is None:
-		checker.mumble(error='can\'t find point with id "{}"'.format(id['id']))
+	listener = state.get_points_listener()
+	points = await listener.find(id['id'])
 	return p
 		
 FIELDS = ['id', 'x', 'y', 'message', 'public', 'user']
@@ -56,10 +53,7 @@ async def check_one(username, sender, viewer, is_public):
 		points = await viewer.get_public_points()
 	else:
 		points = await viewer.get_points()
-	check_points_list(points, FIELDS)
-	p = get_point(points, point['id'])
-	if p is None:
-		checker.mumble(error='can\'t find point with id "{}" in {} points'.format(point['id'], 'public' if is_public else 'private'))
+	point = await viewer.find(point['id'])
 	compare(point, p, FIELDS)
 
 def get_rand_point():
@@ -83,7 +77,6 @@ async def check_path(username, sender, another, aname):
 		responses.append(await sender.put_point(user=username))
 	for i in range(random.randint(3, 7)):
 		responses.append(await another.put_point(is_public=True, user=aname))
-	check_points_list(responses, FIELDS)
 
 	start = get_rand_point()
 	finish = get_rand_point()
@@ -109,14 +102,16 @@ async def check_path(username, sender, another, aname):
 
 async def handler_check(hostname):
 
-	viewer = State(hostname, PORT)
-	state = State(hostname, PORT)
-	auser, apass = await viewer.register()
-	username, password = await state.register()
+	second = State(hostname, PORT)
+	first = State(hostname, PORT)
+	suser, spass = await second.register()
+	fusername, fpassword = await first.register()
+	public_listener = second.get_public_listener()
+	point_listener = first.get_point_listener()
 	tasks = []
 
-	tasks.append(asyncio.ensure_future(check_one(username, state, viewer, True)))
-	tasks.append(asyncio.ensure_future(check_one(username, state, state, False)))
+	tasks.append(asyncio.ensure_future(check_one(username, state, public_listener, True)))
+	tasks.append(asyncio.ensure_future(check_one(username, state, point_listener, False)))
 	tasks.append(asyncio.ensure_future(check_path(username, state, viewer, auser)))
 	await asyncio.gather(*tasks)
 
