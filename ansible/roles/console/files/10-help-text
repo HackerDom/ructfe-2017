@@ -1,0 +1,7 @@
+#!/bin/sh
+printf "\n"
+printf " * Site:            https://ructfe.org\n"
+printf " * IRC:             #ructfe@irc.hackerdom.ru\n"
+printf " * Cloud Console:   https://cloud.ructfe.org\n"
+printf " * Monitor:         http://monitor.ructfe.org\n"
+printf " * Flags:           flags.ructfe.org TCP port 31337\n"

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 using log4net;
@@ -12,11 +15,11 @@ namespace BlackMarket
 {
 	public class TeamsChecker
 	{
-		public TeamsChecker(string parityRpcUrl, string bankContractAbiFilepath, string account, string coinbasePass)
+		public TeamsChecker(string parityRpcUrl, string bankContractAbiFilepath, string sendingAccount, string coinbasePass)
 		{
 			this.parityRpcUrl = parityRpcUrl;
 			this.bankContractAbi = File.ReadAllText(bankContractAbiFilepath);
-			this.account = account;
+			this.sendingAccount = sendingAccount;
 			this.coinbasePass = coinbasePass;
 		}
 
@@ -26,7 +29,7 @@ namespace BlackMarket
 			{
 				try
 				{
-					var senderAccount = new ManagedAccount(account, coinbasePass);
+					var senderAccount = new ManagedAccount(sendingAccount, coinbasePass);
 					return new Web3(senderAccount, parityRpcUrl);
 				}
 				catch(Exception e)
@@ -45,6 +48,10 @@ namespace BlackMarket
 			if(!alreadyChecking)
 				new Thread(() =>
 				{
+					var random = new Random().Next(30);
+					log.Info($"New team {vulnboxIp} checking started. Sleeping {random} sec before start");
+					Thread.Sleep(TimeSpan.FromSeconds(random));
+
 					var web3 = ConnectToParityNode();
 					log.Info($"Successfully connected to parity node {parityRpcUrl} via RPC");
 
@@ -57,21 +64,44 @@ namespace BlackMarket
 							log.Info($"Waiting {secondsToSleep} sec. before checking vulnbox {vulnboxIp}");
 							Thread.Sleep(TimeSpan.FromSeconds(secondsToSleep));
 						}
+						lastContractCheckStartTime = DateTime.UtcNow;
 
 						try
 						{
-							log.Info("Sending test deposit");
-							lastContractCheckStartTime = DateTime.UtcNow;
+							log.Info($"Checking vulnbox {vulnboxIp} contract {contractAddr}");
 
 							var contract = web3.Eth.GetContract(bankContractAbi, contractAddr);
 
 							var transactionPolling = web3.TransactionManager.TransactionReceiptService;
 
-							var transactionSendReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("addToBalance").SendTransactionAsync(account, contactCallGas, contactTransactAmount)).Result;
+							var transactionSendReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("addToBalance").SendTransactionAsync(sendingAccount, contactCallGas, contactTransactAmount)).Result;
 							log.Info($"Sent money to contract {contractAddr}, transaction {transactionSendReceipt.TransactionHash} in block {transactionSendReceipt.BlockNumber}");
 
-							var transactionAddWithdraw = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(account, contactCallGas, new HexBigInteger("1"))).Result;
-							log.Info($"Sent withdraw receipt from contract {contractAddr}, transaction {transactionAddWithdraw.TransactionHash} in block {transactionAddWithdraw.BlockNumber}");
+							var transactionWithdrawReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(sendingAccount, contactCallGas, new HexBigInteger(0))).Result;
+							log.Info($"Sent withdraw receipt from contract {contractAddr}, transaction {transactionWithdrawReceipt.TransactionHash} in block {transactionWithdrawReceipt.BlockNumber}");
+
+							var trace = TransactionTracer.TraceTransactionAsync(transactionWithdrawReceipt.TransactionHash, parityRpcUrl).Result;
+
+							var moneyReturns = (trace ?? new List<TraceResponseItem>())
+								.Select(item => item.action)
+								.Select(action => new
+								{
+									fromAddr = action.fromAddr?.ToLowerInvariant(),
+									toAddr = action.toAddr?.ToLowerInvariant(),
+									sum = BigInteger.Parse("0" + (action.value?.Substring(2) ?? "0"), NumberStyles.AllowHexSpecifier)
+								})
+								.Where(mt => mt.fromAddr == contractAddr && mt.toAddr == sendingAccount && mt.sum > 0)
+								.ToList();
+
+							var totalSumReturned = new BigInteger(0);
+							foreach(var mr in moneyReturns)
+								totalSumReturned += mr.sum;
+
+							if(totalSumReturned < contactTransactAmount)
+							{
+								log.Info($"Witdrawal transaction {transactionWithdrawReceipt.TransactionHash} team {vulnboxIp} contract {contractAddr} tracing returned {totalSumReturned} < we sent {contactTransactAmount}. Considering vulnbox illegaly patched");
+								teamsStatus[vulnboxIp] = DateTime.UtcNow;
+							}
 						}
 						catch(Exception e)
 						{
@@ -82,10 +112,17 @@ namespace BlackMarket
 				}){ IsBackground = true }.Start();
 		}
 
+		public DateTime GetLastIllegalPatchedDetectedDt(string vulnboxIp)
+		{
+			if(teamsStatus.TryGetValue(vulnboxIp, out var result))
+				return result;
+			return DateTime.MinValue;
+		}
+
 		private readonly TimeSpan contractDeployPeriod = TimeSpan.FromSeconds(60);
 
-		public ConcurrentDictionary<string, int> teamsStatus = new ConcurrentDictionary<string, int>();
-		public ConcurrentDictionary<string, string> teamsContracts = new ConcurrentDictionary<string, string>();
+		private ConcurrentDictionary<string, DateTime> teamsStatus = new ConcurrentDictionary<string, DateTime>();
+		private ConcurrentDictionary<string, string> teamsContracts = new ConcurrentDictionary<string, string>();
 
 
 		private readonly HexBigInteger contactCallGas = new HexBigInteger("90000");
@@ -93,7 +130,7 @@ namespace BlackMarket
 
 		private string parityRpcUrl;
 		private string bankContractAbi;
-		private string account;
+		private string sendingAccount;
 		private string coinbasePass;
 
 		private static readonly ILog log = LogManager.GetLogger(typeof(TeamsChecker));

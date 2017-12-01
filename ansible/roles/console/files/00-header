@@ -1,0 +1,12 @@
+#!/bin/sh
+setterm --term linux --fore green --store 2>/dev/null
+
+printf " ___           ___   _____   ___   ___     ___    __    _   ____ \n"
+printf "| _ \  _  _   / __| |_   _| | __| | __|   |_  )  /  \  / | |__  |\n"
+printf "|   / | || | | (__    | |   | _|  | _|     / /  | () | | |   / / \n"
+printf "|_|_\  \_,_|  \___|   |_|   |_|   |___|   /___|  \__/  |_|  /_/  \n"
+printf "\n"
+                                                                                     
+if /usr/bin/VBoxControl --nologo guestproperty get team >/dev/null; then
+  printf "Thank you for using our RuCTFE Cloud\n"
+fi

@@ -103,6 +103,7 @@
     <Compile Include="StateManager.cs" />
     <Compile Include="TeamsChecker.cs" />
     <Compile Include="TransactionChecker.cs" />
+    <Compile Include="TransactionTracer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

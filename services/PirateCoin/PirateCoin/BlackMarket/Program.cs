@@ -43,10 +43,9 @@ namespace BlackMarket
 			if(vulnboxIp == null)
 				throw new HttpException((int)HttpStatusCode.BadRequest, "expected params 'vulnboxIp'");
 
-			if(!teamsChecker.teamsStatus.TryGetValue(vulnboxIp, out var secondsAfterLastMumble))
-				secondsAfterLastMumble = int.MaxValue;
+			var lastIllegalPatchedDetectedDt = teamsChecker.GetLastIllegalPatchedDetectedDt(vulnboxIp);
 
-			await context.WriteStringAsync(secondsAfterLastMumble.ToString());
+			await context.WriteStringAsync(((int)DateTime.UtcNow.Subtract(lastIllegalPatchedDetectedDt).TotalSeconds).ToString());
 		}
 
 		private static async Task PutFlagCallback(HttpListenerContext context)
