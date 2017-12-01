@@ -1,2 +1,3 @@
-cs_worker_checkers_jobs: 300
+cs_worker_checkers_jobs: 128
 cs_worker_checkers_queues: -q checker -q checker-1
+cs_worker_instance: 3
