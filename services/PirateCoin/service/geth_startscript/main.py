@@ -45,21 +45,24 @@ try:
 except Exception:
     pass
 
-geth_run_command = "geth " \
-                   "--datadir {geth_path}" \
+geth_run_command = "geth" \
+                   " --datadir {geth_path}" \
                    " --networkid 31337" \
                    " --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpcapi 'db,eth,net,web3,admin,personal'"\
                    " --port 30303" \
                    " --netrestrict '10.60.0.0/14,10.80.0.0/14,10.10.0.0/16'"\
                    " --maxpeers 30"\
                    " --verbosity 5"\
+                   " --ethash.dagdir {dagdir}"\
                    " --bootnodes '{bootnodes}'" \
                    " --ethstats node_{local_ip}:ructfe_secret_key@10.10.10.102:38030 2>> {get_logs}"\
     .format(
         geth_path=PATH_TO_GETH_DIR,
         bootnodes=",".join(STATIC_BOOTNODES),
         local_ip=get_local_ip(),
-        get_logs=PATH_TO_GETH_LOGS)
+        get_logs=PATH_TO_GETH_LOGS,
+        dagdir=PATH_TO_ETHASH
+)
 
 
 if not os.path.isdir(PATH_TO_GETH_DIR):
