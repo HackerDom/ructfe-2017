@@ -12,7 +12,7 @@ def check_service_state(team_addr):  # todo implement it
         "/checkTeam_C6EDEE7179BD4E2887A5887901F23060?vulnboxIp={}"
         .format(team_addr))
     try:
-        result = urlopen(req_object, timeout=15)
+        result = urlopen(req_object, timeout=15).read().decode()
     except (HTTPError, URLError, socket.timeout):
         return CheckerAnswers.CHECKER_ERROR("", "Couldn't await checker helper answer")
 
