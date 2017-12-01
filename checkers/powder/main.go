@@ -1,6 +1,7 @@
 package main
 
 import (
+    "time"
     "fmt"
     "net/http"
     "net/url"
@@ -11,7 +12,6 @@ import (
     "crypto/rand"
     "encoding/hex"
     "os"
-    "time"
     "math/big"
 )
 
@@ -20,7 +20,7 @@ type Server struct {
     Port string
 }
 
-const ServerPort = "8080"
+const ServerPort = "8082"
 
 type User struct {
     Login string
@@ -406,8 +406,9 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
     if err != nil {
         return "", err, code
     }
-    time.Sleep(6 * time.Second)
+    time.Sleep(100 * time.Millisecond)
     messages, err, code := server.GetMessages(alice, bob.Login)
+    fmt.Println(messages)
     if err != nil {
         return "", err, code
     }
@@ -419,8 +420,9 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
         if err != nil {
             return "", err, code
         }
-        time.Sleep(1100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
         messages, err, code = server.GetMessages(alice, bob.Login)
+        fmt.Println(messages)
         if err != nil {
             return "", err, code
         }
