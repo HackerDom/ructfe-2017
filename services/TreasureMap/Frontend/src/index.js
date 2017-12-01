@@ -9,13 +9,21 @@ import path from "./components/pathRenderer";
 import pathControlInit from "./components/pathControl";
 import store from "./store";
 
-import { fetchData } from "./store/actions";
+import { dataFetched, fetchData } from "./store/actions";
+import { fetchData as fetchDataService } from "../services/backend";
 import { addPointToMap } from "./services/map";
 
-const f = bindActionCreators(fetchData, store.dispatch);
+const updateDataCycle = async () => {
+  let res = await fetchDataService();
+  if (res.length) {
+    store.dispatch(dataFetched(res));
+  }
+  setTimeout(updateDataCycle, 60000);
+};
+
+updateDataCycle();
 loginForm();
 pathControlInit();
-f();
 
 store.subscribe(() => {
   const state = store.getState();

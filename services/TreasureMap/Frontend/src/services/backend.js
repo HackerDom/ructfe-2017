@@ -23,8 +23,8 @@ const $post = async (url, data) => {
 export const fetchData = async () => {
   try {
     let [publics, privates] = await Promise.all([
-      $get("/api/publics"),
-      $get("/api/points")
+      $get("/api/publics").json(),
+      $get("/api/points").json()
     ]);
     let data = [...publics, ...privates];
     return normalize(data, points).entities.point;
