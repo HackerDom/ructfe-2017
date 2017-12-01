@@ -31,8 +31,8 @@ class WSHelper:
 					try:
 						data = msg.json(loads = lambda s : checker.parse_json(s, ['id', 'x', 'y', 'message', 'public', 'user'], ['id']))
 					except Exception as ex:
-						checher.mumble(error='can\'t parse service responce', exception=ex)
-					await self.queue.put()
+						checker.mumble(error='can\'t parse service responce', exception=ex)
+					await self.queue.put(data)
 				elif msg.type == aiohttp.WSMsgType.CLOSED:
 					break
 				else:
@@ -130,7 +130,7 @@ class State:
 		return helper
 
 	def get_public_listener(self):
-		return self.get_listener('/ws/public')
+		return self.get_listener('/ws/publics')
 
 	def get_points_listener(self):
 		return self.get_listener('/ws/points')
