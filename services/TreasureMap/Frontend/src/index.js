@@ -3,14 +3,13 @@ import "./index.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import map from "./map";
 
-import { bindActionCreators } from "redux";
 import loginForm from "./components/updateLoginForm";
 import path from "./components/pathRenderer";
 import pathControlInit from "./components/pathControl";
 import store from "./store";
 
 import { dataFetched, fetchData } from "./store/actions";
-import { fetchData as fetchDataService } from "../services/backend";
+import { fetchData as fetchDataService } from "./services/backend";
 import { addPointToMap } from "./services/map";
 
 const updateDataCycle = async () => {
