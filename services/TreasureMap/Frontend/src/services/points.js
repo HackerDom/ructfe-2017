@@ -1,17 +1,13 @@
 export const normalize = coords => {
   if (coords >= 180) {
-    console.log(coords - 360);
     return coords - 360;
   }
   if (coords <= -180) {
-    console.log(coords + 360);
     return coords + 360;
   }
-  console.log(coords);
   return coords;
 };
-// из цифры в строчку
-// дели на 180 или 90 перед использованием
+
 export const encodeCoordinates = coord => {
   coord = (coord + 1) / 2;
   let res = "";
@@ -23,8 +19,6 @@ export const encodeCoordinates = coord => {
   return res;
 };
 
-// из строчки в цифру
-// умножай на 180 или 90 после
 export const decodeCoordinates = coord => {
   let res = 0;
   for (let i = coord.length - 1; i >= 0; --i) {
