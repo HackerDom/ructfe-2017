@@ -20,7 +20,7 @@ type Server struct {
     Port string
 }
 
-const ServerPort = "8080"
+const ServerPort = "8082"
 
 type User struct {
     Login string
