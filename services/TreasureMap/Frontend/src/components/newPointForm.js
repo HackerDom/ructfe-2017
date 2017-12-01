@@ -48,14 +48,24 @@ export default (lat, lng, popup) => {
   form.appendChild(getSubmit());
 
   form.addEventListener("submit", async e => {
-    const data = serialize(e.target, { hash: true, empty: true });
-    let id = await putNewPoint(data);
-    bindActionCreators(createPoint, store.dispatch)({
-      id,
-      ...data
-    });
     e.preventDefault();
-    popup.remove();
+    const data = serialize(e.target, {
+      hash: true,
+      empty: true,
+      serializer: (res, key, value) => ({
+        ...res,
+        [key]: key === "public" ? value === "on" : value
+      })
+    });
+    let id = await putNewPoint(data);
+    if (id) {
+      bindActionCreators(createPoint, store.dispatch)({
+        id,
+        ...data
+      });
+      popup.remove();
+    }
+
     return false;
   });
   return form;

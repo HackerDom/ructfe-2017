@@ -37,7 +37,9 @@ export const buildPath = () => {
     const { startPoint, endPoint, sub } = getState().path;
     if (startPoint && endPoint) {
       let path = await buildPathHandler(startPoint, endPoint, sub);
-      dispatch(createAction(actions.PATH_BUILD)(path));
+      if (path) {
+        dispatch(createAction(actions.PATH_BUILD)(path));
+      }
     }
   };
 };
