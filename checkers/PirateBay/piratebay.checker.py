@@ -2,6 +2,7 @@
 import os
 import re
 import traceback
+from random import random
 from sys import argv, stderr
 import requests
 import sys
@@ -56,6 +57,7 @@ def put(hostname, flag_id, flag, vuln):
     password = generate_password()
     name = generate_name()
     exit_code = OK
+    filename = 'buffer_{}'.format(str(random())[2:])
     try:
         register_request = requests.get(REGISTER_URL_TEMPLATE.format(
             hostname=hostname,
@@ -66,9 +68,9 @@ def put(hostname, flag_id, flag, vuln):
         ), headers=generate_headers())
         cookies = auth(hostname, login, password)
         register_request.raise_for_status()
-        with open("buffer", "wb") as file:
+        with open(filename, "wb") as file:
             file.write(generate_torrent_dict(name, flag, login))
-        with open('buffer', 'rb') as file:
+        with open(filename, 'rb') as file:
             files = {'upload_file': file}
             upload_request = requests.post(
                 UPLOAD_URL_TEMPLATE.format(hostname=hostname, port=PORT),
@@ -85,8 +87,8 @@ def put(hostname, flag_id, flag, vuln):
         print_to_stderr("HTTP Error: hostname: {}, error: {}".format(hostname, error))
         exit_code = MUMBLE
     finally:
-        if os.path.exists("buffer"):
-            os.remove("buffer")
+        if os.path.exists(filename):
+            os.remove(filename)
     if exit_code == OK:
         print("{},{},{}".format(login, password, name))
     exit(exit_code)
@@ -133,4 +135,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
