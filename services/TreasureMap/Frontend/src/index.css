@@ -18,3 +18,10 @@ body {
   top: 0;
   right: 0;
 }
+
+.pathControll {
+  position: absolute;
+  bottom: 20px;
+  right: 50%;
+  transform: translateX(-50%);
+}

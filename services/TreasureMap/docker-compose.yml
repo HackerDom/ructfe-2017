@@ -1,10 +1,12 @@
-version: '3'
+version: '2.3'
 services:
   treasuremap:
     build: .
     volumes:
       - .:/home/TreasureMap
     restart: on-failure
+    mem_limit: 512m
+    mem_reservation: 128m
   nginx:
     image: nginx:1.13.7-alpine
     ports:
@@ -16,4 +18,6 @@ services:
     depends_on:
       - treasuremap
     restart: on-failure
+    mem_limit: 256m
+    mem_reservation: 64m
 
