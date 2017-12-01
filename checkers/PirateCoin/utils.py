@@ -1,4 +1,6 @@
 from subprocess import Popen, PIPE
+from urllib.request import Request
+from user_agents import get_useragent
 
 
 def run_raw_command(command_text):
@@ -10,10 +12,11 @@ def run_raw_command(command_text):
         return output.decode().strip()
     raise CommandRunningException(err.decode())
 
+def create_request_object(team_addr):
+    return Request(team_addr, headers={
+        'User-Agent': get_useragent(),
+        # 'Content-type': 'application/json'
+    })
 
 class CommandRunningException(Exception):
     pass
-
-
-def parse_team_addr(team_addr):  # todo testing: service.team_name.ructfe
-    return ".".join(team_addr.split(".")[1:]) + ":14473"

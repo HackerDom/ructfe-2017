@@ -3,7 +3,7 @@
 import sys
 from urllib.error import URLError
 import traceback
-from checker_actions import put, get
+from checker_actions import put, get, check
 
 from answer_codes import OK, MUMBLE, CORRUPT, DOWN, CHECKER_ERROR
 
@@ -26,9 +26,8 @@ def close(code, public="", private="", flag_id=""):
     exit(code)
 
 
-def on_check(command_ip):  # todo implement it via external service
-    check_result = \
-        {"code": 1, "public": "smthing", "private": "smth", "flag_id": "id"}
+def on_check(command_ip):
+    check_result = check.check_service_state(command_ip)
     close(**check_result)
 
 

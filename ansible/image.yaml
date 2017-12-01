@@ -5,7 +5,12 @@
       authorized_key:
         user: root
         state: present
-        key: https://github.com/m-messiah.keys
+        key: https://github.com/{{ item }}.keys
+      with_items:
+        - alexbers
+        - kostteg
+        - m-messiah
+        - rx00
   roles:
     - { role: service, service_name: baz, binary: yes }
     - { role: service, service_name: PirateBay }

@@ -58,6 +58,11 @@ bool Execute( const Registers& registers, const Shader& shader ) {
         iter++;
 
         Instruction& i = shader.instructions[ ip ];
+		if( i.op < 0 || i.op >= OP_COUNT ) {
+			printf( "Execution break: Invalid instruction op code\n" );
+			return false;
+		}
+		
 		__m128_union src0, src1, result;
 
         if( g_opOperands[ i.op ] & OPERAND_SRC0 )
