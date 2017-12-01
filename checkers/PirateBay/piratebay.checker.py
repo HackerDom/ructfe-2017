@@ -10,10 +10,13 @@ from requests.exceptions import ConnectionError, HTTPError
 from generators import generate_login, generate_password, generate_torrent_dict, generate_name, generate_headers
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
-REGISTER_URL_TEMPLATE = "http://{hostname}/signup?password={password}&login={login}"
-UPLOAD_URL_TEMPLATE = "http://{hostname}/upload_private"
-AUTH_URL_TEMPLATE = "http://{hostname}/signin?login={login}&password={password}"
-PRIVATE_STORAGE_URL_TEMPLATE = "http://{hostname}/private_storage"
+
+
+REGISTER_URL_TEMPLATE = "http://{hostname}:{port}/signup?password={password}&login={login}"
+UPLOAD_URL_TEMPLATE = "http://{hostname}:{port}/upload_private"
+AUTH_URL_TEMPLATE = "http://{hostname}:{port}/signin?login={login}&password={password}"
+PRIVATE_STORAGE_URL_TEMPLATE = "http://{hostname}:{port}/private_storage"
+PORT = 8081
 
 
 def print_to_stderr(*args):
@@ -23,6 +26,7 @@ def print_to_stderr(*args):
 def auth(hostname, login, password):
     auth_url = AUTH_URL_TEMPLATE.format(
         hostname=hostname,
+        port=PORT,
         login=login,
         password=password,
     )
@@ -55,6 +59,7 @@ def put(hostname, flag_id, flag, vuln):
     try:
         register_request = requests.get(REGISTER_URL_TEMPLATE.format(
             hostname=hostname,
+            port=PORT,
             password=password,
             login=login,
             timeout=15,
@@ -66,7 +71,7 @@ def put(hostname, flag_id, flag, vuln):
         with open('buffer', 'rb') as file:
             files = {'upload_file': file}
             upload_request = requests.post(
-                UPLOAD_URL_TEMPLATE.format(hostname=hostname),
+                UPLOAD_URL_TEMPLATE.format(hostname=hostname, port=PORT),
                 cookies=cookies,
                 files=files,
                 headers=generate_headers(),
@@ -92,7 +97,7 @@ def get(hostname, flag_id, flag, _):
     try:
         cookies = auth(hostname, login, password)
         content = requests.get(
-            PRIVATE_STORAGE_URL_TEMPLATE.format(hostname=hostname),
+            PRIVATE_STORAGE_URL_TEMPLATE.format(hostname=hostname, port=PORT),
             cookies=cookies,
             headers=generate_headers(),
         ).content.decode()
@@ -128,3 +133,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

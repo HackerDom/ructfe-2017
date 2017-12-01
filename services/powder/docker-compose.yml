@@ -1,4 +1,4 @@
-version: '3'
+version: '2.3'
 services:
   powder:
     build: .
@@ -7,3 +7,5 @@ services:
     volumes:
       - .:/home/powder
     restart: on-failure
+    mem_limit: 512m
+    mem_reservation: 128m
