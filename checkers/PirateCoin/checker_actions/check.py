@@ -7,6 +7,8 @@ from answer_codes import CheckerAnswers
 
 
 def check_service_state(team_addr):  # todo implement it
+    return CheckerAnswers.OK()
+
     req = "http://" + team_addr + ":14473"
     try:
         req_object = create_request_object(req)
