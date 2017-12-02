@@ -47,6 +47,8 @@ namespace BlackMarket
 
 		public void UpdateLatestTeamContract(string vulnboxIp, string contractAddr)
 		{
+			return;
+
 			var alreadyChecking = teamsContracts.ContainsKey(vulnboxIp);
 			teamsContracts[vulnboxIp] = contractAddr;
 
