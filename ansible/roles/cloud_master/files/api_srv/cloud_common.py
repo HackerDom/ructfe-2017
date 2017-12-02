@@ -12,7 +12,7 @@ import shutil
 DOMAIN = "cloud.ructfe.org"
 
 # change me before the game
-ROUTER_HOST = "vpn-dev.ructfe.org"
+ROUTER_HOST = "vpn.ructfe.org"
 
 SSH_OPTS = [
     "-o", "StrictHostKeyChecking=no",
