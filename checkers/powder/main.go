@@ -415,7 +415,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
 
     lastAnswer := MessageToRank(messages[len(messages) - 1])
 
-    for i := 0; i < 20; i++ {
+    for i := 0; i < 50; i++ {
         err, code = server.SendMessage(alice, bob.Login, step)
         if err != nil {
             return "", err, code
@@ -430,7 +430,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
         answer := MessageToRank(messages[len(messages) - 1])
         fmt.Fprintln(os.Stderr, lastAnswer, answer)
         if answer == 7 {
-            return "", errors.New("Strange response"), MUMBLE
+            continue
         }
 
         if answer == 0 {

@@ -57,7 +57,6 @@ def get_check_contract(team_addr, flag_id, flag):
             team_coinbase = urlopen(req, timeout=7).read().decode()
         except socket.timeout:
             team_coinbase = urlopen(req, timeout=7).read().decode()
-
         int(team_coinbase, 16)
     except (URLError, socket.timeout) as e:
         return CheckerAnswers.DOWN(
@@ -76,12 +75,11 @@ def get_check_contract(team_addr, flag_id, flag):
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
-        w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
         w3.eth.sendTransaction({
-            "to": team_coinbase,
-            "from": ACCOUNT_ID,
-            "value": 1000000000000,
-            "data": FREE_TRANSACTION_TEXT
+           "to": team_coinbase,
+           "from": ACCOUNT_ID,
+           "value": 1000000000000,
+           "data": FREE_TRANSACTION_TEXT
         })
 
         contract_instance = w3.eth.contract(
