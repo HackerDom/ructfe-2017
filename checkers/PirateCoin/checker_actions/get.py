@@ -2,8 +2,7 @@ import json
 import binascii
 
 from urllib.request import urlopen
-from urllib.parse import urlencode
-from urllib.error import URLError, HTTPError
+from urllib.error import URLError
 from socket import socket
 
 from requests.exceptions import ConnectionError
@@ -14,11 +13,9 @@ from web3.exceptions import BadFunctionCallOutput
 from utils import create_request_object
 from answer_codes import CheckerAnswers
 from config import \
-    GETH_RPC_PATH, ACCOUNT_ID, ACCOUNT_PASSWORD,\
-    BLACK_MARKET_ADDR, SERVICE_COINBASE
+    GETH_RPC_PATH, ACCOUNT_ID, SERVICE_COINBASE
 
 
-TRANSACTION_COOLDOWN = 60
 FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
     b"Ethers for everybody, FREE, and no one will go away unsatisfied!")\
     .decode()
@@ -26,30 +23,6 @@ FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
 
 def get_check_contract(team_addr, flag_id, flag):
     contract_addr = flag_id
-
-    req = BLACK_MARKET_ADDR + "/checkFlag_C6EDEE7179BD4E2887A5887901F23060?{}"\
-        .format(urlencode(
-                    {
-                        "flag": flag,
-                        "contractAddr": contract_addr
-                    }))
-
-    try:
-        try:
-            response = urlopen(req, timeout=7).read().decode()
-        except socket.timeout:
-            response = urlopen(req, timeout=7).read().decode()
-        if response == "stolen":
-            return CheckerAnswers.CORRUPT(
-                "Unsynchronized balances in contract!",
-                "flag has been already given to another team!"
-            )
-    except (URLError, socket.timeout) as e:
-        return CheckerAnswers.CHECKER_ERROR(
-            "", "Black Market is down! req = {}, e = {}".format(req, e))
-    except HTTPError as e:
-        return CheckerAnswers.CHECKER_ERROR(
-            "", "Can't connect to BM req = {}, e = {}".format(req, e))
 
     req = create_request_object(SERVICE_COINBASE.format(team_addr))
     try:
