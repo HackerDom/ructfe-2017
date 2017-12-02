@@ -11,7 +11,7 @@ from answer_codes import OK, MUMBLE, CORRUPT, DOWN, CHECKER_ERROR
 
 
 def rand_sleep():
-    sleep(randint(0, 10))
+    sleep(randint(0, 7))
 
 
 def close(code, public="", private="", flag_id=""):
@@ -68,7 +68,6 @@ def not_found(*args):
         CHECKER_ERROR,
         "Checker error",
         "Unsupported command {}".format(sys.argv[1]))
-
 
 if __name__ == '__main__':
     try:

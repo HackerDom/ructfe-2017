@@ -47,6 +47,8 @@ namespace BlackMarket
 
 		public void UpdateLatestTeamContract(string vulnboxIp, string contractAddr)
 		{
+			return;
+
 			var alreadyChecking = teamsContracts.ContainsKey(vulnboxIp);
 			teamsContracts[vulnboxIp] = contractAddr;
 
@@ -83,34 +85,36 @@ namespace BlackMarket
 							log.Info($"Sent {contactTransactAmount.Value} wei to team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionSendReceipt.TransactionHash}' in block {transactionSendReceipt.BlockNumber.Value}");
 
 							var transactionWithdrawReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, new HexBigInteger(0))).Result;
-							log.Info($"Sent withdraw receipt from team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' in block {transactionWithdrawReceipt.BlockNumber.Value}");
+							log.Info($"Got withdraw receipt from team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' in block {transactionWithdrawReceipt.BlockNumber.Value}");
 
 							//NOTE to have parity synchronized with blockchain
-							Thread.Sleep(TimeSpan.FromSeconds(5));
-							var trace = TransactionTracer.TraceTransactionAsync(transactionWithdrawReceipt.TransactionHash, parityRpcUrl).Result;
+//							Thread.Sleep(TimeSpan.FromSeconds(5));
+//							var trace = TransactionTracer.TraceTransactionAsync(transactionWithdrawReceipt.TransactionHash, parityRpcUrl).Result;
+//
+//							var moneyReturns = (trace ?? new List<TraceResponseItem>())
+//								.Select(item => item.action)
+//								.Select(action => new
+//								{
+//									fromAddr = action.fromAddr?.ToLowerInvariant(),
+//									toAddr = action.toAddr?.ToLowerInvariant(),
+//									sum = BigInteger.Parse("0" + (action.value?.Substring(2) ?? "0"), NumberStyles.AllowHexSpecifier)
+//								})
+//								.Where(mt => mt.fromAddr == contractAddr && mt.toAddr == CoinbaseAddress && mt.sum > 0)
+//								.ToList();
+//
+//							var totalSumReturned = new BigInteger(0);
+//							foreach(var mr in moneyReturns)
+//								totalSumReturned += mr.sum;
+//
+//							bool illegallyPatched = false;
+//							if(totalSumReturned < contactTransactAmount)
+//							{
+//								log.Info($"Withdrawal team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' tracing returned {totalSumReturned} < we sent {contactTransactAmount}. Considering vulnbox illegaly patched");
+//								teamsStatus[vulnboxIp] = DateTime.UtcNow;
+//								illegallyPatched = true;
+//							}
 
-							var moneyReturns = (trace ?? new List<TraceResponseItem>())
-								.Select(item => item.action)
-								.Select(action => new
-								{
-									fromAddr = action.fromAddr?.ToLowerInvariant(),
-									toAddr = action.toAddr?.ToLowerInvariant(),
-									sum = BigInteger.Parse("0" + (action.value?.Substring(2) ?? "0"), NumberStyles.AllowHexSpecifier)
-								})
-								.Where(mt => mt.fromAddr == contractAddr && mt.toAddr == CoinbaseAddress && mt.sum > 0)
-								.ToList();
-
-							var totalSumReturned = new BigInteger(0);
-							foreach(var mr in moneyReturns)
-								totalSumReturned += mr.sum;
-
-							bool illegallyPatched = false;
-							if(totalSumReturned < contactTransactAmount)
-							{
-								log.Info($"Witdrawal team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' tracing returned {totalSumReturned} < we sent {contactTransactAmount}. Considering vulnbox illegaly patched");
-								teamsStatus[vulnboxIp] = DateTime.UtcNow;
-								illegallyPatched = true;
-							}
+							var illegallyPatched = false;
 
 							var msg = illegallyPatched ? "ILLEGAL PATCH" : "OK";
 							log.Warn($"Checked team '{vulnboxIp}' contract '{contractAddr}' -> {msg}");

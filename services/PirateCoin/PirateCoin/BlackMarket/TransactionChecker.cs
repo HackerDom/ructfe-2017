@@ -90,8 +90,6 @@ namespace BlackMarket
 			return totalEthBalance < totalBankBalance;
 		}
 
-		
-
 		private string bankContractAbi;
 		private string bankAttackerContractAbi;
 		private string parityRpcUrl;

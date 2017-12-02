@@ -13,13 +13,15 @@ from requests.exceptions import ConnectionError
 from answer_codes import CheckerAnswers
 from utils import create_request_object
 from config import \
-    GETH_RPC_PATH, ACCOUNT_PASSWORD, \
+    GETH_RPC_PATH, ACCOUNT_ID, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
-    gas_per_transaction = 400000
+    wei_per_transaction = 10 ** 16
+    # (1-20 ethers)
+
+    gas_per_transaction = 90000
 
     try:
         with open("contract_abi.json") as abi:
@@ -34,6 +36,11 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
             contract_addr = urlopen(req, timeout=7).read().decode()
         except socket.timeout:
             contract_addr = urlopen(req, timeout=7).read().decode()
+        if contract_addr == "":
+            return CheckerAnswers.MUMBLE(
+                "Couldn't get team contract",
+                "Team hasn't generated block contract!"
+            )
     except KeyError as e:
         return CheckerAnswers.MUMBLE(
             "Incorrect json-api schema response req",
@@ -64,12 +71,10 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
             urlopen(req, timeout=7).read().decode()
     except (URLError, socket.timeout) as e:
         return CheckerAnswers.CHECKER_ERROR(
-            "", "Black Market is down! ({}), req = {}".format(e, req))
+           "", "Black Market is down! ({}), req = {}".format(e, req))
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
-        w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
-
         contract_instance = w3.eth.contract(
             contract_abi,
             contract_addr,
@@ -77,10 +82,11 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         )
 
         transaction_id = contract_instance.addToBalance(
-            transact={
-                "from": w3.eth.coinbase,
-                "gas": gas_per_transaction,
-                "value": wei_per_transaction}
+           transact={
+               "from": ACCOUNT_ID,
+               "gas": gas_per_transaction,
+               "value": wei_per_transaction
+           }
         )
 
     except ConnectionError as e:

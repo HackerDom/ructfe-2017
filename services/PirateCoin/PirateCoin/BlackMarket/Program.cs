@@ -98,17 +98,17 @@ namespace BlackMarket
 				throw new HttpException((int) HttpStatusCode.Unauthorized,
 					"contract does not look being hacked (total balance on all deposits seems equal to contract balance)");
 
-			var hackerContractAddr = await transactionChecker.CheckTransactionAndFindHackerContractAddr(transaction, contractAddr, flags.First().sum);
-			if(hackerContractAddr == null)
-				throw new HttpException((int)HttpStatusCode.Unauthorized,
-					"contract does not look being hacked (your transaction should show stealing coins to single recipient addr and amount not less than we deposited)");
+//			var hackerContractAddr = await transactionChecker.CheckTransactionAndFindHackerContractAddr(transaction, contractAddr, flags.First().sum);
+//			if(hackerContractAddr == null)
+//				throw new HttpException((int)HttpStatusCode.Unauthorized,
+//					"contract does not look being hacked (your transaction should show stealing coins to single recipient addr and amount not less than we deposited)");
 
-			var hackerContractOwnerIp = await transactionChecker.FindHackerContractOwnerIp(hackerContractAddr);
-			if(hackerContractOwnerIp == null || !IsSameTeam(requestIp, hackerContractOwnerIp))
-			{
-				throw new HttpException((int)HttpStatusCode.Unauthorized,
-					$"contract looks hacked by somebody else ({hackerContractOwnerIp}), not by your team, your ip: {requestIp}");
-			}
+//			var hackerContractOwnerIp = await transactionChecker.FindHackerContractOwnerIp(hackerContractAddr);
+//			if(hackerContractOwnerIp == null || !IsSameTeam(requestIp, hackerContractOwnerIp))
+//			{
+//				throw new HttpException((int)HttpStatusCode.Unauthorized,
+//					$"contract looks hacked by somebody else ({hackerContractOwnerIp}), not by your team, your ip: {requestIp}");
+//			}
 
 			foreach(var flagData in flags)
 			{
