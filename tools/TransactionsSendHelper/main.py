@@ -2,6 +2,7 @@ from flask import Flask, request
 from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 from multiprocessing import Process
+from datetime import datetime
 import binascii
 
 
@@ -53,7 +54,7 @@ def send_transaction_to_contract(t_to, to_value):
            "value": int(to_value)
        }
     )
-    print("Finished {}".format(transaction_id))
+    print("[]Finished contract tx {}".format(transaction_id))
     return transaction_id
 
 
@@ -67,7 +68,7 @@ def sent_transaction_to_wallet(t_to, to_value):
        "value": 1000000000000,
        "data": FREE_TRANSACTION_TEXT
     })
-    print("Finished {}".format(transaction_id))
+    print("Finished wallet tx {}".format(transaction_id))
     return transaction_id
 
 
