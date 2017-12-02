@@ -28,26 +28,28 @@ FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
 def get_check_contract(team_addr, flag_id, flag):
     contract_addr = flag_id
 
-    try:
-        response = urlopen(
-            BLACK_MARKET_ADDR +
-            "/checkFlag_C6EDEE7179BD4E2887A5887901F23060?{}"
-            .format(
-                urlencode(
+    req = BLACK_MARKET_ADDR + "/checkFlag_C6EDEE7179BD4E2887A5887901F23060?{}"\
+        .format(urlencode(
                     {
                         "flag": flag,
                         "contractAddr": contract_addr
-                    })), timeout=TIMEOUT)\
+                    }
+    ))
+
+    try:
+        response = urlopen(req, timeout=TIMEOUT)\
             .read().decode()
         if response == "stolen":
             return CheckerAnswers.CORRUPT(
                 "Unsynchronized balances in contract!",
                 "flag has been already given to another team!"
             )
-    except (URLError, socket.timeout):
-        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
-    except HTTPError:
-        return CheckerAnswers.CHECKER_ERROR("", "Can't connect to ")
+    except (URLError, socket.timeout) as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "Black Market is down! req = {}, e = {}".format(req, e))
+    except HTTPError as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "Can't connect to BM req = {}, e = {}".format(req, e))
 
     try:
         team_coinbase = urlopen(
@@ -96,7 +98,7 @@ def get_check_contract(team_addr, flag_id, flag):
         except ValueError as e:
             return CheckerAnswers.MUMBLE(
                 "Unexpected methods answers!",
-                "can't parse int on calling bankBalance() or getUserBalance() ")
+                "can't parse int on calling bankBalance() or getUserBalance()")
     except ConnectionError:
         return CheckerAnswers.CHECKER_ERROR("", "Can't connect to node rpc")
 
