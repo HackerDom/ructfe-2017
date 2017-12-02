@@ -22,7 +22,6 @@ namespace BlackMarket
 			this.bankContractAbi = File.ReadAllText(bankContractAbiFilepath);
 			this.gethPass = GethPass;
 
-			CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
 			log.Info($"Got Geth coinbase {CoinbaseAddress}");
 		}
 
@@ -32,6 +31,9 @@ namespace BlackMarket
 			{
 				try
 				{
+					if(CoinbaseAddress == null)
+						CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
+
 					var senderAccount = new ManagedAccount(CoinbaseAddress, gethPass);
 					return new Web3(senderAccount, gethRpcUrl);
 				}
