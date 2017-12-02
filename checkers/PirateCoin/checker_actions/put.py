@@ -16,8 +16,6 @@ from config import \
     GETH_RPC_PATH, ACCOUNT_PASSWORD, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
-TIMEOUT = 7
-
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
     wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
@@ -29,40 +27,44 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     except OSError as e:
         return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
 
+    req = create_request_object(
+                SERVICE_FIRST_CONTRACT_ADDR_URL.format(team_addr))
     try:
-        contract_addr = urlopen(
-            create_request_object(
-                SERVICE_FIRST_CONTRACT_ADDR_URL.format(team_addr)),
-            timeout=TIMEOUT) \
-            .read() \
-            .decode()
-        contract_addr = contract_addr
+        try:
+            contract_addr = urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            contract_addr = urlopen(req, timeout=7).read().decode()
     except KeyError as e:
         return CheckerAnswers.MUMBLE(
-            "Incorrect json-api schema response", str(e))
+            "Incorrect json-api schema response req",
+            "req = {}, e = {}".format(req.full_url, e))
     except socket.timeout as e:
         return CheckerAnswers.MUMBLE(
-            "Service response timed out!", str(e))
+            "Service response timed out!",
+            "req = {}, e = {}".format(req.full_url, e))
     except URLError as e:
         return CheckerAnswers.DOWN(
-            "Can't reach service address!", str(e))
+            "Can't reach service address!",
+            "req = {}, e = {}".format(req.full_url, e))
 
-    try:
-        response = urlopen(
-            BLACK_MARKET_ADDR +
-            "/putFlag_C6EDEE7179BD4E2887A5887901F23060?{}"
-            .format(
+    req = BLACK_MARKET_ADDR + "/putFlag_C6EDEE7179BD4E2887A5887901F23060?{}"\
+        .format(
                 urlencode(
                     {
                         "flag": flag,
                         "contractAddr": contract_addr,
                         "sum": int(wei_per_transaction),
                         "vulnboxIp": team_addr
-                    })), timeout=TIMEOUT)\
-            .read().decode()
-    except (URLError, socket.timeout) as e:
-        return CheckerAnswers.CHECKER_ERROR(
-            "", "Black Market is down! ({})".format(e))
+                    }))
+
+    #try:
+    #    try:
+    #        urlopen(req, timeout=7).read().decode()
+    #    except socket.timeout:
+    #        urlopen(req, timeout=7).read().decode()
+    #except (URLError, socket.timeout) as e:
+    #   return CheckerAnswers.CHECKER_ERROR(
+    #        "", "Black Market is down! ({}), req = {}".format(e, req))
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
@@ -85,5 +87,5 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         return CheckerAnswers.CHECKER_ERROR(
             "", "can't connect to checker rpc! {}".format(e))
 
-    # flag_id = contract:wei:transaction_timestamp
+    # flag_id = contract_addr
     return CheckerAnswers.OK(flag_id="{}".format(contract_addr))

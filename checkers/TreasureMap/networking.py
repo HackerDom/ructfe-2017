@@ -115,8 +115,8 @@ class State:
 		status, text = await self.post('/api/login', request, need_check_status = False)
 		if status == 200:
 			return request['user'], request['password']
-		if status == 400 and can_retry:
-			while status == 400:
+		if 500 > status >= 400 and can_retry:
+			while 500 > status >= 400:
 				request['user'] = checker.get_rand_string(16)
 				request['password'] = checker.get_rand_string(32)
 				status, text = await self.post('/api/login', request, need_check_status = False)
