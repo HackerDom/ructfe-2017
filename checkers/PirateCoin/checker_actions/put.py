@@ -19,7 +19,7 @@ from config import \
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
     wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
-    gas_per_transaction = 400000
+    gas_per_transaction = 40728
 
     try:
         with open("contract_abi.json") as abi:
@@ -57,14 +57,14 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                         "vulnboxIp": team_addr
                     }))
 
-    #try:
-    #    try:
-    #        urlopen(req, timeout=7).read().decode()
-    #    except socket.timeout:
-    #        urlopen(req, timeout=7).read().decode()
-    #except (URLError, socket.timeout) as e:
-    #   return CheckerAnswers.CHECKER_ERROR(
-    #        "", "Black Market is down! ({}), req = {}".format(e, req))
+    try:
+        try:
+            urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            urlopen(req, timeout=7).read().decode()
+    except (URLError, socket.timeout) as e:
+        return CheckerAnswers.CHECKER_ERROR(
+           "", "Black Market is down! ({}), req = {}".format(e, req))
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
@@ -76,12 +76,13 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
             ContractFactoryClass=ConciseContract
         )
 
-        transaction_id = contract_instance.addToBalance(
-            transact={
-                "from": w3.eth.coinbase,
-                "gas": gas_per_transaction,
-                "value": wei_per_transaction}
-        )
+        #transaction_id = contract_instance.addToBalance(
+        #    transact={
+        #        "from": w3.eth.coinbase,
+        #        "gas": gas_per_transaction,
+        #        "value": wei_per_transaction
+        #    }
+        #)
 
     except ConnectionError as e:
         return CheckerAnswers.CHECKER_ERROR(
