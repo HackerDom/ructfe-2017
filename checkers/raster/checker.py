@@ -237,7 +237,7 @@ def draw( addr, pos_json ):
 		return payload
 
 	except Exception as e:
-		close(DOWN, "Service corrupted", "Invalid response: %s" % e)
+		close(CORRUPT, "Service corrupted", "Invalid response: %s" % e)
 
 
 ##
