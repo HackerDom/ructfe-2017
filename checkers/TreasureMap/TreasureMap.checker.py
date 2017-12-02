@@ -69,9 +69,9 @@ def is_between(l, r, p):
 
 async def check_path(username, sender, another, aname):
 	responses = []
-	for i in range(random.randint(3, 7)):
+	for i in range(random.randint(1, 3)):
 		responses.append(await sender.put_point(user=username))
-	for i in range(random.randint(3, 7)):
+	for i in range(random.randint(1, 3)):
 		responses.append(await another.put_point(is_public=True, user=aname))
 
 	start = get_rand_point()
