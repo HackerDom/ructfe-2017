@@ -18,7 +18,9 @@ from config import \
 
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
+    wei_per_transaction = 10 ** 17 * randint(1000, 2000) / 2000
+    # (1-20 ethers)
+
     gas_per_transaction = 40728
 
     try:
@@ -34,6 +36,11 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
             contract_addr = urlopen(req, timeout=7).read().decode()
         except socket.timeout:
             contract_addr = urlopen(req, timeout=7).read().decode()
+        if contract_addr == "":
+            return CheckerAnswers.MUMBLE(
+                "Couldn't get team contract",
+                "Team hasn't generated block contract!"
+            )
     except KeyError as e:
         return CheckerAnswers.MUMBLE(
             "Incorrect json-api schema response req",

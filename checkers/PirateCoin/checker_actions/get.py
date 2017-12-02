@@ -57,7 +57,6 @@ def get_check_contract(team_addr, flag_id, flag):
             team_coinbase = urlopen(req, timeout=7).read().decode()
         except socket.timeout:
             team_coinbase = urlopen(req, timeout=7).read().decode()
-
         int(team_coinbase, 16)
     except (URLError, socket.timeout) as e:
         return CheckerAnswers.DOWN(
