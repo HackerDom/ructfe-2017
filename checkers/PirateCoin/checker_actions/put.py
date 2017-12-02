@@ -57,14 +57,14 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                         "vulnboxIp": team_addr
                     }))
 
-    #try:
-    #    try:
-    #        urlopen(req, timeout=7).read().decode()
-    #    except socket.timeout:
-    #        urlopen(req, timeout=7).read().decode()
-    #except (URLError, socket.timeout) as e:
-    #   return CheckerAnswers.CHECKER_ERROR(
-    #        "", "Black Market is down! ({}), req = {}".format(e, req))
+    try:
+        try:
+            urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            urlopen(req, timeout=7).read().decode()
+    except (URLError, socket.timeout) as e:
+       return CheckerAnswers.CHECKER_ERROR(
+            "", "Black Market is down! ({}), req = {}".format(e, req))
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
