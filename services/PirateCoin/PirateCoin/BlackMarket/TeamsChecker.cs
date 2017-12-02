@@ -78,7 +78,7 @@ namespace BlackMarket
 							var transactionPolling = web3.TransactionManager.TransactionReceiptService;
 
 							var transactionSendReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("addToBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, contactTransactAmount)).Result;
-							log.Info($"Sent {contactTransactAmount} wei to team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionSendReceipt.TransactionHash}' in block {transactionSendReceipt.BlockNumber.Value}");
+							log.Info($"Sent {contactTransactAmount.Value} wei to team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionSendReceipt.TransactionHash}' in block {transactionSendReceipt.BlockNumber.Value}");
 
 							var transactionWithdrawReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, new HexBigInteger(0))).Result;
 							log.Info($"Sent withdraw receipt from team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' in block {transactionWithdrawReceipt.BlockNumber.Value}");
