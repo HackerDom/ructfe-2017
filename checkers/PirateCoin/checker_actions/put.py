@@ -13,15 +13,15 @@ from requests.exceptions import ConnectionError
 from answer_codes import CheckerAnswers
 from utils import create_request_object
 from config import \
-    GETH_RPC_PATH, ACCOUNT_PASSWORD, \
+    GETH_RPC_PATH, ACCOUNT_ID, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    wei_per_transaction = 10 ** 17
+    wei_per_transaction = 10 ** 16
     # (1-20 ethers)
 
-    gas_per_transaction = 40728
+    gas_per_transaction = 90000
 
     try:
         with open("contract_abi.json") as abi:
@@ -83,7 +83,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
 
         transaction_id = contract_instance.addToBalance(
            transact={
-               "from": w3.eth.coinbase,
+               "from": ACCOUNT_ID,
                "gas": gas_per_transaction,
                "value": wei_per_transaction
            }
