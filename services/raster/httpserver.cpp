@@ -143,8 +143,8 @@ void HttpServer::PostProcessRequest(void *param, MHD_Connection *connection, voi
 int HttpServer::IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const char *key, const char *value )
 {
     Headers* headers = ( Headers* )cls;
-    std::string keyStr = key;
-    std::string valueStr = value;
+    std::string keyStr = key ? key : "";
+    std::string valueStr = value ? value : "";
     std::transform( keyStr.begin(), keyStr.end(), keyStr.begin(), ::tolower );
     std::transform( valueStr.begin(), valueStr.end(), valueStr.begin(), ::tolower );
     headers->insert( { keyStr, valueStr } );
@@ -154,8 +154,8 @@ int HttpServer::IterateHeadersBase( void *cls, enum MHD_ValueKind kind, const ch
 int HttpServer::IterateQueryString( void *cls, enum MHD_ValueKind kind, const char *key, const char *value )
 {
     QueryString* args = ( QueryString* )cls;
-    std::string keyStr = key;
-    std::string valueStr = value;
+    std::string keyStr = key ? key : "";
+    std::string valueStr = value ? value : "";
     std::transform( keyStr.begin(), keyStr.end(), keyStr.begin(), ::tolower );
     std::transform( valueStr.begin(), valueStr.end(), valueStr.begin(), ::tolower );
     args->insert( { keyStr, valueStr } );
