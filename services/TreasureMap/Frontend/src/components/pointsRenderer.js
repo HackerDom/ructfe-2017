@@ -73,23 +73,20 @@ const addLayers = () => {
         "text-color": "white"
       }
     });
-  map.on("click", "allPoints", e => {
-    store.dispatch(
-      pathPointSelect({
-        type: "point",
-        id: e.features[0].properties.id
-      })
-    );
-    if (e.features[0].properties.description) {
-      map.popupIsOpen = true;
-      map.clicked = 0;
-      new mapboxgl.Popup()
-        .setLngLat(e.features[0].geometry.coordinates)
-        .setText(e.features[0].properties.description)
-        .addTo(map)
-        .on("close", () => (map.popupIsOpen = false));
-    }
-  });
+
+  let popup = new mapboxgl.Popup();
+  map
+    .on("mouseenter", "allPoints", e => {
+      if (e.features[0].properties.description) {
+        popup
+          .setLngLat(e.features[0].geometry.coordinates)
+          .setText(e.features[0].properties.description)
+          .addTo(map);
+      }
+    })
+    .on("mouseleave", "allPoints", function() {
+      popup.remove();
+    });
 };
 if (map.loaded()) {
   addLayers();

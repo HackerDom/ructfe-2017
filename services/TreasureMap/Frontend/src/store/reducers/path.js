@@ -5,23 +5,19 @@ export default handleActions(
   {
     [actions.PATH_POINT_SELECT]: (state, { payload }) => {
       if (payload.type === "coordinates") {
-        if (!state.startPoint) {
-          return {
-            ...state,
-            startPoint: payload.coordinates,
-            path: []
-          };
-        } else {
-          return {
-            ...state,
-            endPoint: payload.coordinates
-          };
-        }
+        return {
+          ...state,
+          path: [],
+          startPoint: state.startPoint ? state.startPoint : payload.coordinates,
+          endPoint: state.startPoint ? payload.coordinates : undefined
+        };
       } else {
-        if (payload.type === "point" && state.startPoint) {
+        if (payload.type === "point") {
           return {
             ...state,
-            sub: [...state.sub, payload.id]
+            startPoint: state.startPoint ? state.startPoint : payload.point,
+            endPoint: state.startPoint ? payload.point : undefined,
+            sub: [...state.sub, payload.point.id]
           };
         }
       }
