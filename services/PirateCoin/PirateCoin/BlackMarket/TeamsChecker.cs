@@ -22,7 +22,6 @@ namespace BlackMarket
 			this.bankContractAbi = File.ReadAllText(bankContractAbiFilepath);
 			this.gethPass = GethPass;
 
-			CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
 			log.Info($"Got Geth coinbase {CoinbaseAddress}");
 		}
 
@@ -32,6 +31,9 @@ namespace BlackMarket
 			{
 				try
 				{
+					if(CoinbaseAddress == null)
+						CoinbaseAddress = new Web3(gethRpcUrl).Eth.CoinBase.SendRequestAsync().Result;
+
 					var senderAccount = new ManagedAccount(CoinbaseAddress, gethPass);
 					return new Web3(senderAccount, gethRpcUrl);
 				}
@@ -78,7 +80,7 @@ namespace BlackMarket
 							var transactionPolling = web3.TransactionManager.TransactionReceiptService;
 
 							var transactionSendReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("addToBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, contactTransactAmount)).Result;
-							log.Info($"Sent {contactTransactAmount} wei to team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionSendReceipt.TransactionHash}' in block {transactionSendReceipt.BlockNumber.Value}");
+							log.Info($"Sent {contactTransactAmount.Value} wei to team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionSendReceipt.TransactionHash}' in block {transactionSendReceipt.BlockNumber.Value}");
 
 							var transactionWithdrawReceipt = transactionPolling.SendRequestAsync(() => contract.GetFunction("withdrawBalance").SendTransactionAsync(CoinbaseAddress, contactCallGas, new HexBigInteger(0))).Result;
 							log.Info($"Sent withdraw receipt from team '{vulnboxIp}' contract '{contractAddr}' transaction '{transactionWithdrawReceipt.TransactionHash}' in block {transactionWithdrawReceipt.BlockNumber.Value}");

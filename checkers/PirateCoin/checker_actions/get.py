@@ -18,7 +18,6 @@ from config import \
     BLACK_MARKET_ADDR, SERVICE_COINBASE
 
 
-TIMEOUT = 7
 TRANSACTION_COOLDOWN = 60
 FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
     b"Ethers for everybody, FREE, and no one will go away unsatisfied!")\
@@ -28,44 +27,52 @@ FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
 def get_check_contract(team_addr, flag_id, flag):
     contract_addr = flag_id
 
-    try:
-        response = urlopen(
-            BLACK_MARKET_ADDR +
-            "/checkFlag_C6EDEE7179BD4E2887A5887901F23060?{}"
-            .format(
-                urlencode(
+    req = BLACK_MARKET_ADDR + "/checkFlag_C6EDEE7179BD4E2887A5887901F23060?{}"\
+        .format(urlencode(
                     {
                         "flag": flag,
                         "contractAddr": contract_addr
-                    })), timeout=TIMEOUT)\
-            .read().decode()
+                    }))
+
+    try:
+        try:
+            response = urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            response = urlopen(req, timeout=7).read().decode()
         if response == "stolen":
             return CheckerAnswers.CORRUPT(
                 "Unsynchronized balances in contract!",
                 "flag has been already given to another team!"
             )
-    except (URLError, socket.timeout):
-        return CheckerAnswers.CHECKER_ERROR("", "Black Market is down!")
-    except HTTPError:
-        return CheckerAnswers.CHECKER_ERROR("", "Can't connect to ")
+    except (URLError, socket.timeout) as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "Black Market is down! req = {}, e = {}".format(req, e))
+    except HTTPError as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "Can't connect to BM req = {}, e = {}".format(req, e))
 
+    req = create_request_object(SERVICE_COINBASE.format(team_addr))
     try:
-        team_coinbase = urlopen(
-            create_request_object(
-                SERVICE_COINBASE.format(team_addr)),
-            timeout=TIMEOUT
-        ).read().decode()
+        try:
+            team_coinbase = urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            team_coinbase = urlopen(req, timeout=7).read().decode()
+
         int(team_coinbase, 16)
-    except (URLError, socket.timeout):
-        return CheckerAnswers.DOWN("Can't reach team web server", "")
+    except (URLError, socket.timeout) as e:
+        return CheckerAnswers.DOWN(
+            "Can't reach team web server",
+            "(req = {}, err = {})".format(req.full_url, e))
     except ValueError:
         return CheckerAnswers.MUMBLE("Can't parse team coinbase!", "")
 
     try:
         with open("contract_abi.json") as abi:
             contract_abi = json.load(abi)
-    except OSError:
-        return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
+    except OSError as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "can't open contract abi! ({})".format(e)
+        )
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
@@ -87,11 +94,11 @@ def get_check_contract(team_addr, flag_id, flag):
         try:
             total_tokens = int(contract_instance.totalBankBalance())
             checker_tokens = int(contract_instance.getUserBalance(ACCOUNT_ID))
-        except BadFunctionCallOutput:
+        except BadFunctionCallOutput as e:
             return CheckerAnswers.MUMBLE(
                 "Couldn't call expected contract methods!",
                 "error calling on bankBalance() or getUserBalance()")
-        except ValueError:
+        except ValueError as e:
             return CheckerAnswers.MUMBLE(
                 "Unexpected methods answers!",
                 "can't parse int on calling bankBalance() or getUserBalance()")
