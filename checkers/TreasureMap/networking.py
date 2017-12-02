@@ -11,11 +11,11 @@ import UserAgents
 def get_cookie_string(cookies):
 	return '; '.join([str(cookie.key) + '=' + str(cookie.value) for cookie in cookies])
 
-async def check_status(response):
+async def check_status(response, log_info):
 	if response.status >= 500:
-		checker.down(error='status code is {}. Content: {}\n'.format(response.status, await response.text()))
+		checker.down(error='{}\n\tstatus code is {}. Content: {}\n'.format(log_info, response.status, await response.text()))
 	if response.status != 200:
-		checker.mumble(error='status code is {}. Content: {}\n'.format(response.status, await response.text()))
+		checker.mumble(error='{}\n\tstatus code is {}. Content: {}\n'.format(log_info, response.status, await response.text()))
 
 class WSHelper:
 	def __init__(self, connection):
@@ -60,6 +60,8 @@ class WSHelper:
 				self.connection.close()
 				return top
 
+def get_log_info(name, url):
+	return '[{:05}] {}: {}'.format(random.randint(0, 99999), name, url)
 
 class State:
 	def __init__(self, hostname, port=None, name=''):
@@ -80,26 +82,32 @@ class State:
 
 	async def get(self, url):
 		url = self.get_url(url)
+		log_info = get_log_info(self.name, url)
 		try:
-			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
+			checker.log(log_info + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			async with self.session.get(url) as response:
-				await check_status(response)
-				return await response.text()
+				await check_status(response, log_info)
+				text = await response.text()
+				checker.log(log_info + ' responsed')
+				return text
 		except Exception as ex:
-			checker.down(error=url, exception=ex)
+			checker.down(error=log_info, exception=ex)
 
 	async def post(self, url, data={}, need_check_status=True):
 		url = self.get_url(url)
+		log_info = get_log_info(self.name, url)
 		try:
-			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
+			checker.log(log_info + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			async with self.session.post(url, json=data) as response:
 				if need_check_status:
-					await check_status(response)
-					return await response.text()
+					await check_status(response, log_info)
+					text = await response.text()
+					checker.log(log_info + ' responsed')
+					return text
 				else:
 					return response.status, await response.text()
 		except Exception as ex:
-			checker.down(error='{}\n{}'.format(url, data), exception=ex)
+			checker.down(error='{}\n{}'.format(log_info, data), exception=ex)
 
 	async def register(self, username=None, password=None):
 		can_retry = username is None
@@ -127,11 +135,13 @@ class State:
 
 	def get_listener(self, url):
 		url = self.get_url(url, proto='ws')
+		log_info = get_log_info(self.name, url)
 		try:
-			checker.log(self.name + ': ' + url + ' cookies:' + get_cookie_string(self.session.cookie_jar))
+			checker.log(log_info + ' cookies:' + get_cookie_string(self.session.cookie_jar))
 			connection = self.session.ws_connect(url, origin=self.get_url(''))
+			checker.log(log_info + ' connected')
 		except Exception as ex:
-			checker.down(exception=ex)
+			checker.down(error=log_info, exception=ex)
 		helper = WSHelper(connection)
 		helper.start()
 		return helper

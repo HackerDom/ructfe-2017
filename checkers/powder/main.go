@@ -408,7 +408,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
     }
     time.Sleep(100 * time.Millisecond)
     messages, err, code := server.GetMessages(alice, bob.Login)
-    fmt.Println(messages)
+    fmt.Fprintln(os.Stderr, messages)
     if err != nil {
         return "", err, code
     }
@@ -422,7 +422,7 @@ func FindPrime1(server *Server, alice *User, bob *User) (string, error, int) {
         }
         time.Sleep(100 * time.Millisecond)
         messages, err, code = server.GetMessages(alice, bob.Login)
-        fmt.Println(messages)
+        fmt.Fprintln(os.Stderr, messages)
         if err != nil {
             return "", err, code
         }

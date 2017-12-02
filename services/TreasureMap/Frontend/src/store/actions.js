@@ -9,6 +9,7 @@ export const dataFetched = createAction(actions.DATA_FETCHED);
 export const pathPointSelect = createAction(actions.PATH_POINT_SELECT);
 export const clearPath = createAction(actions.PATH_CLEAR);
 export const createPoint = createAction(actions.CREATE_POINT);
+export const removePoint = createAction(actions.REMOVE_POINT);
 export const loginOk = createAction(actions.LOGIN);
 export const logoutOk = createAction(actions.LOGOUT);
 

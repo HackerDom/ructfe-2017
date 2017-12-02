@@ -4,6 +4,54 @@ import { lineString, featureCollection, point } from "turf";
 
 const isSameCoordinates = (a, b) => a.x === b.x && a.y === b.y;
 
+const addLayers = () => {
+  map
+    .addSource("lines", {
+      type: "geojson",
+      data: featureCollection([point([0, 0])])
+    })
+    .addLayer({
+      id: "lines",
+      type: "line",
+      source: "lines",
+      paint: {
+        "line-color": "#b294ff",
+        "line-opacity": 0.75,
+        "line-width": 5
+      }
+    })
+    .addSource("points", {
+      type: "geojson",
+      data: featureCollection([point([0, 0])])
+    })
+    .addLayer({
+      id: "points",
+      type: "symbol",
+      source: "points",
+      layout: {
+        "icon-image": "{icon}-15",
+        "icon-allow-overlap": true
+      }
+    });
+};
+if (map.loaded()) {
+  addLayers();
+} else {
+  map.on("load", addLayers);
+}
+
+const toggleLayer = (layer, show) => {
+  if (map.getSource(layer)) {
+    map.setLayoutProperty(layer, "visibility", show ? "visible" : "none");
+  }
+};
+
+const setData = (layer, data) => {
+  if (map.getSource(layer) && data) {
+    map.getSource(layer).setData(data);
+  }
+};
+
 const getPointView = _ => ({
   ...point(xyToCoordinates(_)),
   properties: {
@@ -18,19 +66,11 @@ export default ({ startPoint, endPoint, path, sub }, pointsData) => {
   let lines = null;
 
   if (!startPoint && !endPoint && !sub.length && !path.length) {
-    if (map.getSource("lines")) {
-      map.setLayoutProperty("lines", "visibility", "none");
-    }
-    if (map.getSource("points")) {
-      map.setLayoutProperty("points", "visibility", "none");
-    }
+    toggleLayer("lines", false);
+    toggleLayer("points", false);
   } else {
-    if (map.getSource("lines") && (sub.length || endPoint)) {
-      map.setLayoutProperty("lines", "visibility", "visible");
-    }
-    if (map.getSource("points") && startPoint) {
-      map.setLayoutProperty("points", "visibility", "visible");
-    }
+    toggleLayer("lines", true);
+    toggleLayer("points", true);
   }
   if (path.length) {
     lines = lineString(path.map(xyToCoordinates));
@@ -55,45 +95,8 @@ export default ({ startPoint, endPoint, path, sub }, pointsData) => {
       );
     }
   }
-  if (map.getSource("lines") || map.getSource("points")) {
-    if (lines !== null) {
-      map.getSource("lines").setData(lines);
-      map.setLayoutProperty("lines", "visibility", "visible");
-    } else {
-      map.setLayoutProperty("lines", "visibility", "none");
-    }
-    if (points !== null) {
-      map.getSource("points").setData(points);
-    }
-  } else {
-    const addLayers = () => {
-      map
-        .addSource("lines", { type: "geojson", data: lines })
-        .addLayer({
-          id: "lines",
-          type: "line",
-          source: "lines",
-          paint: {
-            "line-color": "#b294ff",
-            "line-opacity": 0.75,
-            "line-width": 5
-          }
-        })
-        .addSource("points", { type: "geojson", data: points })
-        .addLayer({
-          id: "points",
-          type: "symbol",
-          source: "points",
-          layout: {
-            "icon-image": "{icon}-15",
-            "icon-allow-overlap": true
-          }
-        });
-    };
-    if (map.loaded()) {
-      addLayers();
-    } else {
-      map.on("load", addLayers);
-    }
-  }
+
+  setData("lines", lines);
+  toggleLayer("lines", lines !== null);
+  setData("points", points);
 };

@@ -12,23 +12,28 @@ const map = new mapboxgl.Map({
   container: document.querySelector(".map"),
   style: "mapbox://styles/mapbox/dark-v9",
   center: [60.6, 56.8],
-  zoom: 10
+  zoom: 1
 });
 
 map.doubleClickZoom.disable();
 
-map.on("click", e => {
-  map.clicked = (map.clicked || 0) + 1;
-  setTimeout(function() {
-    if (map.clicked === 1 && !map.popupIsOpen) {
-      map.clicked = 0;
-      bindActionCreators(pathPointSelect, store.dispatch)({
-        type: "coordinates",
-        coordinates: lngLatToXY(e.lngLat)
-      });
-    }
-  }, 300);
-});
+map
+  .on("click", e => {
+    map.clicked = (map.clicked || 0) + 1;
+    setTimeout(function() {
+      if (map.clicked === 1 && !map.popupIsOpen) {
+        map.clicked = 0;
+        bindActionCreators(pathPointSelect, store.dispatch)({
+          type: "coordinates",
+          coordinates: lngLatToXY(e.lngLat)
+        });
+      }
+    }, 300);
+  })
+  .on("load", () => {
+    document.querySelector(".userForm").hidden = false;
+    document.querySelector(".pathControll").hidden = false;
+  });
 
 map.on("dblclick", e => {
   map.clicked = 0;
