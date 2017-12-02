@@ -21,7 +21,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     wei_per_transaction = 10 ** 16
     # (1-20 ethers)
 
-    gas_per_transaction = 90000
+    gas_per_transaction = 190000
 
     try:
         with open("contract_abi.json") as abi:
