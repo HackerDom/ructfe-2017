@@ -73,15 +73,7 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         return CheckerAnswers.CHECKER_ERROR(
            "", "Black Market is down! ({}), req = {}".format(e, req))
 
-    try:
-        w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
-        w3.personal.unlockAccount(w3.eth.coinbase, ACCOUNT_PASSWORD)
-
-        contract_instance = w3.eth.contract(
-            contract_abi,
-            contract_addr,
-            ContractFactoryClass=ConciseContract
-        )
+    #try:
 
         #transaction_id = contract_instance.addToBalance(
         #    transact={
@@ -91,9 +83,9 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
         #    }
         #)
 
-    except ConnectionError as e:
-        return CheckerAnswers.CHECKER_ERROR(
-            "", "can't connect to checker rpc! {}".format(e))
+    #except ConnectionError as e:
+    #    return CheckerAnswers.CHECKER_ERROR(
+    #        "", "can't connect to checker rpc! {}".format(e))
 
     # flag_id = contract_addr
     return CheckerAnswers.OK(flag_id="{}".format(contract_addr))

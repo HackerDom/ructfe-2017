@@ -11,7 +11,7 @@ from answer_codes import OK, MUMBLE, CORRUPT, DOWN, CHECKER_ERROR
 
 
 def rand_sleep():
-    sleep(randint(0, 10))
+    sleep(randint(0, 7))
 
 
 def close(code, public="", private="", flag_id=""):
@@ -33,20 +33,20 @@ def close(code, public="", private="", flag_id=""):
 
 
 def on_check(command_ip):
-    #rand_sleep()
+    rand_sleep()
     check_result = check.check_service_state(command_ip)
     close(**check_result)
 
 
 def on_put(command_ip, flag_id, flag, vuln=None):
-    #rand_sleep()
+    rand_sleep()
     put_result = put.put_ether_on_team_smart_contract(
         command_ip, flag_id, flag)
     close(**put_result)
 
 
 def on_get(command_ip, flag_id, flag, vuln=None):
-    #rand_sleep()
+    rand_sleep()
     get_result = get.get_check_contract(command_ip, flag_id, flag)
     close(**get_result)
 
