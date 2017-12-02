@@ -34,7 +34,7 @@ def get_check_contract(team_addr, flag_id, flag):
                         "contractAddr": contract_addr
                     }))
 
-    try:
+    """try:
         try:
             response = urlopen(req, timeout=7).read().decode()
         except socket.timeout:
@@ -49,7 +49,7 @@ def get_check_contract(team_addr, flag_id, flag):
             "", "Black Market is down! req = {}, e = {}".format(req, e))
     except HTTPError as e:
         return CheckerAnswers.CHECKER_ERROR(
-            "", "Can't connect to BM req = {}, e = {}".format(req, e))
+            "", "Can't connect to BM req = {}, e = {}".format(req, e))"""
 
     req = create_request_object(SERVICE_COINBASE.format(team_addr))
     try:
@@ -97,7 +97,9 @@ def get_check_contract(team_addr, flag_id, flag):
         except BadFunctionCallOutput as e:
             return CheckerAnswers.MUMBLE(
                 "Couldn't call expected contract methods!",
-                "error calling on bankBalance() or getUserBalance()")
+                "error calling on bankBalance() or getUserBalance() ({})"
+                .format(e)
+            )
         except ValueError as e:
             return CheckerAnswers.MUMBLE(
                 "Unexpected methods answers!",
