@@ -76,6 +76,14 @@ const addLayers = () => {
 
   let popup = new mapboxgl.Popup();
   map
+    .on("click", "allPoints", e => {
+      store.dispatch(
+        pathPointSelect({
+          type: "point",
+          point: store.getState().points[e.features[0].properties.id]
+        })
+      );
+    })
     .on("mouseenter", "allPoints", e => {
       if (e.features[0].properties.description) {
         popup
