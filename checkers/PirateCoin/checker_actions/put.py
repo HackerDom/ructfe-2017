@@ -18,7 +18,7 @@ from config import \
 
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
-    wei_per_transaction = 10 ** 17 * randint(1000, 2000) / 2000
+    wei_per_transaction = 10 ** 17
     # (1-20 ethers)
 
     gas_per_transaction = 40728
