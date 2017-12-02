@@ -47,7 +47,7 @@ except Exception:
 
 geth_run_command = "geth" \
                    " --datadir {geth_path}" \
-                   " --networkid 31337" \
+                   " --networkid 1337" \
                    " --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpcapi 'db,eth,net,web3,admin,personal'"\
                    " --port 30303" \
                    " --netrestrict '10.60.0.0/14,10.80.0.0/14,10.10.0.0/16'"\

@@ -9,7 +9,7 @@ from answer_codes import CheckerAnswers
 def check_service_state(team_addr):  # todo implement it
     try:
         req_object = create_request_object("http://" + team_addr + ":14473")
-        urlopen(req_object, timeout=5).read().decode()
+        urlopen(req_object, timeout=7).read().decode()
     except (HTTPError, URLError, socket.timeout) as e:
         return CheckerAnswers.DOWN("Can't reach service main page!", str(e))
 
@@ -23,7 +23,7 @@ def check_service_state(team_addr):  # todo implement it
     except (HTTPError, URLError, socket.timeout) as e:
         return CheckerAnswers.CHECKER_ERROR(
             "",
-            "Couldn't await checker helper answer ({})".format(str(e)))
+            "Couldn't await checker helper answer ({})".format(e))
 
     try:
         if int(result) < 60:

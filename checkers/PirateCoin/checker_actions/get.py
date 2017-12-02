@@ -64,8 +64,10 @@ def get_check_contract(team_addr, flag_id, flag):
     try:
         with open("contract_abi.json") as abi:
             contract_abi = json.load(abi)
-    except OSError:
-        return CheckerAnswers.CHECKER_ERROR("", "can't open contract abi!")
+    except OSError as e:
+        return CheckerAnswers.CHECKER_ERROR(
+            "", "can't open contract abi! ({})".format(e)
+        )
 
     try:
         w3 = Web3(RPCProvider(host=GETH_RPC_PATH))
@@ -87,14 +89,14 @@ def get_check_contract(team_addr, flag_id, flag):
         try:
             total_tokens = int(contract_instance.totalBankBalance())
             checker_tokens = int(contract_instance.getUserBalance(ACCOUNT_ID))
-        except BadFunctionCallOutput:
+        except BadFunctionCallOutput as e:
             return CheckerAnswers.MUMBLE(
                 "Couldn't call expected contract methods!",
                 "error calling on bankBalance() or getUserBalance()")
-        except ValueError:
+        except ValueError as e:
             return CheckerAnswers.MUMBLE(
                 "Unexpected methods answers!",
-                "can't parse int on calling bankBalance() or getUserBalance()")
+                "can't parse int on calling bankBalance() or getUserBalance() ")
     except ConnectionError:
         return CheckerAnswers.CHECKER_ERROR("", "Can't connect to node rpc")
 
