@@ -115,22 +115,36 @@ async def handler_check(hostname):
 
 	checker.ok()
 
-async def handler_get_1(hostname, id, flag):
+async def handler_get(hostname, id, flag):
 	id = json.loads(id)
+	if 'type' not in id or id['type'] == 1:
+		await handler_get_1(hostname, id, flag)
+	else:
+		await handler_get_2(hostname, id, flag)
+
+async def handler_get_1(hostname, id, flag):
 	p = await get_point_with_flag(hostname, id['username'], id['password'], id['id'])
 	if p['message'] != flag:
 		checker.corrupt(message="Bad flag: expected {}, found {}".format(flag, p['message']))
 	checker.ok()
+
+async def handler_put(hostname, id, flag):
+	t = random.randint(1, 2)
+	if t == 1:
+		id = await handler_put_1(hostname, id, flag)
+	else:
+		id = await handler_put_2(hostname, id, flag)
+	id['type'] = t
+	checker.ok(message=json.dumps(id))
 
 async def handler_put_1(hostname, id, flag):
 	state = State(hostname, PORT)
 	username, password = await state.register()
 	point = await state.put_point(message=flag, is_public=False)
 	await state.put_point(is_public=True)
-	checker.ok(message=json.dumps({'username': username, 'password': password, 'id': point['id']}))
+	return {'username': username, 'password': password, 'id': point['id']}
 
 async def handler_get_2(hostname, id, flag):
-	id = json.loads(id)
 	p = await get_point_with_flag(hostname, id['username'], id['password'], id['id'])
 	if p['x'] + p['y'] != flag:
 		checker.corrupt(message="Bad flag: expected {}, found {}".format(flag, p['message']))
@@ -141,11 +155,11 @@ async def handler_put_2(hostname, id, flag):
 	username, password = await state.register()
 	point = await state.put_point(x = flag[:len(flag) // 2], y = flag[len(flag) // 2:], is_public=False)
 	await state.put_point(is_public=True)
-	checker.ok(message=json.dumps({'username': username, 'password': password, 'id': point['id']}))
-
+	return {'username': username, 'password': password, 'id': point['id']}
 
 def main():
-	checker = Checker(handler_check, [(handler_put_1, handler_get_1), (handler_put_2, handler_get_2)])
+#	checker = Checker(handler_check, [(handler_put_1, handler_get_1), (handler_put_2, handler_get_2)])
+	checker = Checker(handler_check, [(handler_put, handler_get)])
 	checker.process(sys.argv)
 
 if __name__ == "__main__":
