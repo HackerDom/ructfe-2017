@@ -18,7 +18,6 @@ from config import \
     BLACK_MARKET_ADDR, SERVICE_COINBASE
 
 
-TIMEOUT = 7
 TRANSACTION_COOLDOWN = 60
 FREE_TRANSACTION_TEXT = "0x" + binascii.hexlify(
     b"Ethers for everybody, FREE, and no one will go away unsatisfied!")\
@@ -33,12 +32,13 @@ def get_check_contract(team_addr, flag_id, flag):
                     {
                         "flag": flag,
                         "contractAddr": contract_addr
-                    }
-    ))
+                    }))
 
     try:
-        response = urlopen(req, timeout=TIMEOUT)\
-            .read().decode()
+        try:
+            response = urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            response = urlopen(req, timeout=7).read().decode()
         if response == "stolen":
             return CheckerAnswers.CORRUPT(
                 "Unsynchronized balances in contract!",
@@ -51,15 +51,18 @@ def get_check_contract(team_addr, flag_id, flag):
         return CheckerAnswers.CHECKER_ERROR(
             "", "Can't connect to BM req = {}, e = {}".format(req, e))
 
+    req = create_request_object(SERVICE_COINBASE.format(team_addr))
     try:
-        team_coinbase = urlopen(
-            create_request_object(
-                SERVICE_COINBASE.format(team_addr)),
-            timeout=TIMEOUT
-        ).read().decode()
+        try:
+            team_coinbase = urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            team_coinbase = urlopen(req, timeout=7).read().decode()
+
         int(team_coinbase, 16)
-    except (URLError, socket.timeout):
-        return CheckerAnswers.DOWN("Can't reach team web server", "")
+    except (URLError, socket.timeout) as e:
+        return CheckerAnswers.DOWN(
+            "Can't reach team web server",
+            "(req = {}, err = {})".format(req.full_url, e))
     except ValueError:
         return CheckerAnswers.MUMBLE("Can't parse team coinbase!", "")
 

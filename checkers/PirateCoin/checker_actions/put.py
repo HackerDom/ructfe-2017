@@ -16,8 +16,6 @@ from config import \
     GETH_RPC_PATH, ACCOUNT_PASSWORD, \
     SERVICE_FIRST_CONTRACT_ADDR_URL, BLACK_MARKET_ADDR
 
-TIMEOUT = 7
-
 
 def put_ether_on_team_smart_contract(team_addr, id, flag):
     wei_per_transaction = 10 ** 18 * randint(1, 20)  # (1-20 ethers)
@@ -32,21 +30,22 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
     req = create_request_object(
                 SERVICE_FIRST_CONTRACT_ADDR_URL.format(team_addr))
     try:
-        contract_addr = urlopen(req, timeout=TIMEOUT) \
-            .read() \
-            .decode()
+        try:
+            contract_addr = urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            contract_addr = urlopen(req, timeout=7).read().decode()
     except KeyError as e:
         return CheckerAnswers.MUMBLE(
             "Incorrect json-api schema response req",
-            "req = {}, e = {}".format(req, e))
+            "req = {}, e = {}".format(req.full_url, e))
     except socket.timeout as e:
         return CheckerAnswers.MUMBLE(
             "Service response timed out!",
-            "req = {}, e = {}".format(req, e))
+            "req = {}, e = {}".format(req.full_url, e))
     except URLError as e:
         return CheckerAnswers.DOWN(
             "Can't reach service address!",
-            "req = {}, e = {}".format(req, e))
+            "req = {}, e = {}".format(req.full_url, e))
 
     req = BLACK_MARKET_ADDR + "/putFlag_C6EDEE7179BD4E2887A5887901F23060?{}"\
         .format(
@@ -59,8 +58,10 @@ def put_ether_on_team_smart_contract(team_addr, id, flag):
                     }))
 
     try:
-        urlopen(req, timeout=TIMEOUT)\
-            .read().decode()
+        try:
+            urlopen(req, timeout=7).read().decode()
+        except socket.timeout:
+            urlopen(req, timeout=7).read().decode()
     except (URLError, socket.timeout) as e:
         return CheckerAnswers.CHECKER_ERROR(
             "", "Black Market is down! ({}), req = {}".format(e, req))
